@@ -1,0 +1,1227 @@
+Cmp-Mod V01 Created by PcbNew   date = 2022-05-07 15:58:52
+
+BeginCmp
+TimeStamp = 038bb562-403c-44b6-af71-51463e17f73c
+Path = /00000000-0000-0000-0000-00005a5d6f8c
+Reference = D3;
+ValeurCmp = LED_Small;
+IdModule  = LED_THT:LED_D3.0mm_Clear;
+EndCmp
+
+BeginCmp
+TimeStamp = 08c138e1-fce9-4ac8-bee2-54404a7e5338
+Path = /00000000-0000-0000-0000-00005a5d7143
+Reference = R5;
+ValeurCmp = 330R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = 094c773e-635b-45e6-9707-3e50d9d77da5
+Path = /77a4bde1-1e4f-4fc5-b2c9-a9452d73eeff
+Reference = J13;
+ValeurCmp = Screw_Terminal_01x02;
+IdModule  = TerminalBlock_MetzConnect:TerminalBlock_MetzConnect_Type055_RT01502HDWU_1x02_P5.00mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = 0a28d3e2-cdf9-4c84-af9c-2468375c6c19
+Path = /00000000-0000-0000-0000-00005a5d8056
+Reference = U8;
+ValeurCmp = MOC3083M;
+IdModule  = Package_DIP:DIP-6_W7.62mm_Socket_LongPads;
+EndCmp
+
+BeginCmp
+TimeStamp = 0b50e240-eb6d-4e53-b457-99ce4ac4c3c8
+Path = /904b93ea-7eb7-4fb5-9214-a24d47a32fcc
+Reference = R50;
+ValeurCmp = 680R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = 0c798496-6314-4c64-9385-8f583f8b8540
+Path = /00000000-0000-0000-0000-00005a5d970a
+Reference = R40;
+ValeurCmp = 1k;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 0d181dcc-579e-4dd9-84ef-7ec7ed00fbd5
+Path = /00000000-0000-0000-0000-00005a5d7b32
+Reference = R27;
+ValeurCmp = 22R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 0d3ba00b-fbba-46f0-84c0-7057f1d20115
+Path = /00000000-0000-0000-0000-00005a5d6b35
+Reference = D2;
+ValeurCmp = LED_Small;
+IdModule  = LED_THT:LED_D3.0mm_Clear;
+EndCmp
+
+BeginCmp
+TimeStamp = 13a18858-dc24-44cf-b1e4-f1ec252e400c
+Path = /00000000-0000-0000-0000-00005a5d96c6
+Reference = Q9;
+ValeurCmp = BT136-600;
+IdModule  = Package_TO_SOT_THT:TO-220-3_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 174daf42-80ac-457e-8799-b11137a8592c
+Path = /00000000-0000-0000-0000-00005a5d6b2f
+Reference = C3;
+ValeurCmp = 10n;
+IdModule  = Capacitor_THT:C_Rect_L19.0mm_W7.0mm_P15.00mm_MKS4;
+EndCmp
+
+BeginCmp
+TimeStamp = 19a25072-34b5-4331-8cea-a9228235ca48
+Path = /df67da5b-d4a5-4edd-abde-1e5496deff01
+Reference = R55;
+ValeurCmp = 22R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 19cb165c-26b0-4fec-a555-301ba9e51fcf
+Path = /00000000-0000-0000-0000-00005a61977d
+Reference = JP1;
+ValeurCmp = Jumper_2_Open;
+IdModule  = Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 1d96b980-c033-43b2-87dc-756bb0356928
+Path = /00000000-0000-0000-0000-00005a5d7b44
+Reference = RV6;
+ValeurCmp = Varistor;
+IdModule  = Varistor:RV_Disc_D9mm_W3.3mm_P5mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 1f19f290-4971-4ec8-829b-2afd925d4b73
+Path = /00000000-0000-0000-0000-00005a5d1e60
+Reference = R2;
+ValeurCmp = 330R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = 1fc529c6-9762-4ce3-a676-34b239046304
+Path = /00000000-0000-0000-0000-00005a5d1c50
+Reference = U2;
+ValeurCmp = MOC3083M;
+IdModule  = Package_DIP:DIP-6_W7.62mm_Socket_LongPads;
+EndCmp
+
+BeginCmp
+TimeStamp = 207a085c-cd9a-4f60-ab0f-4b3a552d0479
+Path = /00000000-0000-0000-0000-00005a5d805c
+Reference = Q7;
+ValeurCmp = BT136-600;
+IdModule  = Package_TO_SOT_THT:TO-220-3_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 21d6ff59-5114-4dbd-b83c-7f1d2297ba31
+Path = /00000000-0000-0000-0000-00005a5d96de
+Reference = R30;
+ValeurCmp = 22R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 223791f5-a44f-460e-ac71-d2e365ebbdf6
+Path = /53929eb6-a379-48a3-82c8-a16aa2a4cdf9
+Reference = Q19;
+ValeurCmp = BC857;
+IdModule  = Package_TO_SOT_SMD:SOT-23;
+EndCmp
+
+BeginCmp
+TimeStamp = 26acc68a-ca8d-4e7b-86ac-c89485cf2964
+Path = /00000000-0000-0000-0000-00005a619317
+Reference = JP9;
+ValeurCmp = Jumper_2_Open;
+IdModule  = Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 26c71d91-b23c-4221-abc2-c97fd52bc18d
+Path = /00000000-0000-0000-0000-00005a5f13c5
+Reference = J12;
+ValeurCmp = Screw_Terminal_01x02;
+IdModule  = TerminalBlock_MetzConnect:TerminalBlock_MetzConnect_Type055_RT01502HDWU_1x02_P5.00mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = 27321288-1341-4939-8e9b-3a0325e8dbb5
+Path = /dddcf456-234a-4489-ad71-fc2b066bb9b6
+Reference = J3_DC5V1;
+ValeurCmp = Screw_Terminal_01x02;
+IdModule  = TerminalBlock_MetzConnect:TerminalBlock_MetzConnect_Type055_RT01502HDWU_1x02_P5.00mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = 27f9162c-0b88-419c-ae5d-3a7b434d1aa3
+Path = /00000000-0000-0000-0000-00005a5d6b11
+Reference = Q2;
+ValeurCmp = BT136-600;
+IdModule  = Package_TO_SOT_THT:TO-220-3_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 28aeae41-1106-4544-9a76-fc90c48351ee
+Path = /00000000-0000-0000-0000-00005a5d6f74
+Reference = J5;
+ValeurCmp = Screw_Terminal_01x02;
+IdModule  = TerminalBlock_MetzConnect:TerminalBlock_MetzConnect_Type055_RT01502HDWU_1x02_P5.00mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = 2a9271eb-121a-48e5-bcfd-90aa8be99ab5
+Path = /00000000-0000-0000-0000-00005a5d8074
+Reference = R28;
+ValeurCmp = 22R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 33536eca-69cf-49a0-8fbd-1ee46f1f10d8
+Path = /9bc3bb9f-85d0-4286-b404-70967ae71cfe
+Reference = R48;
+ValeurCmp = 680R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = 350f285a-0c9e-404b-a033-73ca5396c4aa
+Path = /00000000-0000-0000-0000-00005a5d75d0
+Reference = D5;
+ValeurCmp = LED_Small;
+IdModule  = LED_THT:LED_D3.0mm_Clear;
+EndCmp
+
+BeginCmp
+TimeStamp = 362f637d-50a3-44e7-ba4d-c3fbb52224d8
+Path = /04ccee0c-2bc2-48fa-a35c-65710c53c376
+Reference = R44;
+ValeurCmp = 680R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = 3692f320-6cad-4720-a461-3a4196de5452
+Path = /00000000-0000-0000-0000-00005a5d80a0
+Reference = R38;
+ValeurCmp = 1k;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 36c7933f-cfd6-4174-aeb6-cb5799e52e63
+Path = /00000000-0000-0000-0000-00005a617110
+Reference = JP6;
+ValeurCmp = Jumper_2_Open;
+IdModule  = Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 37cd233f-1e28-4300-929b-fc81a012d8ec
+Path = /00000000-0000-0000-0000-00005a5d7149
+Reference = J6;
+ValeurCmp = Screw_Terminal_01x02;
+IdModule  = TerminalBlock_MetzConnect:TerminalBlock_MetzConnect_Type055_RT01502HDWU_1x02_P5.00mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = 391c478f-0779-4196-a369-b134940bb09f
+Path = /00000000-0000-0000-0000-00005a5d75b8
+Reference = J7;
+ValeurCmp = Screw_Terminal_01x02;
+IdModule  = TerminalBlock_MetzConnect:TerminalBlock_MetzConnect_Type055_RT01502HDWU_1x02_P5.00mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = 3a5ea2ed-6a5c-45a6-865b-394fef15fea4
+Path = /00000000-0000-0000-0000-00005a5d3145
+Reference = J5_AC_INPUT1;
+ValeurCmp = Screw_Terminal_01x02;
+IdModule  = TerminalBlock:TerminalBlock_bornier-2_P5.08mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 3bd7e5fa-36eb-4c65-b259-029802319f40
+Path = /00000000-0000-0000-0000-00005a5d6f80
+Reference = R25;
+ValeurCmp = 22R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 3d6e9901-af3a-4232-bdac-dceff85b8c02
+Path = /00000000-0000-0000-0000-00005a5d6f86
+Reference = C4;
+ValeurCmp = 10n;
+IdModule  = Capacitor_THT:C_Rect_L19.0mm_W7.0mm_P15.00mm_MKS4;
+EndCmp
+
+BeginCmp
+TimeStamp = 3e658006-b926-4434-bba8-b99c29001448
+Path = /00000000-0000-0000-0000-00005a61866c
+Reference = JP5;
+ValeurCmp = Jumper_2_Open;
+IdModule  = Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 3f3ee35b-c43f-42f6-92d2-b2015618f3fe
+Path = /00000000-0000-0000-0000-00005a5d7161
+Reference = D4;
+ValeurCmp = LED_Small;
+IdModule  = LED_THT:LED_D3.0mm_Clear;
+EndCmp
+
+BeginCmp
+TimeStamp = 41c4fad6-70ad-4ddf-9b7c-79a352a6c6da
+Path = /e4b748d9-1d2f-4b94-b731-10f4b3b082f7
+Reference = R47;
+ValeurCmp = 680R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = 423aa899-df18-4eef-a7fe-cb78efb45f86
+Path = /00000000-0000-0000-0000-00005a5d1e00
+Reference = Q1;
+ValeurCmp = BT136-600;
+IdModule  = Package_TO_SOT_THT:TO-220-3_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 44801be3-d29c-4bb1-920f-6164e2bea236
+Path = /00000000-0000-0000-0000-00005a614062
+Reference = J4_AC_OUTPUT1;
+ValeurCmp = Screw_Terminal_01x02;
+IdModule  = TerminalBlock_MetzConnect:TerminalBlock_MetzConnect_Type055_RT01502HDWU_1x02_P5.00mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = 453eea2b-a01b-4f82-9baf-845837e69227
+Path = /00000000-0000-0000-0000-00005a5f13b3
+Reference = U11;
+ValeurCmp = MOC3083M;
+IdModule  = Package_DIP:DIP-6_W7.62mm_Socket_LongPads;
+EndCmp
+
+BeginCmp
+TimeStamp = 460468f2-4906-4189-80aa-a7334b629d7b
+Path = /00000000-0000-0000-0000-00005a5d6b3b
+Reference = RV2;
+ValeurCmp = Varistor;
+IdModule  = Varistor:RV_Disc_D9mm_W3.3mm_P5mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 4627914b-f740-478b-a406-ac1e70c408d2
+Path = /00000000-0000-0000-0000-00005a5d7155
+Reference = R26;
+ValeurCmp = 22R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 49442e5c-a577-4bc5-a95f-6a6c64b806b7
+Path = /00000000-0000-0000-0000-00005a5f13d1
+Reference = R31;
+ValeurCmp = 22R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 499f0043-d011-4c69-b76f-552cc2e709c0
+Path = /1d97b000-ec1b-4e27-9f88-2f9ce4c24dd3
+Reference = Q18;
+ValeurCmp = BC857;
+IdModule  = Package_TO_SOT_SMD:SOT-23;
+EndCmp
+
+BeginCmp
+TimeStamp = 4ba0e480-4aac-47c3-8fd5-7b469f82694e
+Path = /00000000-0000-0000-0000-00005a619499
+Reference = JP3;
+ValeurCmp = Jumper_2_Open;
+IdModule  = Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 506a1999-f24d-4e32-9512-43276f0c5d15
+Path = /00000000-0000-0000-0000-00005a5d807a
+Reference = C7;
+ValeurCmp = 10n;
+IdModule  = Capacitor_THT:C_Rect_L19.0mm_W7.0mm_P15.00mm_MKS4;
+EndCmp
+
+BeginCmp
+TimeStamp = 50981274-96f0-4878-a875-a13c22b797e4
+Path = /00000000-0000-0000-0000-00005a5d21c6
+Reference = RV1;
+ValeurCmp = Varistor;
+IdModule  = Varistor:RV_Disc_D9mm_W3.3mm_P5mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 5436fa32-8718-4aff-a16e-8e7cd926c31d
+Path = /00000000-0000-0000-0000-00005a5d6fac
+Reference = R34;
+ValeurCmp = 1k;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 544b0791-b9a0-4133-8695-33c48555560a
+Path = /00000000-0000-0000-0000-00005a5d89ae
+Reference = R9;
+ValeurCmp = 330R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = 54a154e6-a4d1-4706-a442-5a354ee8e028
+Path = /00000000-0000-0000-0000-00005a5d6f68
+Reference = Q3;
+ValeurCmp = BT136-600;
+IdModule  = Package_TO_SOT_THT:TO-220-3_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 55dfea33-34fe-4f71-b60b-7139624fe266
+Path = /00000000-0000-0000-0000-00005a5d89a8
+Reference = Q8;
+ValeurCmp = BT136-600;
+IdModule  = Package_TO_SOT_THT:TO-220-3_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 56e2a5e6-7536-4413-a711-0d93769763e7
+Path = /00000000-0000-0000-0000-00005a5d7b20
+Reference = R7;
+ValeurCmp = 330R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = 57f15665-3f98-4325-8163-75c7162e6ef9
+Path = /00000000-0000-0000-0000-00005a616faf
+Reference = JP7;
+ValeurCmp = Jumper_2_Open;
+IdModule  = Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 585143de-4b23-4585-b72d-b763adb54ed3
+Path = /00000000-0000-0000-0000-00005a5d89ba
+Reference = R19;
+ValeurCmp = 27R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 5a47bacc-2c54-4d41-9903-abe0e6bd9f47
+Path = /00000000-0000-0000-0000-00005a5d7b26
+Reference = J8;
+ValeurCmp = Screw_Terminal_01x02;
+IdModule  = TerminalBlock_MetzConnect:TerminalBlock_MetzConnect_Type055_RT01502HDWU_1x02_P5.00mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = 5ae2ad8b-5b9a-4f0a-9ba8-60e853cebaed
+Path = /c8a05f28-0b25-4d73-8f46-86a024735837
+Reference = JP11;
+ValeurCmp = Jumper_2_Open;
+IdModule  = Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 6194da66-6534-470a-8eb2-2838334a3776
+Path = /00000000-0000-0000-0000-00005a61960c
+Reference = JP2;
+ValeurCmp = Jumper_2_Open;
+IdModule  = Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 64876363-f658-47bf-87cd-9c41cc2fe23a
+Path = /00000000-0000-0000-0000-00005a5d8068
+Reference = J9;
+ValeurCmp = Screw_Terminal_01x02;
+IdModule  = TerminalBlock_MetzConnect:TerminalBlock_MetzConnect_Type055_RT01502HDWU_1x02_P5.00mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = 64ebb341-122f-4789-ad7a-c34a29a0a492
+Path = /00000000-0000-0000-0000-00005a5d6f6e
+Reference = R4;
+ValeurCmp = 330R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = 65648233-9278-4bea-b187-3a49899887bb
+Path = /d29f6854-e1f2-4efd-92ab-f420d34d7dd6
+Reference = R56;
+ValeurCmp = 1k;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 65c4bfb2-51c9-45f2-9b4a-007fd59c12d2
+Path = /439609e6-3de7-4770-83d3-5d61af09c20c
+Reference = RV12;
+ValeurCmp = Varistor;
+IdModule  = Varistor:RV_Disc_D9mm_W3.3mm_P5mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 67407086-43d2-4224-b2ef-e8b8b51c8d44
+Path = /00000000-0000-0000-0000-00005a5d20ea
+Reference = C2;
+ValeurCmp = 10n;
+IdModule  = Capacitor_THT:C_Rect_L19.0mm_W7.0mm_P15.00mm_MKS4;
+EndCmp
+
+BeginCmp
+TimeStamp = 679c4184-7540-46bc-98b7-79e500f9ae38
+Path = /00000000-0000-0000-0000-00005a5f13b9
+Reference = Q10;
+ValeurCmp = BT136-600;
+IdModule  = Package_TO_SOT_THT:TO-220-3_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 67cdefc5-ec13-444f-99ab-b3b268d12778
+Path = /ee2c8e9f-0950-4e6d-bd4b-462d8097c084
+Reference = R45;
+ValeurCmp = 680R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = 6a8d1011-eb13-4763-81c8-95e8233f1e6b
+Path = /00000000-0000-0000-0000-00005a5d96c0
+Reference = U10;
+ValeurCmp = MOC3083M;
+IdModule  = Package_DIP:DIP-6_W7.62mm_Socket_LongPads;
+EndCmp
+
+BeginCmp
+TimeStamp = 6cb2a321-9bb9-4d1b-a41f-353a8f934615
+Path = /55a0d0c5-4b7c-4074-a389-6cabd3672e14
+Reference = R54;
+ValeurCmp = 27R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 6fc850b5-bf26-44be-9b64-8923d4c24ed4
+Path = /66107526-2657-4d99-90d6-1f3057624689
+Reference = R52;
+ValeurCmp = 680R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = 72dd8169-3509-4464-85ea-6fac444aa563
+Path = /00000000-0000-0000-0000-00005a5d89cc
+Reference = D8;
+ValeurCmp = LED_Small;
+IdModule  = LED_THT:LED_D3.0mm_Clear;
+EndCmp
+
+BeginCmp
+TimeStamp = 7321fc1d-4bf4-4722-b771-3dea58908c97
+Path = /00000000-0000-0000-0000-00005a5de0ff
+Reference = F1;
+ValeurCmp = Fuse;
+IdModule  = Fuse:Fuseholder_Littelfuse_100_series_5x20mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 76975803-bb80-4374-9138-b5ca56bb5c51
+Path = /00000000-0000-0000-0000-00005a5d6b29
+Reference = R24;
+ValeurCmp = 22R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 779a2efa-be7c-4e8b-8403-7a4ebe32580b
+Path = /00000000-0000-0000-0000-00005a5f13cb
+Reference = R21;
+ValeurCmp = 27R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 78bd8c9f-45d5-4a2f-a4ac-367baec7ec1e
+Path = /00000000-0000-0000-0000-00005a5d7b5e
+Reference = R37;
+ValeurCmp = 1k;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 79641d3b-344d-4623-8e6a-330300f2ef62
+Path = /00000000-0000-0000-0000-00005a5f13f7
+Reference = R41;
+ValeurCmp = 1k;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 7cfb7f9b-da6b-447d-b9f4-ca0aa98d5d87
+Path = /586bbbe2-da45-4972-9742-e818c186a8db
+Reference = J1;
+ValeurCmp = Screw_Terminal_01x03;
+IdModule  = TerminalBlock:TerminalBlock_bornier-3_P5.08mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 7e565c57-cf5e-4d45-9192-db5e14ad7cb6
+Path = /00000000-0000-0000-0000-00005a5d96f0
+Reference = RV9;
+ValeurCmp = Varistor;
+IdModule  = Varistor:RV_Disc_D9mm_W3.3mm_P5mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 7ea15abd-81d0-4efd-ac9c-9153d70c4e38
+Path = /5ec10fe2-22c6-4ce5-98e2-6b74cbefb3bd
+Reference = C11;
+ValeurCmp = 10n;
+IdModule  = Capacitor_THT:C_Rect_L19.0mm_W7.0mm_P15.00mm_MKS4;
+EndCmp
+
+BeginCmp
+TimeStamp = 7f263271-b885-4f92-b229-871e7627eeeb
+Path = /00000000-0000-0000-0000-00005a5d75c4
+Reference = R22;
+ValeurCmp = 22R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 814f078d-532c-408c-9bca-11cb9324ae9c
+Path = /00000000-0000-0000-0000-00005a5d8080
+Reference = D7;
+ValeurCmp = LED_Small;
+IdModule  = LED_THT:LED_D3.0mm_Clear;
+EndCmp
+
+BeginCmp
+TimeStamp = 825974d8-e113-40ca-9bbc-7b9d496944a5
+Path = /00000000-0000-0000-0000-00005a5d1fc2
+Reference = J2;
+ValeurCmp = Conn_01x11;
+IdModule  = Connector_PinHeader_2.54mm:PinHeader_1x12_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 875e14e4-94b4-46d7-8591-eaf56f92cd9d
+Path = /00000000-0000-0000-0000-00005a616e48
+Reference = JP8;
+ValeurCmp = Jumper_2_Open;
+IdModule  = Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 88dc3435-6ce2-4386-8a11-0148881b2b9e
+Path = /eb690af2-b472-42a7-8c69-dc95c2204105
+Reference = R46;
+ValeurCmp = 680R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = 89c0351e-3a15-47bb-b1aa-2b80c3bad1e9
+Path = /00000000-0000-0000-0000-00005a5d8062
+Reference = R8;
+ValeurCmp = 330R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = 8a8d2438-147d-419a-aac2-5915d3739449
+Path = /00000000-0000-0000-0000-00005a5d8086
+Reference = RV7;
+ValeurCmp = Varistor;
+IdModule  = Varistor:RV_Disc_D9mm_W3.3mm_P5mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 8b3ab73e-a9a1-4f68-bb1a-8e9b48b6c601
+Path = /00000000-0000-0000-0000-00005a5d89b4
+Reference = J10;
+ValeurCmp = Screw_Terminal_01x02;
+IdModule  = TerminalBlock_MetzConnect:TerminalBlock_MetzConnect_Type055_RT01502HDWU_1x02_P5.00mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = 8c2b33f3-955f-44d2-a44c-7f5d5cd24582
+Path = /284eacbc-88c9-40d7-8449-7e46fb78829c
+Reference = Q15;
+ValeurCmp = BC857;
+IdModule  = Package_TO_SOT_SMD:SOT-23;
+EndCmp
+
+BeginCmp
+TimeStamp = 8c7a4860-2f1b-413e-ae5d-57d44467f86a
+Path = /00000000-0000-0000-0000-00005a5d6b55
+Reference = R33;
+ValeurCmp = 1k;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 8fa28216-b3fe-4bf1-a7a7-9388c9ee452e
+Path = /00000000-0000-0000-0000-00005a5d7b38
+Reference = C6;
+ValeurCmp = 10n;
+IdModule  = Capacitor_THT:C_Rect_L19.0mm_W7.0mm_P15.00mm_MKS4;
+EndCmp
+
+BeginCmp
+TimeStamp = 9015a948-b2d7-479d-8696-35d2d12d3646
+Path = /00000000-0000-0000-0000-00005a5d1f53
+Reference = J3;
+ValeurCmp = Screw_Terminal_01x02;
+IdModule  = TerminalBlock_MetzConnect:TerminalBlock_MetzConnect_Type055_RT01502HDWU_1x02_P5.00mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = 91db11e3-4fb6-4d40-971c-d8ffa9f85910
+Path = /00000000-0000-0000-0000-00005a5d75ac
+Reference = Q5;
+ValeurCmp = BT136-600;
+IdModule  = Package_TO_SOT_THT:TO-220-3_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 9495855d-aace-450f-9b9a-72243c5089d8
+Path = /00000000-0000-0000-0000-00005a5d7167
+Reference = RV4;
+ValeurCmp = Varistor;
+IdModule  = Varistor:RV_Disc_D9mm_W3.3mm_P5mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 94e3b5bf-0d11-46d2-b703-e5754e7d6e1a
+Path = /46adaa7f-aa9d-49bc-b853-63d71e7a7990
+Reference = R49;
+ValeurCmp = 680R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = 95d1bdec-390e-43bc-ac61-d72fd246b3cf
+Path = /00000000-0000-0000-0000-00005a5f13e3
+Reference = RV10;
+ValeurCmp = Varistor;
+IdModule  = Varistor:RV_Disc_D9mm_W3.3mm_P5mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 970a360f-8bc2-41a7-b10d-1099146e27ec
+Path = /554edd25-e906-43ef-b170-bba3bf07d1e7
+Reference = Q20;
+ValeurCmp = BC857;
+IdModule  = Package_TO_SOT_SMD:SOT-23;
+EndCmp
+
+BeginCmp
+TimeStamp = 974ac03c-c759-4e4d-a3c8-30cff4559ee7
+Path = /227107d3-5190-4df5-834b-9ff5e8cb815c
+Reference = R53;
+ValeurCmp = 330R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = 99dcf6c1-d77b-406c-9562-097152d85a50
+Path = /b188af18-c8e8-441f-aade-161ed76149ad
+Reference = Q13;
+ValeurCmp = BC857;
+IdModule  = Package_TO_SOT_SMD:SOT-23;
+EndCmp
+
+BeginCmp
+TimeStamp = 9a338ff7-32d5-4285-840c-d8420e0acd54
+Path = /00000000-0000-0000-0000-00005a5d2173
+Reference = D1;
+ValeurCmp = LED_Small;
+IdModule  = LED_THT:LED_D3.0mm_Clear;
+EndCmp
+
+BeginCmp
+TimeStamp = 9a3d7b14-7e22-4f9c-94ad-07a875ef8167
+Path = /00000000-0000-0000-0000-00005a5d89a2
+Reference = U9;
+ValeurCmp = MOC3083M;
+IdModule  = Package_DIP:DIP-6_W7.62mm_Socket_LongPads;
+EndCmp
+
+BeginCmp
+TimeStamp = 9ce9897d-ebb8-4849-bc5c-ac81de7c722b
+Path = /00000000-0000-0000-0000-00005a608a21
+Reference = JP10;
+ValeurCmp = Jumper_2_Open;
+IdModule  = Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 9d5f1307-0b5a-4400-9fd0-da8cfcc6e213
+Path = /00000000-0000-0000-0000-00005a5d75ca
+Reference = C1;
+ValeurCmp = 10n;
+IdModule  = Capacitor_THT:C_Rect_L19.0mm_W7.0mm_P15.00mm_MKS4;
+EndCmp
+
+BeginCmp
+TimeStamp = 9d70d401-de1e-4aaa-b6dd-55e1aa68b559
+Path = /00000000-0000-0000-0000-00005a5f13dd
+Reference = D10;
+ValeurCmp = LED_Small;
+IdModule  = LED_THT:LED_D3.0mm_Clear;
+EndCmp
+
+BeginCmp
+TimeStamp = 9f90dfc1-3014-48a3-951c-bdc52dc95a61
+Path = /00000000-0000-0000-0000-00005a5d715b
+Reference = C5;
+ValeurCmp = 10n;
+IdModule  = Capacitor_THT:C_Rect_L19.0mm_W7.0mm_P15.00mm_MKS4;
+EndCmp
+
+BeginCmp
+TimeStamp = a064aa3f-a2de-4e8f-9269-6e0cc0b439b1
+Path = /00000000-0000-0000-0000-00005a5d75b2
+Reference = R6;
+ValeurCmp = 330R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = a261e796-25d7-477c-be76-97f041d1e6b6
+Path = /2e789dd3-044d-464d-b0a4-6a31a0971d7c
+Reference = D11;
+ValeurCmp = LED_Small;
+IdModule  = LED_THT:LED_D3.0mm_Clear;
+EndCmp
+
+BeginCmp
+TimeStamp = a4eef720-e4d0-4b1f-9ddb-a47400778e91
+Path = /9c63e803-b3f9-41ed-bf01-b871fafbead2
+Reference = U1;
+ValeurCmp = ESP32_DevKit_V1_DOIT;
+IdModule  = Espressif:esp32_devkit_v1_doit;
+EndCmp
+
+BeginCmp
+TimeStamp = af2dd889-40f1-422d-bb6d-aa1273002a47
+Path = /00000000-0000-0000-0000-00005a5d6b0b
+Reference = U3;
+ValeurCmp = MOC3083M;
+IdModule  = Package_DIP:DIP-6_W7.62mm_Socket_LongPads;
+EndCmp
+
+BeginCmp
+TimeStamp = b3ee0731-53e9-4fd5-a8a5-a1461450f54d
+Path = /00000000-0000-0000-0000-00005a5d7181
+Reference = R35;
+ValeurCmp = 1k;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = b93c7c03-bcb9-442c-97fe-47cc7046aa3c
+Path = /00000000-0000-0000-0000-00005a5d89d2
+Reference = RV8;
+ValeurCmp = Varistor;
+IdModule  = Varistor:RV_Disc_D9mm_W3.3mm_P5mm;
+EndCmp
+
+BeginCmp
+TimeStamp = bb2d4abf-ad9c-4a0b-9dfc-a8b452359748
+Path = /00000000-0000-0000-0000-00005a5d6b1d
+Reference = J4;
+ValeurCmp = Screw_Terminal_01x02;
+IdModule  = TerminalBlock_MetzConnect:TerminalBlock_MetzConnect_Type055_RT01502HDWU_1x02_P5.00mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = bcf9b464-c57b-43c7-a590-537a6046bafd
+Path = /00000000-0000-0000-0000-00005a5f13d7
+Reference = C10;
+ValeurCmp = 10n;
+IdModule  = Capacitor_THT:C_Rect_L19.0mm_W7.0mm_P15.00mm_MKS4;
+EndCmp
+
+BeginCmp
+TimeStamp = c491206e-1b9f-4741-8b53-ca86001ffbda
+Path = /00000000-0000-0000-0000-00005a5d96e4
+Reference = C9;
+ValeurCmp = 10n;
+IdModule  = Capacitor_THT:C_Rect_L19.0mm_W7.0mm_P15.00mm_MKS4;
+EndCmp
+
+BeginCmp
+TimeStamp = c4b3bdd7-4b97-43e3-93cc-66cf315a08e2
+Path = /00000000-0000-0000-0000-00005a5d7b14
+Reference = U7;
+ValeurCmp = MOC3083M;
+IdModule  = Package_DIP:DIP-6_W7.62mm_Socket_LongPads;
+EndCmp
+
+BeginCmp
+TimeStamp = c7f55a53-2411-4f3d-8c2c-9ee1d302ef2e
+Path = /06d95e73-4f07-4788-be00-e9c832ea2b76
+Reference = RV11;
+ValeurCmp = Varistor;
+IdModule  = Varistor:RV_Disc_D9mm_W3.3mm_P5mm;
+EndCmp
+
+BeginCmp
+TimeStamp = cd5765af-376a-4ea0-8c2d-112e64eaaccc
+Path = /00000000-0000-0000-0000-00005a5f13bf
+Reference = R11;
+ValeurCmp = 330R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = cec94cd2-9700-4dd3-b9d2-4b72c629d4b7
+Path = /00000000-0000-0000-0000-00005a5d714f
+Reference = R16;
+ValeurCmp = 27R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = cf555f2f-3324-49c1-8485-dfee4c430451
+Path = /aa923f06-5677-40e5-889e-51691fd5b149
+Reference = Q12;
+ValeurCmp = BC857;
+IdModule  = Package_TO_SOT_SMD:SOT-23;
+EndCmp
+
+BeginCmp
+TimeStamp = cfdc27be-63a5-4258-a1d7-c12e7a1fe233
+Path = /00000000-0000-0000-0000-00005a5d713d
+Reference = Q4;
+ValeurCmp = BT136-600;
+IdModule  = Package_TO_SOT_THT:TO-220-3_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = d1753eee-0207-4acb-b357-c5ad569d56b8
+Path = /f0304f6b-503b-4f20-8d71-e07ba2a3a85b
+Reference = Q22;
+ValeurCmp = BT136-600;
+IdModule  = Package_TO_SOT_THT:TO-220-3_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = d3fb3a3a-c024-4693-a18b-feaf1528a1b3
+Path = /00000000-0000-0000-0000-00005a5d89c6
+Reference = C8;
+ValeurCmp = 10n;
+IdModule  = Capacitor_THT:C_Rect_L19.0mm_W7.0mm_P15.00mm_MKS4;
+EndCmp
+
+BeginCmp
+TimeStamp = d4bdeefb-59ab-492e-ad77-02e40aff3c88
+Path = /00000000-0000-0000-0000-00005a5d806e
+Reference = R18;
+ValeurCmp = 27R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = d4fa26f6-f04a-4ac7-ad75-29505031576e
+Path = /00000000-0000-0000-0000-00005a5d6b23
+Reference = R14;
+ValeurCmp = 27R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = d680bedc-5e78-4177-896f-abe9451f0a72
+Path = /00000000-0000-0000-0000-00005a5d7b3e
+Reference = D6;
+ValeurCmp = LED_Small;
+IdModule  = LED_THT:LED_D3.0mm_Clear;
+EndCmp
+
+BeginCmp
+TimeStamp = d8f62de9-1185-4783-ab9c-241325d19c1e
+Path = /4c93c850-58bf-4eab-bf60-d86d4752f7b4
+Reference = U12;
+ValeurCmp = MOC3083M;
+IdModule  = Package_DIP:DIP-6_W7.62mm_Socket_LongPads;
+EndCmp
+
+BeginCmp
+TimeStamp = d90fecb7-91d5-455d-ade4-d264f482f28b
+Path = /00000000-0000-0000-0000-00005a5d89c0
+Reference = R29;
+ValeurCmp = 22R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = d91767f4-3795-4985-925b-9935def97e8b
+Path = /00000000-0000-0000-0000-00005a5d2060
+Reference = R13;
+ValeurCmp = 27R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = daa04505-4f7d-48fb-8db9-f7757d0c1f5b
+Path = /00000000-0000-0000-0000-00005a5d575d
+Reference = R32;
+ValeurCmp = 1k;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = dde17fb4-eeb4-4d49-bb8c-683da33d41e9
+Path = /00000000-0000-0000-0000-00005a5d96d2
+Reference = J11;
+ValeurCmp = Screw_Terminal_01x02;
+IdModule  = TerminalBlock_MetzConnect:TerminalBlock_MetzConnect_Type055_RT01502HDWU_1x02_P5.00mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = e0da4cc6-6675-4588-a2d0-b2a35c17ecd7
+Path = /0b8ef4c2-9b77-40cc-b616-bbc98c45382c
+Reference = R1;
+ValeurCmp = 4k7;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = e39a4654-f710-4838-9a15-630c8a119be9
+Path = /1b2c2b2e-14f4-43da-a8b4-2db1caf518f3
+Reference = R42;
+ValeurCmp = 680R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = e583b143-3a1b-4bc2-9cd1-ff1359cccb34
+Path = /6ca0ce45-6213-43fd-ac68-b52080e916c6
+Reference = Q14;
+ValeurCmp = BC857;
+IdModule  = Package_TO_SOT_SMD:SOT-23;
+EndCmp
+
+BeginCmp
+TimeStamp = e5cc7be7-ee49-4599-82e6-b31845cf1e4b
+Path = /77abb38c-54c3-42a6-9179-9a0f9043bcfe
+Reference = R43;
+ValeurCmp = 680R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = e5db9a23-c973-4341-8655-56492c268f60
+Path = /00000000-0000-0000-0000-00005a5d89ec
+Reference = R39;
+ValeurCmp = 1k;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = e60787ff-2998-46d0-84d7-254c50de1ee6
+Path = /6c32b349-413b-4751-a8ad-bb73e06f744a
+Reference = PS1;
+ValeurCmp = HLK-PM03;
+IdModule  = Converter_ACDC:Converter_ACDC_HiLink_HLK-PMxx;
+EndCmp
+
+BeginCmp
+TimeStamp = e7b90fe2-fc82-474f-adcc-72b4ac352978
+Path = /1aaeb17f-a91d-42f8-ad7c-0de2149eb7c0
+Reference = Q11;
+ValeurCmp = BC857;
+IdModule  = Package_TO_SOT_SMD:SOT-23;
+EndCmp
+
+BeginCmp
+TimeStamp = ea05b1df-1df8-4840-96c8-62f74a385d36
+Path = /b508d601-080c-41ee-be18-03771d2a3d13
+Reference = Q17;
+ValeurCmp = BC857;
+IdModule  = Package_TO_SOT_SMD:SOT-23;
+EndCmp
+
+BeginCmp
+TimeStamp = ea4f7bd6-6821-448f-bbec-c40ded7426db
+Path = /00000000-0000-0000-0000-00005a5d7137
+Reference = U5;
+ValeurCmp = MOC3083M;
+IdModule  = Package_DIP:DIP-6_W7.62mm_Socket_LongPads;
+EndCmp
+
+BeginCmp
+TimeStamp = ea9d09a1-0cbb-40a2-8dc5-5155e062e927
+Path = /00000000-0000-0000-0000-00005a5d6f92
+Reference = RV3;
+ValeurCmp = Varistor;
+IdModule  = Varistor:RV_Disc_D9mm_W3.3mm_P5mm;
+EndCmp
+
+BeginCmp
+TimeStamp = eb7b1fb1-901a-4241-b0cb-eb7bd63dc78f
+Path = /00000000-0000-0000-0000-00005a5d75a6
+Reference = U6;
+ValeurCmp = MOC3083M;
+IdModule  = Package_DIP:DIP-6_W7.62mm_Socket_LongPads;
+EndCmp
+
+BeginCmp
+TimeStamp = eca36837-8508-442c-8425-52e7eb948647
+Path = /00000000-0000-0000-0000-00005a5d7b2c
+Reference = R17;
+ValeurCmp = 27R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = ed25f9cd-445d-4a9f-af51-0317ad1d76af
+Path = /00000000-0000-0000-0000-00005a5d75f0
+Reference = R36;
+ValeurCmp = 1k;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = ed9bb30e-5f10-4d38-b768-dc73600c6d48
+Path = /b948c229-03c3-46d5-85eb-9ae25687b3d4
+Reference = R51;
+ValeurCmp = 680R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = ee05f8f4-7e62-4ca4-acb6-71ec4a7632db
+Path = /00000000-0000-0000-0000-00005a5d96ea
+Reference = D9;
+ValeurCmp = LED_Small;
+IdModule  = LED_THT:LED_D3.0mm_Clear;
+EndCmp
+
+BeginCmp
+TimeStamp = efef3fcc-97b2-41ab-84d8-2d8ef169d625
+Path = /00000000-0000-0000-0000-00005a5d75be
+Reference = R12;
+ValeurCmp = 27R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = f1132a5a-0b57-4659-a093-fc8fa3bf5f95
+Path = /ff83b6cc-31cb-416e-9d79-03c6847da439
+Reference = Q21;
+ValeurCmp = BC857;
+IdModule  = Package_TO_SOT_SMD:SOT-23;
+EndCmp
+
+BeginCmp
+TimeStamp = f29d7664-ef88-4da2-9ab0-637d5046eaf9
+Path = /00000000-0000-0000-0000-00005a5d96cc
+Reference = R10;
+ValeurCmp = 330R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = f3931416-2455-47ff-bdeb-d85d6cae7d3b
+Path = /00000000-0000-0000-0000-00005a5d6b17
+Reference = R3;
+ValeurCmp = 330R;
+IdModule  = Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder;
+EndCmp
+
+BeginCmp
+TimeStamp = f3983cb3-c1f9-4e35-a619-8be008d34db8
+Path = /00000000-0000-0000-0000-00005a5d6f7a
+Reference = R15;
+ValeurCmp = 27R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = f4504cb5-e5ed-4293-822f-9033a15d4a02
+Path = /3f8eddcf-cfec-4595-9cc1-00f556040129
+Reference = Q16;
+ValeurCmp = BC857;
+IdModule  = Package_TO_SOT_SMD:SOT-23;
+EndCmp
+
+BeginCmp
+TimeStamp = f50bfc0e-0145-46ab-b2fe-5a4911ee84d8
+Path = /00000000-0000-0000-0000-00005a5d7b1a
+Reference = Q6;
+ValeurCmp = BT136-600;
+IdModule  = Package_TO_SOT_THT:TO-220-3_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = fac2e20c-a9bc-4f7f-8d50-260a610b3232
+Path = /00000000-0000-0000-0000-00005a5d20a5
+Reference = R23;
+ValeurCmp = 22R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = fdc0ed08-6282-4640-8e02-02308a43fb3e
+Path = /00000000-0000-0000-0000-00005a5d6f62
+Reference = U4;
+ValeurCmp = MOC3083M;
+IdModule  = Package_DIP:DIP-6_W7.62mm_Socket_LongPads;
+EndCmp
+
+BeginCmp
+TimeStamp = fe2c82cc-bb7b-4c51-8fe1-acae35c7b348
+Path = /00000000-0000-0000-0000-00005a6187d1
+Reference = JP4;
+ValeurCmp = Jumper_2_Open;
+IdModule  = Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = fe38c4dd-ad2e-4fc6-b7f0-c4d8f565189a
+Path = /00000000-0000-0000-0000-00005a5d96d8
+Reference = R20;
+ValeurCmp = 27R;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = ff90a907-85a4-4d17-84ca-6f030ebbcfd7
+Path = /00000000-0000-0000-0000-00005a5d75d6
+Reference = RV5;
+ValeurCmp = Varistor;
+IdModule  = Varistor:RV_Disc_D9mm_W3.3mm_P5mm;
+EndCmp
+
+EndListe

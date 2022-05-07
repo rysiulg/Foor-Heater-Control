@@ -401,12 +401,12 @@
   },
   "pcbnew": {
     "last_paths": {
-      "gencad": "",
-      "idf": "",
+      "gencad": "Central Heating Control PBA.cad",
+      "idf": "Central Heating Control PBA.emn",
       "netlist": "Untitled.net",
-      "specctra_dsn": "",
-      "step": "",
-      "vrml": ""
+      "specctra_dsn": "Central Heating Control PBA.dsn",
+      "step": "Central Heating Control PBA.step",
+      "vrml": "Central Heating Control PBA.wrl"
     },
     "page_layout_descr_file": ""
   },
