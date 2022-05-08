@@ -123,7 +123,9 @@ void handleGetTemp() {
 size_t content_len;
 void printProgress(size_t prg, size_t sz) {
   Serial.printf("Progress: %d%%\n", (prg*100)/content_len);
+  #ifdef webserialenable
   WebSerial.println("Progress: "+String((prg*100)/content_len));
+  #endif
 }
 
 void handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final) {
@@ -293,265 +295,260 @@ void WebServers() {
 
 
 
-
-
-
-
-
-
-
-
-
   webserver.on("/" NEWS_lastTimeS, HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain; charset=utf-8", String(uptimedana(temp_NEWS_count*temp_NEWS_interval_reduction_time_ms+lastNEWSSet)));
   }).setAuthentication("", "");
 
-
-
   webserver.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
     String message;
-//0
-      if (request->hasParam(PARAM_roomtempset0)) { //tempCOset
-          message = request->getParam(PARAM_roomtempset0)->value();
-          message.trim();
-          message.replace(",",".");
-          float liczba = message.toFloat();
-          if (isnan(liczba) || !isValidNumber(message)) {
-            #ifdef debug
-            Serial.println(F("Liczba not a valid number, ignoring..."));
-            #endif
-            WebSerial.println(F("Liczba not a valid number, ignoring..."));
-          }
-          else {
-            if (liczba>roomtemphi) liczba=roomtemphi;
-            if (liczba<roomtemplo) liczba=roomtemplo;
-            room_temp[0].tempset = liczba;
-            receivedmqttdata=true;
-            message = String(liczba);
-            WebSerial.print(String(millis())+": "+F("WebReceived change room_temp[0].tempset Set to: "));
-            WebSerial.println(message);
-          }
+    //0
+    if (request->hasParam(PARAM_roomtempset0)) { //tempCOset
+    message = request->getParam(PARAM_roomtempset0)->value();
+    String ident = String(millis())+": Fromweb room_temp[0].tempset ";
+    if (PayloadtoValidFloatCheck(message))
+    {
+      #ifdef debug
+      Serial.print(ident);
+      #endif
+      #ifdef webserialenable
+      WebSerial.print(ident);
+      #endif
+      room_temp[0].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
+      receivedmqttdata = true;
       } else {
-        //message = "No message sent tempCOset";
-      }
+        #ifdef debug
+        Serial.println(ident + " is not a valid number, ignoring...");
+        #endif
+        #ifdef webserialenable
+        WebSerial.println(ident + " is not a valid number, ignoring...");
+        #endif
+        }
+    } else {
+          //message = "No message sent PARAM_roomtempset0";
+    }
 //1
-      if (request->hasParam(PARAM_roomtempset1)) { //tempCOset
-          message = request->getParam(PARAM_roomtempset1)->value();
-          message.trim();
-          message.replace(",",".");
-          float liczba = message.toFloat();
-          if (isnan(liczba) || !isValidNumber(message)) {
-            #ifdef debug
-            Serial.println(F("Liczba not a valid number, ignoring..."));
-            #endif
-            WebSerial.println(F("Liczba not a valid number, ignoring..."));
-          }
-          else {
-            if (liczba>roomtemphi) liczba=roomtemphi;
-            if (liczba<roomtemplo) liczba=roomtemplo;
-            room_temp[1].tempset = liczba;
-            receivedmqttdata=true;
-            message = String(liczba);
-            WebSerial.print(F("WebReceived change room_temp[1].tempset Set to: "));
-            WebSerial.println(message);
-          }
+    if (request->hasParam(PARAM_roomtempset1)) { //tempCOset
+    message = request->getParam(PARAM_roomtempset1)->value();
+    String ident = String(millis())+": Fromweb room_temp[1].tempset ";
+    if (PayloadtoValidFloatCheck(message))
+    {
+      #ifdef debug
+      Serial.print(ident);
+      #endif
+      #ifdef webserialenable
+      WebSerial.print(ident);
+      #endif
+      room_temp[1].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
+      receivedmqttdata = true;
       } else {
-        //message = "No message sent tempCOset";
-      }
+        #ifdef debug
+        Serial.println(ident + " is not a valid number, ignoring...");
+        #endif
+        #ifdef webserialenable
+        WebSerial.println(ident + " is not a valid number, ignoring...");
+        #endif
+        }
+    } else {
+          //message = "No message sent PARAM_roomtempset1";
+    }
 //2
-      if (request->hasParam(PARAM_roomtempset2)) { //tempCOset
-          message = request->getParam(PARAM_roomtempset2)->value();
-          message.trim();
-          message.replace(",",".");
-          float liczba = message.toFloat();
-          if (isnan(liczba) || !isValidNumber(message)) {
-            #ifdef debug
-            Serial.println(F("Liczba not a valid number, ignoring..."));
-            #endif
-            WebSerial.println(F("Liczba not a valid number, ignoring..."));
-          }
-          else {
-            if (liczba>roomtemphi) liczba=roomtemphi;
-            if (liczba<roomtemplo) liczba=roomtemplo;
-            room_temp[2].tempset = liczba;
-            receivedmqttdata=true;
-            message = String(liczba);
-            WebSerial.print(F("WebReceived change room_temp[2].tempset Set to: "));
-            WebSerial.println(message);
-          }
+    if (request->hasParam(PARAM_roomtempset2)) { //tempCOset
+    message = request->getParam(PARAM_roomtempset2)->value();
+    String ident = String(millis())+": Fromweb room_temp[2].tempset ";
+    if (PayloadtoValidFloatCheck(message))
+    {
+      #ifdef debug
+      Serial.print(ident);
+      #endif
+      #ifdef webserialenable
+      WebSerial.print(ident);
+      #endif
+      room_temp[2].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
+      receivedmqttdata = true;
       } else {
-        //message = "No message sent tempCOset";
-      }
+        #ifdef debug
+        Serial.println(ident + " is not a valid number, ignoring...");
+        #endif
+        #ifdef webserialenable
+        WebSerial.println(ident + " is not a valid number, ignoring...");
+        #endif
+        }
+    } else {
+          //message = "No message sent PARAM_roomtempset2";
+    }
 //3
-      if (request->hasParam(PARAM_roomtempset3)) { //tempCOset
-          message = request->getParam(PARAM_roomtempset3)->value();
-          message.trim();
-          message.replace(",",".");
-          float liczba = message.toFloat();
-          if (isnan(liczba) || !isValidNumber(message)) {
-            #ifdef debug
-            Serial.println(F("Liczba not a valid number, ignoring..."));
-            #endif
-            WebSerial.println(F("Liczba not a valid number, ignoring..."));
-          }
-          else {
-            if (liczba>roomtemphi) liczba=roomtemphi;
-            if (liczba<roomtemplo) liczba=roomtemplo;
-            room_temp[3].tempset = liczba;
-            receivedmqttdata=true;
-            message = String(liczba);
-            WebSerial.print(F("WebReceived change room_temp[3].tempset Set to: "));
-            WebSerial.println(message);
-          }
+    if (request->hasParam(PARAM_roomtempset3)) { //tempCOset
+    message = request->getParam(PARAM_roomtempset3)->value();
+    String ident = String(millis())+": Fromweb room_temp[3].tempset ";
+    if (PayloadtoValidFloatCheck(message))
+    {
+      #ifdef debug
+      Serial.print(ident);
+      #endif
+      #ifdef webserialenable
+      WebSerial.print(ident);
+      #endif
+      room_temp[3].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
+      receivedmqttdata = true;
       } else {
-        //message = "No message sent tempCOset";
-      }
+        #ifdef debug
+        Serial.println(ident + " is not a valid number, ignoring...");
+        #endif
+        #ifdef webserialenable
+        WebSerial.println(ident + " is not a valid number, ignoring...");
+        #endif
+        }
+    } else {
+          //message = "No message sent PARAM_roomtempset3";
+    }
 //4
-      if (request->hasParam(PARAM_roomtempset4)) { //tempCOset
-          message = request->getParam(PARAM_roomtempset4)->value();
-          message.trim();
-          message.replace(",",".");
-          float liczba = message.toFloat();
-          if (isnan(liczba) || !isValidNumber(message)) {
-            #ifdef debug
-            Serial.println(F("Liczba not a valid number, ignoring..."));
-            #endif
-            WebSerial.println(F("Liczba not a valid number, ignoring..."));
-          }
-          else {
-            if (liczba>roomtemphi) liczba=roomtemphi;
-            if (liczba<roomtemplo) liczba=roomtemplo;
-            room_temp[4].tempset = liczba;
-            receivedmqttdata=true;
-            message = String(liczba);
-            WebSerial.print(String(millis())+": "+F("WebReceived change room_temp[4].tempset Set to: "));
-            WebSerial.println(message);
-          }
+    if (request->hasParam(PARAM_roomtempset4)) { //tempCOset
+    message = request->getParam(PARAM_roomtempset4)->value();
+    String ident = String(millis())+": Fromweb room_temp[4].tempset ";
+    if (PayloadtoValidFloatCheck(message))
+    {
+      #ifdef debug
+      Serial.print(ident);
+      #endif
+      #ifdef webserialenable
+      WebSerial.print(ident);
+      #endif
+      room_temp[4].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
+      receivedmqttdata = true;
       } else {
-        //message = "No message sent tempCOset";
-      }
+        #ifdef debug
+        Serial.println(ident + " is not a valid number, ignoring...");
+        #endif
+        #ifdef webserialenable
+        WebSerial.println(ident + " is not a valid number, ignoring...");
+        #endif
+        }
+    } else {
+          //message = "No message sent PARAM_roomtempset4";
+    }
 //5
-      if (request->hasParam(PARAM_roomtempset5)) { //tempCOset
-          message = request->getParam(PARAM_roomtempset5)->value();
-          message.trim();
-          message.replace(",",".");
-          float liczba = message.toFloat();
-          if (isnan(liczba) || !isValidNumber(message)) {
-            #ifdef debug
-            Serial.println(F("Liczba not a valid number, ignoring..."));
-            #endif
-            WebSerial.println(F("Liczba not a valid number, ignoring..."));
-          }
-          else {
-            if (liczba>roomtemphi) liczba=roomtemphi;
-            if (liczba<roomtemplo) liczba=roomtemplo;
-            room_temp[5].tempset = liczba;
-            receivedmqttdata=true;
-            message = String(liczba);
-            WebSerial.print(F("WebReceived change room_temp[5].tempset Set to: "));
-            WebSerial.println(message);
-          }
+    if (request->hasParam(PARAM_roomtempset5)) { //tempCOset
+    message = request->getParam(PARAM_roomtempset5)->value();
+    String ident = String(millis())+": Fromweb room_temp[5].tempset ";
+    if (PayloadtoValidFloatCheck(message))
+    {
+      #ifdef debug
+      Serial.print(ident);
+      #endif
+      #ifdef webserialenable
+      WebSerial.print(ident);
+      #endif
+      room_temp[5].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
+      receivedmqttdata = true;
       } else {
-        //message = "No message sent tempCOset";
-      }
+        #ifdef debug
+        Serial.println(ident + " is not a valid number, ignoring...");
+        #endif
+        #ifdef webserialenable
+        WebSerial.println(ident + " is not a valid number, ignoring...");
+        #endif
+        }
+    } else {
+          //message = "No message sent PARAM_roomtempset5";
+    }
 //6
-      if (request->hasParam(PARAM_roomtempset6)) { //tempCOset
-          message = request->getParam(PARAM_roomtempset6)->value();
-          message.trim();
-          message.replace(",",".");
-          float liczba = message.toFloat();
-          if (isnan(liczba) || !isValidNumber(message)) {
-            #ifdef debug
-            Serial.println(F("Liczba not a valid number, ignoring..."));
-            #endif
-            WebSerial.println(F("Liczba not a valid number, ignoring..."));
-          }
-          else {
-            if (liczba>roomtemphi) liczba=roomtemphi;
-            if (liczba<roomtemplo) liczba=roomtemplo;
-            room_temp[6].tempset = liczba;
-            receivedmqttdata=true;
-            message = String(liczba);
-            WebSerial.print(F("WebReceived change room_temp[6].tempset Set to: "));
-            WebSerial.println(message);
-          }
+    if (request->hasParam(PARAM_roomtempset6)) { //tempCOset
+    message = request->getParam(PARAM_roomtempset6)->value();
+    String ident = String(millis())+": Fromweb room_temp[6].tempset ";
+    if (PayloadtoValidFloatCheck(message))
+    {
+      #ifdef debug
+      Serial.print(ident);
+      #endif
+      #ifdef webserialenable
+      WebSerial.print(ident);
+      #endif
+      room_temp[6].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
+      receivedmqttdata = true;
       } else {
-        //message = "No message sent tempCOset";
-      }
+        #ifdef debug
+        Serial.println(ident + " is not a valid number, ignoring...");
+        #endif
+        #ifdef webserialenable
+        WebSerial.println(ident + " is not a valid number, ignoring...");
+        #endif
+        }
+    } else {
+          //message = "No message sent PARAM_roomtempset6";
+    }
 //7
-      if (request->hasParam(PARAM_roomtempset7)) { //tempCOset
-          message = request->getParam(PARAM_roomtempset7)->value();
-          message.trim();
-          message.replace(",",".");
-          float liczba = message.toFloat();
-          if (isnan(liczba) || !isValidNumber(message)) {
-            #ifdef debug
-            Serial.println(F("Liczba not a valid number, ignoring..."));
-            #endif
-            WebSerial.println(F("Liczba not a valid number, ignoring..."));
-          }
-          else {
-            if (liczba>roomtemphi) liczba=roomtemphi;
-            if (liczba<roomtemplo) liczba=roomtemplo;
-            room_temp[7].tempset = liczba;
-            receivedmqttdata=true;
-            message = String(liczba);
-            WebSerial.print(F("WebReceived change room_temp[7].tempset Set to: "));
-            WebSerial.println(message);
-          }
+    if (request->hasParam(PARAM_roomtempset7)) { //tempCOset
+    message = request->getParam(PARAM_roomtempset7)->value();
+    String ident = String(millis())+": Fromweb room_temp[7].tempset ";
+    if (PayloadtoValidFloatCheck(message))
+    {
+      #ifdef debug
+      Serial.print(ident);
+      #endif
+      #ifdef webserialenable
+      WebSerial.print(ident);
+      #endif
+      room_temp[7].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
+      receivedmqttdata = true;
       } else {
-        //message = "No message sent tempCOset";
-      }
-      if (request->hasParam(PARAM_roomtempset8)) { //tempCOset
-          message = request->getParam(PARAM_roomtempset8)->value();
-          message.trim();
-          message.replace(",",".");
-          float liczba = message.toFloat();
-          if (isnan(liczba) || !isValidNumber(message)) {
-            #ifdef debug
-            Serial.println(F("Liczba not a valid number, ignoring..."));
-            #endif
-            WebSerial.println(F("Liczba not a valid number, ignoring..."));
-          }
-          else {
-            if (liczba>roomtemphi) liczba=roomtemphi;
-            if (liczba<roomtemplo) liczba=roomtemplo;
-            room_temp[8].tempset = liczba;
-            receivedmqttdata=true;
-            message = String(liczba);
-            WebSerial.print(F("WebReceived change room_temp[8].tempset Set to: "));
-            WebSerial.println(message);
-          }
+        #ifdef debug
+        Serial.println(ident + " is not a valid number, ignoring...");
+        #endif
+        #ifdef webserialenable
+        WebSerial.println(ident + " is not a valid number, ignoring...");
+        #endif
+        }
+    } else {
+          //message = "No message sent PARAM_roomtempset7";
+    }
+//8
+    if (request->hasParam(PARAM_roomtempset8)) { //tempCOset
+    message = request->getParam(PARAM_roomtempset8)->value();
+    String ident = String(millis())+": Fromweb room_temp[8].tempset ";
+    if (PayloadtoValidFloatCheck(message))
+    {
+      #ifdef debug
+      Serial.print(ident);
+      #endif
+      #ifdef webserialenable
+      WebSerial.print(ident);
+      #endif
+      room_temp[8].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
+      receivedmqttdata = true;
       } else {
-        //message = "No message sent tempCOset";
-      }
-
-
-
-
-
+        #ifdef debug
+        Serial.println(ident + " is not a valid number, ignoring...");
+        #endif
+        #ifdef webserialenable
+        WebSerial.println(ident + " is not a valid number, ignoring...");
+        #endif
+        }
+    } else {
+          //message = "No message sent PARAM_roomtempset8";
+    }
       if (request->hasParam(PARAM_MESSAGE_cutOffTempSet)) { //tempCOset
           message = request->getParam(PARAM_MESSAGE_cutOffTempSet)->value();
-          message.trim();
-          message.replace(",",".");
-          float liczba = message.toFloat();
-          if (isnan(liczba) || !isValidNumber(message)) {
+          String ident = String(millis())+": Fromweb cutOffTemp ";
+          if (PayloadtoValidFloatCheck(message))
+          {
             #ifdef debug
-            Serial.println(F("Liczba not a valid number, ignoring..."));
+            Serial.print(ident);
             #endif
-            WebSerial.println(F("Liczba not a valid number, ignoring..."));
-          }
-          else {
-            if (liczba>cutoffhi) liczba=cutoffhi;
-            if (liczba<cutofflo) liczba=cutofflo;
-            cutOffTemp = liczba;
-            receivedmqttdata=true;
-            message = String(liczba);
-            WebSerial.print(F("WebReceived change TempCutOff Set to: "));
-            WebSerial.println(message);
+            #ifdef webserialenable
+            WebSerial.print(ident);
+            #endif
+            cutOffTemp = PayloadtoValidFloat(message, true, cutofflo, cutoffhi);
+            receivedmqttdata = true;
+          } else {
+            #ifdef debug
+            Serial.println(ident + " is not a valid number, ignoring...");
+            #endif
+            #ifdef webserialenable
+            WebSerial.println(ident + " is not a valid number, ignoring...");
+            #endif
           }
       } else {
-        //message = "No message sent tempCOset";
+        //message = "No message sent PARAM_MESSAGE_cutOffTempSet";
       }
 
     AsyncWebServerResponse *response = request->beginResponse(302, "text/plain", "Update value");
@@ -640,7 +637,7 @@ String processor(const String var) {
 
   if (var=="stylesectionadd") {
     String ptr;
-    ptr="html{font-family:Arial;display:inline-block;margin:0 auto;text-align:center}\
+    ptr=F("html{font-family:Arial;display:inline-block;margin:0 auto;text-align:center}\
     h2{font-size:2.1rem}\
     p{font-size:2.2rem}\
     .units{font-size:1.1rem}\
@@ -648,7 +645,7 @@ String processor(const String var) {
     .dht-labels-temp{font-size:3.3rem;font-weight:700;vertical-align:middle;padding-bottom:8px}\
     table,td,th{border-color:green;border-collapse:collapse;border-style:outset;margin-left:auto;margin-right:auto;border:0;text-align:center;padding-left: 40px;padding-right: 50px;padding-top: 5px;padding-bottom: 10px;}\
     input{margin:.4rem}\
-    td{height:auto;width:auto}";
+    td{height:auto;width:auto}");
     ptr+="#blink{font-weight:bold;font-size:20px;font-family:sans-serif;transition: 0.5s;}";//         color: #2d38be;   font-size: 20px; font-weight: bold; color: #2d38be;
 
     return String(ptr);

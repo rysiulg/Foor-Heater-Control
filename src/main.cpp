@@ -69,14 +69,15 @@ void callback(char *topic, byte *payload, unsigned int length)
     #ifdef debug
     Serial.print(ident);
     #endif
+    #ifdef webserialenable
     WebSerial.print(ident);
+    #endif
     if (PayloadtoValidFloatCheck(payloadStr))
     {
       temp_NEWS = PayloadtoValidFloat(payloadStr,true);     //true to get output to serial and webserial
       lastNEWSSet = millis();
       temp_NEWS_count = 0;
 //      receivedmqttdata = true;    //makes every second run mqtt send and influx
-      WebSerial.print(F("NEWS updated from MQTT"));
     }
   } else
 //CO Pump Status
@@ -86,48 +87,72 @@ void callback(char *topic, byte *payload, unsigned int length)
     #ifdef debug
     Serial.print(ident);
     #endif
+    #ifdef webserialenable
     WebSerial.print(ident);
+    #endif
     receivedmqttdata = true;
     if (PayloadStatus(payloadStr, true)) CO_PumpWorking = true;
     else if (PayloadStatus(payloadStr, false)) CO_PumpWorking = false;
     else
     {
       receivedmqttdata = false;
-#ifdef debug
+      #ifdef debug
       Serial.println("Unknown: "+String(payloadStr));
-#endif
+      #endif
+      #ifdef webserialenable
       WebSerial.println("Unknown: "+String(payloadStr));
+      #endif
     }
     if (receivedmqttdata) {
       #ifdef debug
       Serial.println(CO_PumpWorking ? "Active" : "Disabled" );
       #endif
+      #ifdef webserialenable
       WebSerial.println(CO_PumpWorking ? "Active" : "Disabled" );
+      #endif
     }
   } else
 //BOILER OPENTHERM CO Status with flame
   if (topicStr == BOILER_FLAME_STATUS_TOPIC)
   {
+    #ifdef AJson
     DynamicJsonDocument root(1024);
     deserializeJson(root, payloadStr);
+    #endif
     String ident = String(millis())+": Status Boiler flame and co pump ";
+    #ifdef webserialenable
     WebSerial.print(ident);
+    #endif
     receivedmqttdata = true;
+    #ifdef AJson
     if (PayloadStatus(root[BOILER_FLAME_STATUS_ATTRIBUTE],true) && PayloadStatus(root[BOILER_COPUMP_STATUS_ATTRIBUTE],true)) CO_BoilerPumpWorking = true;
     else if (PayloadStatus(root[BOILER_FLAME_STATUS_ATTRIBUTE],false) && PayloadStatus(root[BOILER_COPUMP_STATUS_ATTRIBUTE],false)) CO_BoilerPumpWorking = false;
     else
     {
       receivedmqttdata = false;
-#ifdef debug
+      #ifdef debug
       Serial.println("Unknown: "+String(payloadStr));
-#endif
+      #endif
+      #ifdef webserialenable
       WebSerial.println("Unknown: "+String(payloadStr));
+      #endif
     }
+    #endif
+    #ifndef AJson
+    #ifdef debug
+    Serial.Println(ident+"No JSON no data");
+    #endif
+    #ifdef webserialenable
+    WebSerial.Println(ident+"No JSON no data");
+    #endif
+    #endif
     if (receivedmqttdata) {
       #ifdef debug
       Serial.println(CO_PumpWorking ? "Active Heating" : "Disabled Heating" );
       #endif
+      #ifdef webserialenable
       WebSerial.println(CO_BoilerPumpWorking ? "Active Heating" : "Disabled Heating" );
+      #endif
       }
   }
 //sensors for setpoint temperature
@@ -137,10 +162,12 @@ void callback(char *topic, byte *payload, unsigned int length)
     {
       if (PayloadtoValidFloatCheck(payloadStr))  //wrong value are displayed in function
       {
-  #ifdef debug
+        #ifdef debug
         Serial.println(String(millis())+": ROOM"+String(getIdentyfikator(x))+" "));
-  #endif
+        #endif
+        #ifdef webserialenable
         WebSerial.println(String(millis())+": ROOM"+String(getIdentyfikator(x))+" ");
+        #endif
         room_temp[x].tempset = PayloadtoValidFloat(payloadStr, true, roomtemplo, roomtemphi);
         receivedmqttdata = true;
       }
@@ -156,43 +183,50 @@ void reconnect()
   // Loop until we're reconnected
   while (!client.connected() and mqtt_offline_retrycount < mqtt_offline_retries)
   {
-#ifdef debug
+    #ifdef debug
     Serial.print(F("Attempting MQTT connection..."));
-#endif
+    #endif
+    #ifdef webserialenable
     WebSerial.print(String(millis())+": "+F("Attempting MQTT connection..."));
+    #endif
     const char *clientId = "MARM-test";
 
     if (client.connect(clientId, mqtt_user, mqtt_password))
     {
-#ifdef debug
+      #ifdef debug
       Serial.println(F("ok"));
-#endif
+      #endif
+      #ifdef webserialenable
       WebSerial.println(F("ok"));
+      #endif
       mqtt_offline_retrycount = 0;
 
       for (int x=0;x<8;x++){
         //String identyfikator=getIdentyfikator(x);
         client.subscribe((ROOM_TEMPERATURE_SETPOINT_SET_TOPIC + getIdentyfikator(x) + SET_LAST).c_str());
       }
-
       client.subscribe(NEWS_GET_TOPIC.c_str());
       client.subscribe(COPUMP_GET_TOPIC.c_str());
       client.subscribe(TEMP_CUTOFF_SET_TOPIC.c_str());
-    }
-    else
-    {
-#ifdef debug
+    } else {
+      #ifdef debug
       Serial.print(F(" failed, rc="));
-#endif
+      #endif
+      #ifdef webserialenable
       WebSerial.print(F(" failed, rc="));
-#ifdef debug
+      #endif
+      #ifdef debug
       Serial.print(client.state());
-#endif
+      #endif
+      #ifdef webserialenable
       WebSerial.print(client.state());
-#ifdef debug
+      #endif
+      #ifdef debug
       Serial.println(F(" try again in 5 seconds"));
-#endif
+      #endif
+      #ifdef webserialenable
       WebSerial.println(F(" try again in 5 seconds"));
+      #endif
       mqtt_offline_retrycount++;
       // Wait 5 seconds before retrying
       delay(5000);
@@ -213,9 +247,6 @@ void ReadTemperatures()
   uint8_t  addr[8];
   float temp1w;
   int count = sensors.getDS18Count();
-  #ifdef debug
-  Serial.println("Sensors: "+String(count));
-  #endif
   if (count==0) count = maxsensors;
   #ifdef debug
   Serial.println("Sensors new: "+String(count));
@@ -238,17 +269,20 @@ void ReadTemperatures()
       }
       if (!assignedsensor and UnassignedTempSensor.indexOf(addrstr)==-1) UnassignedTempSensor += ";"+String(addrstr)+" "+String(temp1w);
       assignedsensor=false;
-  #ifdef debug
-      Serial.println((j)+":  Collected ROM=: " + addrstr + "  Temp.: "+String(temp1w));
-  #endif
-      WebSerial.println(String(j)+":  Collected ROM=: " + addrstr + "  Temp.: "+String(temp1w));
+      #ifdef debug
+      Serial.println((String(millis())+": "+j)+":  Collected ROM=: " + addrstr + "  Temp.: "+String(temp1w));
+      #endif
+      #ifdef webserialenable
+      WebSerial.println(String(millis())+": "+String(j)+":  Collected ROM=: " + addrstr + "  Temp.: "+String(temp1w));
+      #endif
     }
 
-#ifdef debug
-Serial.println("Unassigned Sensors: "+UnassignedTempSensor);
-#endif
-WebSerial.println(String(millis())+": "+"Unassigned Sensors: "+UnassignedTempSensor);
-
+  #ifdef debug
+  Serial.println("Unassigned Sensors: "+UnassignedTempSensor);
+  #endif
+  #ifdef webserialenable
+  WebSerial.println(String(millis())+": "+"Unassigned Sensors: "+UnassignedTempSensor);
+  #endif
 }
 
 void updateInfluxDB()
@@ -283,13 +317,21 @@ void updateInfluxDB()
   InfluxSensor.addField(String(LOG_GET_TOPIC)+String(kondygnacja), LastboilerResponseError);
 
   // Print what are we exactly writing
-  WebSerial.println(F("Writing to InfluxDB: "));
+  #ifdef webserialenable
+  WebSerial.println(String(millis())+": "+("Writing to InfluxDB: "));
 //  WebSerial.println(InfluxClient.pointToLineProtocol(InfluxSensor));
+  #endif
   // Write point
   if (!InfluxClient.writePoint(InfluxSensor))
   {
-    WebSerial.print(F("InfluxDB write failed: "));
+    #ifdef debug
+    Serial.print(String(millis())+": "+("InfluxDB write failed: "));
+    Serial.println(InfluxClient.getLastErrorMessage());
+    #endif
+    #ifdef webserialenable
+    WebSerial.print(String(millis())+": "+("InfluxDB write failed: "));
     WebSerial.println(InfluxClient.getLastErrorMessage());
+    #endif
   }
 #endif
 }
@@ -398,9 +440,10 @@ void setup()
 
 
   started = millis();
-
+  #ifdef webserialenable
   WebSerial.begin(&webserver);
   WebSerial.msgCallback(recvMsg);
+  #endif
   WebServers();
 
   #ifdef ENABLE_INFLUX
@@ -411,13 +454,15 @@ void setup()
   // Add tags
   InfluxSensor.addTag("device", me_lokalizacja);
     // Check server connection
-  if (InfluxClient.validateConnection()) {
-    WebSerial.print(String(millis())+": "+"Connected to InfluxDB: ");
-    WebSerial.println(InfluxClient.getServerUrl());
-  } else {
-    WebSerial.print("InfluxDB connection failed: ");
-    WebSerial.println(InfluxClient.getLastErrorMessage());
-  }
+    #ifdef webserialenable
+    if (InfluxClient.validateConnection()) {
+      WebSerial.print(String(millis())+": "+"Connected to InfluxDB: ");
+      WebSerial.println(InfluxClient.getServerUrl());
+    } else {
+      WebSerial.print("InfluxDB connection failed: ");
+      WebSerial.println(InfluxClient.getLastErrorMessage());
+    }
+    #endif
   #endif
 
 
@@ -435,7 +480,12 @@ void loop()
     {
       lastmqtt_reconnect = millis();
       mqtt_offline_retrycount = 0;
+      #ifdef debug
+      Serial.println(String(millis())+": "+F("MQTT connection problem -now reset retry counter and try again..."));
+      #endif
+      #ifdef webserialenable
       WebSerial.println(String(millis())+": "+F("MQTT connection problem -now reset retry counter and try again..."));
+      #endif
     }
     else
     {
@@ -452,7 +502,12 @@ void loop()
   {
     if (!client.connected())
     {
+      #ifdef debug
+      Serial.println(String(millis())+": "+F("MQTT connection problem -try to connect again..."));
+      #endif
+      #ifdef webserialenable
       WebSerial.println(String(millis())+": "+F("MQTT connection problem -try to connect again..."));
+      #endif
       delay(500);
       reconnect();
     }
@@ -469,7 +524,12 @@ void loop()
 
   if (((millis() - lastUpdateTempPump) > statusUpdateInterval_ms) or lastUpdateTempPump==0 or (((millis() < statusUpdateInterval_ms) or CO_PumpWorking or CO_BoilerPumpWorking) and (int(millis()/1000)%statusUpdateShortenInterval_s==0)) )   //after start for first defauylt 600s every 60s refresh
   {
+    #ifdef debug
+    Serial.println("now: "+String(millis())+" temps+pumps "+"lastUpdate: "+String(lastUpdateTempPump)+" statusUpdateInterval_ms: "+String(statusUpdateInterval_ms));
+    #endif
+    #ifdef webserialenable
     WebSerial.println("now: "+String(millis())+" temps+pumps "+"lastUpdate: "+String(lastUpdateTempPump)+" statusUpdateInterval_ms: "+String(statusUpdateInterval_ms));
+    #endif
     lastUpdateTempPump = millis();
     ReadTemperatures();
     Pump_Activate_Control();
@@ -478,8 +538,14 @@ void loop()
 
   if (((millis() - lastUpdatemqtt) > mqttUpdateInterval_ms) or (receivedmqttdata == true) or lastUpdatemqtt==0)   //recived data ronbi co 800ms -wylacze ten sttus dla odebrania news
   {
+    #ifdef debug
+    Serial.println("now: "+String(millis())+" mqtt+influ "+"lastUpdatemqtt: "+String(lastUpdatemqtt)+" receivedmqttdata: "+String(receivedmqttdata)+" mqttUpdateInterval_ms: "+String(mqttUpdateInterval_ms));
+    Serial.println(String(lastUpdatemqtt)+": Update MQTT and InfluxDB data: ");
+    #endif
+    #ifdef webserialenable
     WebSerial.println("now: "+String(millis())+" mqtt+influ "+"lastUpdatemqtt: "+String(lastUpdatemqtt)+" receivedmqttdata: "+String(receivedmqttdata)+" mqttUpdateInterval_ms: "+String(mqttUpdateInterval_ms));
     WebSerial.println(String(lastUpdatemqtt)+": Update MQTT and InfluxDB data: ");
+    #endif
     receivedmqttdata = false;
     lastUpdatemqtt = millis();
     if (client.connected()) {
@@ -495,13 +561,23 @@ void loop()
   //#define abs(x) ((x)>0?(x):-(x))
   if ((millis() - lastNEWSSet) > temp_NEWS_interval_reduction_time_ms)
   { // at every 0,5hour lower temp NEWS when no communication why -2>1800000 is true ???
+    #ifdef debug
+    Serial.println("now: "+String(millis())+" "+"lastNEWSSet: "+String(lastNEWSSet)+" "+"temp_NEWS_interval_reduction_time_ms: "+String(temp_NEWS_interval_reduction_time_ms));
+    #endif
+    #ifdef webserialenable
     WebSerial.println("now: "+String(millis())+" "+"lastNEWSSet: "+String(lastNEWSSet)+" "+"temp_NEWS_interval_reduction_time_ms: "+String(temp_NEWS_interval_reduction_time_ms));
+    #endif
     lastNEWSSet = millis();
     temp_NEWS_count++;
     if (temp_NEWS > cutOffTemp)
     {
       temp_NEWS = temp_NEWS - temp_NEWS * 0.05;
+      #ifdef debug
+      Serial.println(String(millis())+": "+F("Lowering by 5% temp_NEWS (no communication) -after 10times execute every 30minutes lowered temp NEWS"));
+      #endif
+      #ifdef webserialenable
       WebSerial.println(String(millis())+": "+F("Lowering by 5% temp_NEWS (no communication) -after 10times execute every 30minutes lowered temp NEWS"));
+      #endif
     }
     else
     {
@@ -510,11 +586,21 @@ void loop()
     if (temp_NEWS_count > 10)
     {
       CO_PumpWorking = false; // assume that we loose mqtt connection to other system where is co pump controlled -so after 10 times lowered NEWS temp by 5% we also disable CO_Pump_Working to allow heat by this heater -default it counts 5hours no communication
+      #ifdef debug
+      Serial.println(F("Force disable CO_PumpWorking flag -after 10times execute every 30minutes lowered temp NEWS"));
+      #endif
+      #ifdef webserialenable
       WebSerial.println(F("Force disable CO_PumpWorking flag -after 10times execute every 30minutes lowered temp NEWS"));
+      #endif
       temp_NEWS_count = 0;
     }
     // dobre miejsce do try get data by http api
+    #ifdef debug
+    Serial.println(F("Korekta temperatury NEWS z braku połaczenia -pomniejszona o 5%"));
+    #endif
+    #ifdef webserialenable
     WebSerial.println(F("Korekta temperatury NEWS z braku połaczenia -pomniejszona o 5%"));
+    #endif
   }
 
   // if WiFi is down, try reconnecting
@@ -530,7 +616,12 @@ void loop()
   if ((millis() - lastSaveConfig) > save_config_every)
   {
     lastSaveConfig = millis();
+    #ifdef debug
+    Serial.println(String(millis())+": "+F("Saving config to EEPROM memory..."));
+    #endif
+    #ifdef webserialenable
     WebSerial.println(String(millis())+": "+F("Saving config to EEPROM memory..."));
+    #endif
     saveConfig(); // According OpenTherm Specification from Ihnor Melryk Master requires max 1s interval communication -przy okazji wg czasu update mqtt zrobie odczyt dallas
   }
 
@@ -559,7 +650,12 @@ void loop()
 
 
 void Pump_Activate_Control () {
+  #ifdef debug
+  Serial.println(String(millis())+": Pump loop...");
+  #endif
+  #ifdef webserialenable
   WebSerial.println(String(millis())+": Pump loop...");
+  #endif
   GetSpecificSensorData();
   for (int o = 0; o < maxsensors; o++) {
     if (room_temp[o].tempread == InitTemp) room_temp[o].switch_state = stop; //-wylacz gdy temp na wartosci inicjalnej
@@ -589,7 +685,9 @@ void Pump_Activate_Control () {
       #ifdef debug
       Serial.println(String(o)+": Switching: "+String(room_temp[o].switch_state)+" pump: "+String(pump));
       #endif
+      #ifdef webserialenable
       WebSerial.println(String(o)+": Switching: "+String(room_temp[o].switch_state)+" pump: "+String(pump));
+      #endif
       digitalWrite(lampPin, !digitalRead(lampPin));
     }
   }
@@ -606,7 +704,12 @@ void GetSpecificSensorData () {
     if (String(room_temp[o].nameSensor) == (String(kondygnacja)+sepkondname+String(tempcutoff)).substring(0,namelength)) {
       pumpOffVal = room_temp[o].tempset;
       if ((room_temp[o].tempread > min) and (room_temp[o].tempread > pumpOffVal)) pump = start; else pump = stop;  //raczej na wejsciu z 4d dol
+      #ifdef debug
+      Serial.println("------------------------------"+String(o)+": SetPUMP: "+String(room_temp[o].switch_state)+" to pump: "+String(pump));
+      #endif
+      #ifdef webserialenable
       WebSerial.println("------------------------------"+String(o)+": SetPUMP: "+String(room_temp[o].switch_state)+" to pump: "+String(pump));
+      #endif
       room_temp[o].switch_state = pump;
     }
     if (String(room_temp[o].nameSensor) == (String(kondygnacja)+sepkondname+String(tempwename)).substring(0,namelength)) {
@@ -620,7 +723,8 @@ void GetSpecificSensorData () {
 #ifdef debug
       Serial.println(String(o)+": Pump: "+String(pump)+" tempwe: "+String(tempwe)+" MIN: "+String(min)+" PUMPoffTemp: "+String(pumpOffVal));
 #endif
+#ifdef webserialenable
       WebSerial.println(String(o)+": Pump: "+String(pump)+" tempwe: "+String(tempwe)+" MIN: "+String(min)+" PUMPoffTemp: "+String(pumpOffVal));
-
+#endif
   }
 }

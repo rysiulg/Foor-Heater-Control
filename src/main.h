@@ -50,8 +50,10 @@
   #endif
 #endif
 #include <Update.h>
+#define AJson
+#ifdef AJson
 #include <ArduinoJson.h>
-
+#endif
 
 const char version[12+1] =
 {

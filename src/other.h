@@ -197,6 +197,7 @@ void recvMsg(uint8_t *data, size_t len)
   {
     d += char(data[i]);
   }
+  d.toUpperCase();
   WebSerial.println("Received: " + String(d));
   if (d == "ON")
   {
@@ -223,10 +224,13 @@ void recvMsg(uint8_t *data, size_t len)
   }
   if (d == "TOGGLEPUMP")
   {
-    WebSerial.println(("Toggle Pump State by command... to max: "+String(statusUpdateInterval_ms/1000)+"s" ));
+    WebSerial.println(String(millis())+": "+("Toggle Pump State by command... to: "+String((millis() - lastUpdateTempPump)/1000)+"s max: "+String(statusUpdateInterval_ms/1000)+"s" ));
     int o=8;    //assigned pump pin to toom_temp array
-    digitalWrite(room_temp[o].idpinout, !digitalRead(room_temp[o].idpinout));
+    WebSerial.println("Stan: "+String(room_temp[o].switch_state)+" dig: "+String(digitalRead(room_temp[o].idpinout)));
     room_temp[o].switch_state = !room_temp[o].switch_state;
+    digitalWrite(room_temp[o].idpinout, room_temp[o].switch_state);
+    WebSerial.println("Stan2: "+String(room_temp[o].switch_state)+" dig: "+String(digitalRead(room_temp[o].idpinout)));
+
   }
 
   if (d == "RESET_CONFIG")
@@ -246,8 +250,6 @@ void recvMsg(uint8_t *data, size_t len)
     WebSerial.println(F("KOMENDY: RESTART, RECONNECT, SAVE, RESET_CONFIG, TOGGLEPUMP"));
   }
 }
-
-#define Payload_
 
 
 
@@ -393,8 +395,11 @@ https://www.home-assistant.io/integrations/climate.mqtt/
 */
 
   }
-
+  #ifdef debug
+  Serial.println(String(millis())+": MQTT Data Sended...");  String(millis())+": "+
+  #endif
+  #ifdef webserialenable
+  WebSerial.println(String(millis())+": MQTT Data Sended...");
+  #endif
 
 }
-
-
