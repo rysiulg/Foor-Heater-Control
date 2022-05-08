@@ -326,6 +326,7 @@ void WebServers() {
             if (liczba>roomtemphi) liczba=roomtemphi;
             if (liczba<roomtemplo) liczba=roomtemplo;
             room_temp[0].tempset = liczba;
+            receivedmqttdata=true;
             message = String(liczba);
             WebSerial.print(String(millis())+": "+F("WebReceived change room_temp[0].tempset Set to: "));
             WebSerial.println(message);
@@ -349,6 +350,7 @@ void WebServers() {
             if (liczba>roomtemphi) liczba=roomtemphi;
             if (liczba<roomtemplo) liczba=roomtemplo;
             room_temp[1].tempset = liczba;
+            receivedmqttdata=true;
             message = String(liczba);
             WebSerial.print(F("WebReceived change room_temp[1].tempset Set to: "));
             WebSerial.println(message);
@@ -372,6 +374,7 @@ void WebServers() {
             if (liczba>roomtemphi) liczba=roomtemphi;
             if (liczba<roomtemplo) liczba=roomtemplo;
             room_temp[2].tempset = liczba;
+            receivedmqttdata=true;
             message = String(liczba);
             WebSerial.print(F("WebReceived change room_temp[2].tempset Set to: "));
             WebSerial.println(message);
@@ -395,6 +398,7 @@ void WebServers() {
             if (liczba>roomtemphi) liczba=roomtemphi;
             if (liczba<roomtemplo) liczba=roomtemplo;
             room_temp[3].tempset = liczba;
+            receivedmqttdata=true;
             message = String(liczba);
             WebSerial.print(F("WebReceived change room_temp[3].tempset Set to: "));
             WebSerial.println(message);
@@ -418,6 +422,7 @@ void WebServers() {
             if (liczba>roomtemphi) liczba=roomtemphi;
             if (liczba<roomtemplo) liczba=roomtemplo;
             room_temp[4].tempset = liczba;
+            receivedmqttdata=true;
             message = String(liczba);
             WebSerial.print(String(millis())+": "+F("WebReceived change room_temp[4].tempset Set to: "));
             WebSerial.println(message);
@@ -441,6 +446,7 @@ void WebServers() {
             if (liczba>roomtemphi) liczba=roomtemphi;
             if (liczba<roomtemplo) liczba=roomtemplo;
             room_temp[5].tempset = liczba;
+            receivedmqttdata=true;
             message = String(liczba);
             WebSerial.print(F("WebReceived change room_temp[5].tempset Set to: "));
             WebSerial.println(message);
@@ -464,6 +470,7 @@ void WebServers() {
             if (liczba>roomtemphi) liczba=roomtemphi;
             if (liczba<roomtemplo) liczba=roomtemplo;
             room_temp[6].tempset = liczba;
+            receivedmqttdata=true;
             message = String(liczba);
             WebSerial.print(F("WebReceived change room_temp[6].tempset Set to: "));
             WebSerial.println(message);
@@ -487,6 +494,7 @@ void WebServers() {
             if (liczba>roomtemphi) liczba=roomtemphi;
             if (liczba<roomtemplo) liczba=roomtemplo;
             room_temp[7].tempset = liczba;
+            receivedmqttdata=true;
             message = String(liczba);
             WebSerial.print(F("WebReceived change room_temp[7].tempset Set to: "));
             WebSerial.println(message);
@@ -509,6 +517,7 @@ void WebServers() {
             if (liczba>roomtemphi) liczba=roomtemphi;
             if (liczba<roomtemplo) liczba=roomtemplo;
             room_temp[8].tempset = liczba;
+            receivedmqttdata=true;
             message = String(liczba);
             WebSerial.print(F("WebReceived change room_temp[8].tempset Set to: "));
             WebSerial.println(message);
@@ -536,6 +545,7 @@ void WebServers() {
             if (liczba>cutoffhi) liczba=cutoffhi;
             if (liczba<cutofflo) liczba=cutofflo;
             cutOffTemp = liczba;
+            receivedmqttdata=true;
             message = String(liczba);
             WebSerial.print(F("WebReceived change TempCutOff Set to: "));
             WebSerial.println(message);

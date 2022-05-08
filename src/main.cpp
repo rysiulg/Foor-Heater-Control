@@ -78,7 +78,7 @@ void callback(char *topic, byte *payload, unsigned int length)
       temp_NEWS = op_news;
       lastNEWSSet = millis();
       temp_NEWS_count = 0;
-      receivedmqttdata = true;
+//      receivedmqttdata = true;    //makes every second run mqtt send and influx
 
       WebSerial.print(F("NEWS updated from MQTT, to: "));
       WebSerial.println(temp_NEWS);
@@ -86,9 +86,9 @@ void callback(char *topic, byte *payload, unsigned int length)
   }
 
 
-  for (int x=0;x<8;x++)
+  for (int x=0;x<maxsensors;x++)
   {
-  if (topicStr == ROOM_TEMPERATURE_SETPOINT_SET_TOPIC + getIdentyfikator(x) + SET_LAST )
+  if ((topicStr == ROOM_TEMPERATURE_SETPOINT_SET_TOPIC + getIdentyfikator(x) + SET_LAST) and (room_temp[x].idpinout>0))
     {
       payloadStr.replace(",", ".");
       float t1 = payloadStr.toFloat();
@@ -113,7 +113,6 @@ void callback(char *topic, byte *payload, unsigned int length)
     }
   }
 
-  lastUpdate = 0;
 }
 
 String getIdentyfikator(int x)
@@ -253,12 +252,12 @@ void updateInfluxDB()
   InfluxSensor.addField(String(LOG_GET_TOPIC)+String(kondygnacja), LastboilerResponseError);
 
   // Print what are we exactly writing
-  WebSerial.print("Writing to InfluxDB: ");
-  WebSerial.println(InfluxClient.pointToLineProtocol(InfluxSensor));
+  WebSerial.println(F("Writing to InfluxDB: "));
+//  WebSerial.println(InfluxClient.pointToLineProtocol(InfluxSensor));
   // Write point
   if (!InfluxClient.writePoint(InfluxSensor))
   {
-    WebSerial.print("InfluxDB write failed: ");
+    WebSerial.print(F("InfluxDB write failed: "));
     WebSerial.println(InfluxClient.getLastErrorMessage());
   }
 #endif
@@ -393,17 +392,19 @@ void setup()
 
 }
 
+  #define abs(x) ((x)>0?(x):-(x))
+
 void loop()
 {
-  unsigned long now = millis() + 100; // TO AVOID compare -2>10000 which is true ??? why?
+  //unsigned long now = millis() + 0; // TO AVOID compare -2>10000 which is true ??? why?
   // check mqtt is available and connected in other case check values in api.
   if (mqtt_offline_retrycount == mqtt_offline_retries)
   {
-    if ((now - lastmqtt_reconnect) > mqtt_offline_reconnect_after_ms)
+    if ((millis() - lastmqtt_reconnect) > mqtt_offline_reconnect_after_ms)
     {
-      lastmqtt_reconnect = now;
+      lastmqtt_reconnect = millis();
       mqtt_offline_retrycount = 0;
-      WebSerial.println(String(now)+": "+F("MQTT connection problem -now reset retry counter and try again..."));
+      WebSerial.println(String(millis())+": "+F("MQTT connection problem -now reset retry counter and try again..."));
     }
     else
     {
@@ -420,7 +421,8 @@ void loop()
   {
     if (!client.connected())
     {
-      WebSerial.println(String(now)+": "+F("MQTT connection problem -try to connect again..."));
+      WebSerial.println(String(millis())+": "+F("MQTT connection problem -try to connect again..."));
+      delay(500);
       reconnect();
     }
     else
@@ -429,30 +431,46 @@ void loop()
     }
   }
 
-  if (((now - lastUpdate) > statusUpdateInterval_ms) or now<statusUpdateInterval_ms)
+// WebSerial.println("NOW: "+String(now)+ "last upd: "+String(lastUpdate)+" statusintr: "+String(statusUpdateInterval_ms));
+// WebSerial.println("Warunek: "+String((((now - lastUpdate) > statusUpdateInterval_ms) or lastUpdate==0)));
+// WebSerial.println("Warunek: "+String((((now - lastUpdate) > statusUpdateInterval_ms) )));
+// delay(5000);
+
+  if (((millis() - lastUpdateTempPump) > statusUpdateInterval_ms) or lastUpdateTempPump==0)
   {
-    lastUpdate = now;
+    WebSerial.println("now: "+String(millis())+" temps+pumps "+"lastUpdate: "+String(lastUpdateTempPump)+" statusUpdateInterval_ms: "+String(statusUpdateInterval_ms));
+    lastUpdateTempPump = millis();
     ReadTemperatures();
     Pump_Activate_Control();
 //    opentherm_update_data(lastUpdatemqtt); // According OpenTherm Specification from Ihnor Melryk Master requires max 1s interval communication -przy okazji wg czasu update mqtt zrobie odczyt dallas
   }
-  if (((now - lastUpdatemqtt) > mqttUpdateInterval_ms) or (receivedmqttdata == true) or now<lastUpdatemqtt )
+
+  if (((millis() - lastUpdatemqtt) > mqttUpdateInterval_ms) or (receivedmqttdata == true) or lastUpdatemqtt==0)   //recived data ronbi co 800ms -wylacze ten sttus dla odebrania news
   {
-    lastUpdatemqtt = now;
-    if (client.connected()) updateMQTTData();
-    updateInfluxDB();
+    WebSerial.println("now: "+String(millis())+" mqtt+influ "+"lastUpdatemqtt: "+String(lastUpdatemqtt)+" receivedmqttdata: "+String(receivedmqttdata)+" mqttUpdateInterval_ms: "+String(mqttUpdateInterval_ms));
+    WebSerial.println(String(lastUpdatemqtt)+": Update MQTT and InfluxDB data: ");
+    receivedmqttdata = false;
+    lastUpdatemqtt = millis();
+    if (client.connected()) {
+      updateMQTTData();
+      updateInfluxDB(); //i have on same server mqtt and influx so when mqtt is down influx probably also ;(  This   if (InfluxClient.isConnected())  doesn't work forme 202205
+    }
 
   }
+
+
+
+
   //#define abs(x) ((x)>0?(x):-(x))
-  if ((now - lastNEWSSet) > temp_NEWS_interval_reduction_time_ms)
+  if ((millis() - lastNEWSSet) > temp_NEWS_interval_reduction_time_ms)
   { // at every 0,5hour lower temp NEWS when no communication why -2>1800000 is true ???
-    WebSerial.println("now: "+String(now)+" "+"lastNEWSSet: "+String(lastNEWSSet)+" "+"temp_NEWS_interval_reduction_time_ms: "+String(temp_NEWS_interval_reduction_time_ms));
-    lastNEWSSet = now;
+    WebSerial.println("now: "+String(millis())+" "+"lastNEWSSet: "+String(lastNEWSSet)+" "+"temp_NEWS_interval_reduction_time_ms: "+String(temp_NEWS_interval_reduction_time_ms));
+    lastNEWSSet = millis();
     temp_NEWS_count++;
     if (temp_NEWS > cutOffTemp)
     {
       temp_NEWS = temp_NEWS - temp_NEWS * 0.05;
-      WebSerial.println(String(now)+": "+F("Lowering by 5% temp_NEWS (no communication) -after 10times execute every 30minutes lowered temp NEWS"));
+      WebSerial.println(String(millis())+": "+F("Lowering by 5% temp_NEWS (no communication) -after 10times execute every 30minutes lowered temp NEWS"));
     }
     else
     {
@@ -469,24 +487,24 @@ void loop()
   }
 
   // if WiFi is down, try reconnecting
-  if ((WiFi.status() != WL_CONNECTED) && (now - WiFipreviousMillis >= WiFiinterval))
+  if ((WiFi.status() != WL_CONNECTED) && (millis() - WiFipreviousMillis >= WiFiinterval))
   {
-    Serial.print(now);
+    Serial.print(millis());
     Serial.println("Reconnecting to WiFi...");
     WiFi.disconnect();
     WiFi.begin(ssid, pass);
-    WiFipreviousMillis = now;
+    WiFipreviousMillis = millis();
   }
 
-  if ((now - lastSaveConfig) > save_config_every)
+  if ((millis() - lastSaveConfig) > save_config_every)
   {
-    lastSaveConfig = now;
-    WebSerial.println(String(now)+": "+F("Saving config to EEPROM memory..."));
+    lastSaveConfig = millis();
+    WebSerial.println(String(millis())+": "+F("Saving config to EEPROM memory..."));
     saveConfig(); // According OpenTherm Specification from Ihnor Melryk Master requires max 1s interval communication -przy okazji wg czasu update mqtt zrobie odczyt dallas
   }
 
   static bool failFlag = false;
-  bool fail = now - lastTempSet > extTempTimeout_ms && now - lastSpSet > spOverrideTimeout_ms + now;
+  bool fail = millis() - lastTempSet > extTempTimeout_ms && millis() - lastSpSet > spOverrideTimeout_ms + millis();
   if (fail)
   {
     if (!failFlag)
@@ -495,7 +513,7 @@ void loop()
 #ifdef debug
       Serial.printf("Neither temperature nor setpoint provided, setting heating water to %.1f\r\n", noCommandSpOverride);
 #endif
-      WebSerial.println(String(now)+": "+"Neither temperature nor setpoint provided, setting heating water to " + String(noCommandSpOverride));
+      WebSerial.println(String(millis())+": "+"Neither temperature nor setpoint provided, setting heating water to " + String(noCommandSpOverride));
     }
 
     lastSpSet = millis();

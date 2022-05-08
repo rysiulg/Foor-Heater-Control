@@ -3,9 +3,9 @@
 #include <Arduino.h>
 
 const unsigned long extTempTimeout_ms = 180 * 1000,
-                    statusUpdateInterval_ms = 7 * 60 * 1000,    //update temp
+                    statusUpdateInterval_ms = 10 * 60 * 1000,    //update pumps i dallas
                     spOverrideTimeout_ms = 180 * 1000,
-                    mqttUpdateInterval_ms = 30 * 1000,      //send data to mqtt and influxdb
+                    mqttUpdateInterval_ms = 5 * 60 * 1000,      //send data to mqtt and influxdb
                     temp_NEWS_interval_reduction_time_ms = 30 * 60 * 1000, // time to laps between temp_NEWS reduction by 5%
                     mqtt_offline_reconnect_after_ms = 15 * 60 * 1000,      // time when mqtt is offline to wait for next reconnect (15minutes)
                     save_config_every = 5 * 60 * 60 * 1000,                    // time saveing config values in eeprom (15minutes)
@@ -40,7 +40,7 @@ int temp_NEWS_count = 0,
     mqtt_offline_retries = 10; // retries to mqttconnect before timewait
 
 unsigned long ts = 0, new_ts = 0, // timestamp
-              lastUpdate = 0,
+              lastUpdateTempPump = 0,
               lastUpdatemqtt = 0,
               lastTempSet = 0,
               lastcutOffTempSet = 0,
@@ -67,10 +67,10 @@ void Assign_Name_Addr_Pinout(int i, String name, String address, int outpin) {
   if (outpin>0) {
     pinMode (outpin, OUTPUT);       //set pin as output
     digitalWrite (outpin, start_digital);    //set active high
-    room_temp[i].tempset = room_temp_default;
+    if (room_temp[i].tempset==InitTemp) room_temp[i].tempset = room_temp_default;
   }
   room_temp[i].switch_state=start;
-  if (name == String(tempcutoff).substring(0,namelength)) room_temp[i].tempset=pumpOffVal;      //assign pump to sensor
+  if (name == String(tempcutoff).substring(0,namelength) and (room_temp[i].tempset==InitTemp)) room_temp[i].tempset=pumpOffVal;      //assign pump to sensor
   #ifdef debug
   Serial.println(String(i)+": "+String(room_temp[i].nameSensor)+" "+String(address)+" "+String(outpin)+" "+String(name.length()));
   #endif
@@ -239,7 +239,7 @@ void recvMsg(uint8_t *data, size_t len)
 
 void updateMQTTData() {
   const String payloadvalue_startend_val = ""; // value added before and after value send to mqtt queue
-  int createhasensors = 9;
+  int createhasensors = maxsensors;  //jest tylko 1 temp wejscia !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   client.setBufferSize(2048);
 
   String tmpbuilder="{";
@@ -253,7 +253,7 @@ void updateMQTTData() {
       tmpbuilder += ",\"" + OT + ROOM_TEMPERATURE + identyfikator + "\": " + payloadvalue_startend_val + String(room_temp[x].tempread) + payloadvalue_startend_val;
       if (min>room_temp[x].tempread and x<8) min = room_temp[x].tempread;
     }
-    if (room_temp[x].tempread!=InitTemp) {
+    if (room_temp[x].tempread!=InitTemp and room_temp[x].idpinout>0) {
       tmpbuilder += ",\"" + OT + ROOM_TEMPERATURE_SETPOINT + identyfikator + "\": " + payloadvalue_startend_val + String(room_temp[x].tempset) + payloadvalue_startend_val;
       if (max<room_temp[x].tempset and x<8) max = room_temp[x].tempset;
     }
@@ -292,12 +292,13 @@ void updateMQTTData() {
     // 21:16:02.724 MQT: homeassistant/sensor/BB050B_OPENTHERM_OT10_hi/config = {"name":"Opentherm OPENTHERM OT10 hi","stat_t":"tele/tasmota_BB050B/SENSOR","avty_t":"tele/tasmota_BB050B/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"BB050B_OPENTHERM_OT10_hi","dev":{"ids":["BB050B"]},"unit_of_meas":" ","ic":"mdi:eye","frc_upd":true,"val_tpl":"{{value_json['OPENTHERM']['OT10']['hi']}}"} (retained)
     for (int x=0;x<createhasensors;x++){
       String identyfikator = getIdentyfikator(x);
-      client.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE + identyfikator + "/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMPERATURE + identyfikator+"\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE + identyfikator+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE + identyfikator+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer\",\"qos\":" + QOS + "," + deviceid + "}").c_str(), mqtt_Retain);
-      client.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE_SETPOINT + identyfikator+"/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMPERATURE_SETPOINT + identyfikator+"\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE_SETPOINT + identyfikator+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE_SETPOINT + identyfikator+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer-lines\",\"qos\":" + QOS + "," + deviceid + "}").c_str(), mqtt_Retain);
-      client.publish((ROOMS_HACLI_TOPIC + identyfikator + "_climate/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMP + identyfikator + "\",\"uniq_id\": \"" + OT + ROOM_TEMP + identyfikator + "\", \
+      client.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE + identyfikator + "/config").c_str(), ("{\"name\":\"" + OT + String(room_temp[x].nameSensor) + identyfikator+"\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE + identyfikator+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE + identyfikator+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer\",\"qos\":" + QOS + "," + deviceid + "}").c_str(), mqtt_Retain);
+      //client.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE + identyfikator + "/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMPERATURE + identyfikator+"\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE + identyfikator+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE + identyfikator+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer\",\"qos\":" + QOS + "," + deviceid + "}").c_str(), mqtt_Retain);
+      if (room_temp[x].idpinout>0) client.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE_SETPOINT + identyfikator+"/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMPERATURE_SETPOINT + identyfikator+"\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE_SETPOINT + identyfikator+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE_SETPOINT + identyfikator+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer-lines\",\"qos\":" + QOS + "," + deviceid + "}").c_str(), mqtt_Retain);
+      if (room_temp[x].idpinout>0) client.publish((ROOMS_HACLI_TOPIC + identyfikator + "_climate/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMP + identyfikator + "\",\"uniq_id\": \"" + OT + ROOM_TEMP + identyfikator + "\", \
 \"modes\":[\"heat\"], \
 \"mode_state_topic\": \"" + ROOMS_TOPIC_SENSOR + "\", \
-\"mode_state_template\": \"{{heat}}\", \
+\"mode_state_template\": \"{{\"heat\" if now() > today_at(\"0:00\") else \"heat\"}}\", \
 \"icon\": \"mdi:radiator\", \
 \"current_temperature_topic\":\"" + ROOMS_TOPIC_SENSOR + "\", \
 \"current_temperature_template\":\"{{value_json." + OT + ROOM_TEMPERATURE + identyfikator + "}}\", \
