@@ -770,14 +770,18 @@ String do_stopkawebsite() {
         ptr += "<i class='fas fa-fire' style='color: red'></i>"; ptr += "<span class='dht-labels'>"+String(Flame_Active_Flame_level)+"</span><B>"+ String("flame_level",0)+"<sup class=\"units\">&#37;</sup></B>";
         ptr += "<br>";
       }
+      if (CO_BoilerPumpWorking) ptr += "<font color=\"red\"><span class='dht-labels'><B>"+String(BOILER_IS_HEATING)+"<br></B></span></font>";
+      if (CO_PumpWorking) ptr += "<font color=\"blue\"><span class='dht-labels'><B>"+String(Second_Engine_Heating_PompActive)+"<br></B><br></span></font>";
+
+
       // if (status_Fault) ptr += "<span class='dht-labels'><B>!!!!!!!!!!!!!!!!! status_Fault !!!!!!!<br></B></span>";
-      // if (heatingEnabled) ptr += "<span class='dht-labels'><B>"+String(BOILER_HEAT_ON)+"<br></B></span>";
+
       // if (status_CHActive) ptr += "<font color=\"red\"><span class='dht-labels'><B>"+String(BOILER_IS_HEATING)+"<br></B></span></font>";
       // if (enableHotWater) ptr += "<span class='dht-labels'><B>"+String(DHW_HEAT_ON)+"<br></B></span>";
       // if (status_WaterActive) ptr += "<font color=\"red\"><span class='dht-labels'><B>"+String(Boiler_Active_heat_DHW)+"<br></B></span></font>";
       // if (status_Cooling) ptr += "<font color=\"orange\"><span class='dht-labels'><B>"+String(CoolingMode)+"<br></B></span></font>";
       // if (status_Diagnostic) ptr += "<font color=\"darkred\"><span class='dht-labels'><B>"+String(DiagMode)+"<br></B></span></font>";
-      // ptr += "<font color=\"blue\"><span class='dht-labels'><B>"+String(Second_Engine_Heating_PompActive_Disable_heat)+"<br></B><br></span></font>";
+
 //      if (flame_time>0) ptr+= "<font color=\"green\"><span class='dht-labels'>"+String(Flame_time)+"<B>"+uptimedana(millis()-flame_time)+"<br></B><br></span></font>";
 //      ptr += "<br>"+String(Flame_total)+"<B>"+String(flame_used_power_kwh,4)+"kWh</B>";
     return String(ptr);
@@ -860,10 +864,11 @@ bool loadConfig() {
     strcpy(mqtt_user, CONFIGURATION.mqtt_user);
     strcpy(mqtt_password, CONFIGURATION.mqtt_password);
     mqtt_port = CONFIGURATION.mqtt_port;
-    COPUMP_GET_TOPIC=String(CONFIGURATION.COPUMP_GET_TOPIC);
-    NEWS_GET_TOPIC=String(CONFIGURATION.NEWS_GET_TOPIC);
-    NEWS_GET_TOPIC=String(CONFIGURATION.NEWS_GET_TOPIC1);
-    NEWS_GET_TOPIC=String(CONFIGURATION.NEWS_GET_TOPIC2);
+    COPUMP_GET_TOPIC=(CONFIGURATION.COPUMP_GET_TOPIC);
+    NEWS_GET_TOPIC=(CONFIGURATION.NEWS_GET_TOPIC);
+    BOILER_FLAME_STATUS_TOPIC=(CONFIGURATION.BOILER_FLAME_STATUS_TOPIC);
+    BOILER_FLAME_STATUS_ATTRIBUTE=(CONFIGURATION.BOILER_FLAME_STATUS_ATTRIBUTE);
+    BOILER_COPUMP_STATUS_ATTRIBUTE=(CONFIGURATION.BOILER_COPUMP_STATUS_ATTRIBUTE);
 
     return true; // return 1 if config loaded
   }
@@ -898,9 +903,9 @@ void saveConfig() {
   CONFIGURATION.mqtt_port = mqtt_port;
   strcpy(CONFIGURATION.COPUMP_GET_TOPIC,COPUMP_GET_TOPIC.c_str());
   strcpy(CONFIGURATION.NEWS_GET_TOPIC,NEWS_GET_TOPIC.c_str());
-  strcpy(CONFIGURATION.NEWS_GET_TOPIC1,NEWS_GET_TOPIC.c_str());
-  strcpy(CONFIGURATION.NEWS_GET_TOPIC2,NEWS_GET_TOPIC.c_str());
-
+  strcpy(CONFIGURATION.BOILER_FLAME_STATUS_TOPIC,BOILER_FLAME_STATUS_TOPIC.c_str());
+  strcpy(CONFIGURATION.BOILER_FLAME_STATUS_ATTRIBUTE,BOILER_FLAME_STATUS_ATTRIBUTE.c_str());
+  strcpy(CONFIGURATION.BOILER_COPUMP_STATUS_ATTRIBUTE,BOILER_COPUMP_STATUS_ATTRIBUTE.c_str());
 
   for (unsigned int i=0; i<sizeof(configuration_type); i++)
     EEPROM.write(CONFIG_START + i, *((char*)&CONFIGURATION + i));

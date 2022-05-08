@@ -13,6 +13,7 @@
 
 //#define debug		//Serial Debug
 #define debug1
+#define webserialenable
 #define kondygnacja 2
 const String me_lokalizacja = "FLOORH"+String(kondygnacja);//+"_mqqt_MARM";
 #define ATOMIC_FS_UPDATE
@@ -60,6 +61,10 @@ const String me_lokalizacja = "FLOORH"+String(kondygnacja);//+"_mqqt_MARM";
 #endif
 #define InfluxMeasurments "MARMpl_Measurments"
 #endif
+
+#define InitTemp 85
+#define maxsensors 13            //maksymalna liczba czujnikow w tabeli
+#define namelength 15 //ilosc znakow z nazwy czunika
 
 // Your WiFi credentials.
 // Set password to "" for open networks.
@@ -115,24 +120,24 @@ const String BOILER_TEMPERATURE = BOILER + TEMPERATURE;
 // const String BOILER_MOD = BOILER+"-mode";   //tryb pracy
 const String BOILER_TEMPERATURE_RET = BOILER + TEMPERATURE + "_return";
 const String BOILER_TEMPERATURE_SETPOINT = BOILER + TEMPERATURE + "_setpoint";
-const String BOILER_CH_STATE = BOILER + "_ch_state";
+// const String BOILER_CH_STATE = BOILER + "_ch_state";
 const String BOILER_SOFTWARE_CH_STATE_MODE = BOILER + "_software_ch_state_and_mode";
-const String FLAME_STATE = "flame_state";
-const String FLAME_LEVEL = "flame_level";
+// const String FLAME_STATE = "flame_state";
+// const String FLAME_LEVEL = "flame_level";
 const String TEMP_CUTOFF = "temp_cutoff";
-const String FLAME_W = "flame_used_energy";
-const String FLAME_W_TOTAL = "flame_used_energy_total";
+// const String FLAME_W = "flame_used_energy";
+// const String FLAME_W_TOTAL = "flame_used_energy_total";
 
-const String HOT_WATER_TEMPERATURE = HOT_WATER + TEMPERATURE;
+// const String HOT_WATER_TEMPERATURE = HOT_WATER + TEMPERATURE;
 const String HOT_WATER_TEMPERATURE_SETPOINT = HOT_WATER + TEMPERATURE + "_setpoint";
-const String HOT_WATER_CH_STATE = HOT_WATER + "_dhw_state";
+// const String HOT_WATER_CH_STATE = HOT_WATER + "_dhw_state";
 const String HOT_WATER_SOFTWARE_CH_STATE = HOT_WATER + "_software_dhw_state";
 
 
-const String ROOM_OTHERS_PRESSURE = ROOM_OTHERS + "_pressure";
+// const String ROOM_OTHERS_PRESSURE = ROOM_OTHERS + "_pressure";
 
 const String BOILER_TOPIC = BASE_TOPIC + "/" + BOILER + "/attributes";
-const String HOT_WATER_TOPIC = BASE_TOPIC + "/" + HOT_WATER + "/attributes";
+// const String HOT_WATER_TOPIC = BASE_TOPIC + "/" + HOT_WATER + "/attributes";
 
 
 
@@ -143,6 +148,9 @@ const String MODE_SET_TOPIC = BASE_TOPIC + "/SET/" + BOILER_SOFTWARE_CH_STATE_MO
 const String TEMP_DHW_SET_TOPIC = BASE_TOPIC + "/SET/" + HOT_WATER_TEMPERATURE_SETPOINT + "/set";    // dhwTarget
 String COPUMP_GET_TOPIC = "COWoda_mqqt_MARM/switch/bcddc2b2c08e/pump2CO/state";                      // temperatura outside avg NEWS
 String NEWS_GET_TOPIC = "COWoda_mqqt_MARM/sensor/bcddc2b2c08e/WENS_Outside_Temp_AVG/state";          // pompa CO status
+String BOILER_FLAME_STATUS_TOPIC = "opentherm-thermostat/boiler/attributes";                              //flme status of co gaz boiler
+String BOILER_FLAME_STATUS_ATTRIBUTE = "ot_flame_state";                              //boiler flame status of co gaz boiler
+String BOILER_COPUMP_STATUS_ATTRIBUTE = "ot_boiler_ch_state";                          //boiler pump status
 
 // logs topic
 const String DIAGS = "diag";
@@ -178,7 +186,7 @@ const String SETPOINT_OVERRIDE_RESET_TOPIC = BASE_TOPIC + "/" + SETPOINT_OVERRID
 
 
 
-#define CONFIG_VERSION "V01" sensitive_sizeS
+#define CONFIG_VERSION "V02" sensitive_sizeS
 
 // Where in EEPROM?
 #define CONFIG_START 32
@@ -206,8 +214,9 @@ typedef struct
   float temp_NEWS;
   char COPUMP_GET_TOPIC[255];  //temperatura outside avg NEWS
   char NEWS_GET_TOPIC[255];   //pompa CO status
-  char NEWS_GET_TOPIC1[255];   //pompa CO status for 1st temp room sensor
-  char NEWS_GET_TOPIC2[255];   //pompa CO status for 2nd temp room sensor
+  char BOILER_FLAME_STATUS_TOPIC[255];   //pompa CO status for 1st temp room sensor
+  char BOILER_FLAME_STATUS_ATTRIBUTE[255];   //pompa CO status for 2nd temp room sensor
+  char BOILER_COPUMP_STATUS_ATTRIBUTE[255];
 } configuration_type;
 
 // with DEFAULT values!

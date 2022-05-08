@@ -1,7 +1,6 @@
 //main.h
 
-#define maxsensors 13            //maksymalna liczba czujnikow w tabeli
-#define namelength 15 //ilosc znakow z nazwy czunika
+
 //#include <Arduino.h>
 //#include "dane.h"
 #ifdef ESP32
@@ -51,6 +50,8 @@
   #endif
 #endif
 #include <Update.h>
+#include <ArduinoJson.h>
+
 
 const char version[12+1] =
 {
@@ -114,6 +115,8 @@ float tempwe;                   //temp. wejscia co
 
 
 
+
+
 String convertPayloadToStr(byte *payload, unsigned int length);
 bool isValidNumber(String str);
 void callback(char *topic, byte *payload, unsigned int length);
@@ -130,6 +133,10 @@ bool loadConfig();
 void saveConfig();
 
 void restart();
+bool PayloadStatus(String payloadStr, bool state);
+bool PayloadtoValidFloatCheck(String payloadStr);
+float PayloadtoValidFloat(String payloadStr,bool withtemps_minmax=false, float mintemp=InitTemp, float maxtemp=InitTemp);
+String getIdentyfikator(int x);
 
 void Assign_Name_Addr_Pinout(int i, String name, String addresss, int outpin);
 int convertCharToHex(char ch);

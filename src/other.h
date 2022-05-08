@@ -3,9 +3,10 @@
 #include <Arduino.h>
 
 const unsigned long extTempTimeout_ms = 180 * 1000,
-                    statusUpdateInterval_ms = 10 * 60 * 1000,    //update pumps i dallas
+                    statusUpdateInterval_ms = 45 * 60 * 1000,    //update pumps i dallas  -i check mqtt for active boiler ch pump and co pump and if active one or both change time to next value
+                    statusUpdateShortenInterval_s = 60,          //update pumps i dallas  -i check mqtt for active boiler ch pump and co pump and if active one or both change time to this value
                     spOverrideTimeout_ms = 180 * 1000,
-                    mqttUpdateInterval_ms = 5 * 60 * 1000,      //send data to mqtt and influxdb
+                    mqttUpdateInterval_ms = 1 * 60 * 1000,      //send data to mqtt and influxdb
                     temp_NEWS_interval_reduction_time_ms = 30 * 60 * 1000, // time to laps between temp_NEWS reduction by 5%
                     mqtt_offline_reconnect_after_ms = 15 * 60 * 1000,      // time when mqtt is offline to wait for next reconnect (15minutes)
                     save_config_every = 5 * 60 * 60 * 1000,                    // time saveing config values in eeprom (15minutes)
@@ -52,6 +53,7 @@ unsigned long ts = 0, new_ts = 0, // timestamp
 
 bool receivedmqttdata = false,
      CO_PumpWorking = false,
+     CO_BoilerPumpWorking = false,
      tmanual = false;
 
 const int lampPin = LED_BUILTIN;
@@ -219,6 +221,14 @@ void recvMsg(uint8_t *data, size_t len)
     WebSerial.println("Size CONFIG: " + String(sizeof(CONFIGURATION)));
     saveConfig();
   }
+  if (d == "TOGGLEPUMP")
+  {
+    WebSerial.println(("Toggle Pump State by command... to max: "+String(statusUpdateInterval_ms/1000)+"s" ));
+    int o=8;    //assigned pump pin to toom_temp array
+    digitalWrite(room_temp[o].idpinout, !digitalRead(room_temp[o].idpinout));
+    room_temp[o].switch_state = !room_temp[o].switch_state;
+  }
+
   if (d == "RESET_CONFIG")
   {
     WebSerial.println(F("RESET config to DEFAULT VALUES and restart..."));
@@ -233,8 +243,62 @@ void recvMsg(uint8_t *data, size_t len)
   }
    if (d == "HELP")
   {
-    WebSerial.println(F("KOMENDY: RESTART, RECONNECT, SAVE, RESET_CONFIG"));
+    WebSerial.println(F("KOMENDY: RESTART, RECONNECT, SAVE, RESET_CONFIG, TOGGLEPUMP"));
   }
+}
+
+#define Payload_
+
+
+
+bool PayloadStatus(String payloadStr, bool state)
+{
+  payloadStr.toUpperCase();
+  payloadStr.trim();
+  payloadStr.replace(",", ".");      //for localization correction
+  if (state and (payloadStr == "ON" or payloadStr == "TRUE" or payloadStr == "START" or payloadStr == "1"  or payloadStr == "ENABLE" or payloadStr == "HEAT")) return true;
+  else
+  if (!state and (payloadStr == "OFF" or payloadStr == "FALSE" or payloadStr == "STOP" or payloadStr == "0" or payloadStr == "DISABLE")) return true;
+  else return false;
+}
+
+
+bool PayloadtoValidFloatCheck(String payloadStr)
+{
+  if (PayloadtoValidFloat(payloadStr)==InitTemp) return false; else return true;
+}
+float PayloadtoValidFloat(String payloadStr, bool withtemps_minmax, float mintemp, float maxtemp)  //bool withtemps_minmax=false, float mintemp=InitTemp,float
+{
+  payloadStr.trim();
+  payloadStr.replace(",", ".");
+  float valuefromStr = payloadStr.toFloat();
+  if (isnan(valuefromStr) || !isValidNumber(payloadStr))
+  {
+    #ifdef debug
+    Serial.println(F("Value is not a valid number, ignoring..."));
+    #endif
+    WebSerial.println(F("Value is not a valid number, ignoring..."));
+    return InitTemp;
+  } else
+  {
+    if (!withtemps_minmax)
+    {
+      return valuefromStr;
+    } else {
+      #ifdef debug
+      Serial.println("Value is valid number: "+String(valuefromStr,2));
+      #endif
+      WebSerial.println("Value is valid number: "+String(valuefromStr,2));
+      if (valuefromStr>maxtemp and maxtemp!=InitTemp) valuefromStr = maxtemp;
+      if (valuefromStr<mintemp and mintemp!=InitTemp) valuefromStr = mintemp;
+      return valuefromStr;
+    }
+  }
+}
+
+String getIdentyfikator(int x)
+{
+  return "_"+String(x+1);
 }
 
 void updateMQTTData() {
@@ -332,3 +396,5 @@ https://www.home-assistant.io/integrations/climate.mqtt/
 
 
 }
+
+

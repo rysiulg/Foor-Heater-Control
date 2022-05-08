@@ -60,65 +60,96 @@ void callback(char *topic, byte *payload, unsigned int length)
   const String topicStr(topic);
 
   String payloadStr = convertPayloadToStr(payload, length);
-  payloadStr.trim();
 
+
+//NEWS temperature
   if (topicStr == NEWS_GET_TOPIC)
   {
-    payloadStr.replace(",", ".");
-    float op_news = payloadStr.toFloat();
-    if (isnan(op_news) || !isValidNumber(payloadStr))
+    String ident = String(millis())+": NEWS temp ";
+    #ifdef debug
+    Serial.print(ident);
+    #endif
+    WebSerial.print(ident);
+    if (PayloadtoValidFloatCheck(payloadStr))
     {
-#ifdef debug
-      Serial.println(F("NEWS is not a valid number, ignoring..."));
-#endif
-      WebSerial.println(F("NEWS is not a valid number, ignoring..."));
-    }
-    else
-    {
-      temp_NEWS = op_news;
+      temp_NEWS = PayloadtoValidFloat(payloadStr,true);     //true to get output to serial and webserial
       lastNEWSSet = millis();
       temp_NEWS_count = 0;
 //      receivedmqttdata = true;    //makes every second run mqtt send and influx
-
-      WebSerial.print(F("NEWS updated from MQTT, to: "));
-      WebSerial.println(temp_NEWS);
+      WebSerial.print(F("NEWS updated from MQTT"));
     }
+  } else
+//CO Pump Status
+  if (topicStr == COPUMP_GET_TOPIC)
+  {
+    String ident = String(millis())+": Status CO Pomp ";
+    #ifdef debug
+    Serial.print(ident);
+    #endif
+    WebSerial.print(ident);
+    receivedmqttdata = true;
+    if (PayloadStatus(payloadStr, true)) CO_PumpWorking = true;
+    else if (PayloadStatus(payloadStr, false)) CO_PumpWorking = false;
+    else
+    {
+      receivedmqttdata = false;
+#ifdef debug
+      Serial.println("Unknown: "+String(payloadStr));
+#endif
+      WebSerial.println("Unknown: "+String(payloadStr));
+    }
+    if (receivedmqttdata) {
+      #ifdef debug
+      Serial.println(CO_PumpWorking ? "Active" : "Disabled" );
+      #endif
+      WebSerial.println(CO_PumpWorking ? "Active" : "Disabled" );
+    }
+  } else
+//BOILER OPENTHERM CO Status with flame
+  if (topicStr == BOILER_FLAME_STATUS_TOPIC)
+  {
+    DynamicJsonDocument root(1024);
+    deserializeJson(root, payloadStr);
+    String ident = String(millis())+": Status Boiler flame and co pump ";
+    WebSerial.print(ident);
+    receivedmqttdata = true;
+    if (PayloadStatus(root[BOILER_FLAME_STATUS_ATTRIBUTE],true) && PayloadStatus(root[BOILER_COPUMP_STATUS_ATTRIBUTE],true)) CO_BoilerPumpWorking = true;
+    else if (PayloadStatus(root[BOILER_FLAME_STATUS_ATTRIBUTE],false) && PayloadStatus(root[BOILER_COPUMP_STATUS_ATTRIBUTE],false)) CO_BoilerPumpWorking = false;
+    else
+    {
+      receivedmqttdata = false;
+#ifdef debug
+      Serial.println("Unknown: "+String(payloadStr));
+#endif
+      WebSerial.println("Unknown: "+String(payloadStr));
+    }
+    if (receivedmqttdata) {
+      #ifdef debug
+      Serial.println(CO_PumpWorking ? "Active Heating" : "Disabled Heating" );
+      #endif
+      WebSerial.println(CO_BoilerPumpWorking ? "Active Heating" : "Disabled Heating" );
+      }
   }
-
-
+//sensors for setpoint temperature
   for (int x=0;x<maxsensors;x++)
   {
   if ((topicStr == ROOM_TEMPERATURE_SETPOINT_SET_TOPIC + getIdentyfikator(x) + SET_LAST) and (room_temp[x].idpinout>0))
     {
-      payloadStr.replace(",", ".");
-      float t1 = payloadStr.toFloat();
-      if (isnan(t1) || !isValidNumber(payloadStr))
+      if (PayloadtoValidFloatCheck(payloadStr))  //wrong value are displayed in function
       {
   #ifdef debug
-        Serial.println(F("Current temp set is not a valid number, ignoring..."));
+        Serial.println(String(millis())+": ROOM"+String(getIdentyfikator(x))+" "));
   #endif
-        WebSerial.println(F("Current temp set is not a valid number, ignoring..."));
-      }
-      else
-      {
-        if (t1 > roomtemphi)
-          t1 = roomtemphi;
-        if (t1 < roomtemplo)
-          t1 = roomtemplo;
-        room_temp[x].tempset = t1;
-        // t = t1;
+        WebSerial.println(String(millis())+": ROOM"+String(getIdentyfikator(x))+" ");
+        room_temp[x].tempset = PayloadtoValidFloat(payloadStr, true, roomtemplo, roomtemphi);
         receivedmqttdata = true;
-        WebSerial.println("Room Temp set "+String(getIdentyfikator(x))+": " + payloadStr);
       }
     }
   }
 
 }
 
-String getIdentyfikator(int x)
-{
-  return "_"+String(x+1);
-}
+
 
 void reconnect()
 {
@@ -140,8 +171,8 @@ void reconnect()
       mqtt_offline_retrycount = 0;
 
       for (int x=0;x<8;x++){
-        String identyfikator=getIdentyfikator(x);
-        client.subscribe((ROOM_TEMPERATURE_SETPOINT_SET_TOPIC + identyfikator + SET_LAST).c_str());
+        //String identyfikator=getIdentyfikator(x);
+        client.subscribe((ROOM_TEMPERATURE_SETPOINT_SET_TOPIC + getIdentyfikator(x) + SET_LAST).c_str());
       }
 
       client.subscribe(NEWS_GET_TOPIC.c_str());
@@ -436,7 +467,7 @@ void loop()
 // WebSerial.println("Warunek: "+String((((now - lastUpdate) > statusUpdateInterval_ms) )));
 // delay(5000);
 
-  if (((millis() - lastUpdateTempPump) > statusUpdateInterval_ms) or lastUpdateTempPump==0 or ((millis() < statusUpdateInterval_ms) and (int(millis()/1000)%30==0)) )   //after start for first defauylt 600s every 30s refresh
+  if (((millis() - lastUpdateTempPump) > statusUpdateInterval_ms) or lastUpdateTempPump==0 or (((millis() < statusUpdateInterval_ms) or CO_PumpWorking or CO_BoilerPumpWorking) and (int(millis()/1000)%statusUpdateShortenInterval_s==0)) )   //after start for first defauylt 600s every 60s refresh
   {
     WebSerial.println("now: "+String(millis())+" temps+pumps "+"lastUpdate: "+String(lastUpdateTempPump)+" statusUpdateInterval_ms: "+String(statusUpdateInterval_ms));
     lastUpdateTempPump = millis();
