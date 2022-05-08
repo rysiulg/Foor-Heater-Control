@@ -62,7 +62,7 @@ const String me_lokalizacja = "FLOORH"+String(kondygnacja);//+"_mqqt_MARM";
 #define InfluxMeasurments "MARMpl_Measurments"
 #endif
 
-#define InitTemp 85
+#define InitTemp -127.00
 #define maxsensors 13            //maksymalna liczba czujnikow w tabeli
 #define namelength 15 //ilosc znakow z nazwy czunika
 

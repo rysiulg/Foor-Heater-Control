@@ -687,14 +687,15 @@ String processor(const String var) {
       ptr+="<td>";
       ptr+=tempicon+"<span class=\"dht-labels\">"+String(room_temp[x].nameSensor)+" id"+getIdentyfikator(x)+"</span>";
       ptr+="<br><B>";
-      if ((room_temp[x].tempread<room_temp[x].tempset and x<8) or (room_temp[x].tempread>room_temp[x].tempset and x>=8)) ptr += "<font color=\"Red\">";
+      if (room_temp[x].tempread<room_temp[x].tempset and x<8)  ptr += "<font color=\"Red\">";
+      if (room_temp[x].tempread>room_temp[x].tempset and x>=8) ptr += "<font color=\"Blue\">";
       if (room_temp[x].switch_state) ptr += "<p id=\"blink\">"; else ptr+="<p>";
       ptr+="<span class=\"dht-labels-temp\" id=\""+String(roomtempS)+getIdentyfikator(x)+"\">"+String(room_temp[x].tempread==InitTemp ? "--.-" : String(room_temp[x].tempread,1))+"</span><sup class=\"units\">&deg;C</sup></B>";
       if (room_temp[x].switch_state) ptr += "</p>"; else ptr += "</p>"; //end blink
       if ((room_temp[x].tempread<room_temp[x].tempset and x<8) or (room_temp[x].tempread>room_temp[x].tempset and x>=8)) ptr += "</font>";
       ptr+="<br>";//</td><td>";
       //ptr+=tempicon+"<span class=\"dht-labels\">"+String(room4tempset)+"</span>";
-      if (room_temp[x].idpinout!=0 and room_temp[x].tempset>0 and room_temp[x].tempread!=InitTemp)
+      if (room_temp[x].idpinout!=0 and room_temp[x].tempset!=0 and room_temp[x].tempread!=InitTemp)
       {
         ptr+="<br>";
         ptr+="<font size=\"4\" color=\"blue\"><input type=\"number\" id=\"T"+String(roomtempSetS)+getIdentyfikator(x)+"\" min=\""+String(roomtemplo,1)+"\" max=\""+String(roomtemphi,1)+"\" step=\""+String(tempstep,1)+"\" value=\""+String(room_temp[x].tempset,1)+"\" style=\"width:auto\" onchange=\"uTI(this.value, '"+String(roomtempSetS)+getIdentyfikator(x)+"');\"><sup class=\"units\">&deg;C</sup></B><input id=\""+String(roomtempSetS)+getIdentyfikator(x)+"\" type=\"range\" min=\""+String(roomtemplo,1)+"\" max=\""+String(roomtemphi,1)+"\" step=\""+String(tempstep,1)+"\" name=\""+String(roomtempset)+getIdentyfikator(x)+"\" value=\""+String(room_temp[x].tempset,1)+"\" style=\"width:50px\" onchange=\"uTI(this.value, 'T"+String(roomtempSetS)+getIdentyfikator(x)+"');\">";

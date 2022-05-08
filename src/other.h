@@ -69,7 +69,7 @@ void Assign_Name_Addr_Pinout(int i, String name, String address, int outpin) {
   if (outpin>0) {
     pinMode (outpin, OUTPUT);       //set pin as output
     digitalWrite (outpin, start_digital);    //set active high
-    if (room_temp[i].tempset==InitTemp) room_temp[i].tempset = room_temp_default;
+    if (room_temp[i].tempset==InitTemp or room_temp[i].tempset==0) room_temp[i].tempset = room_temp_default;
   }
   room_temp[i].switch_state=start;
   if (name == String(tempcutoff).substring(0,namelength) and (room_temp[i].tempset==InitTemp)) room_temp[i].tempset=pumpOffVal;      //assign pump to sensor
@@ -224,7 +224,7 @@ void recvMsg(uint8_t *data, size_t len)
   }
   if (d == "TOGGLEPUMP")
   {
-    WebSerial.println(String(millis())+": "+("Toggle Pump State by command... to: "+String((millis() - lastUpdateTempPump)/1000)+"s max: "+String(statusUpdateInterval_ms/1000)+"s" ));
+    WebSerial.println(String(millis())+": "+("Toggle Pump State by command... to: "+String((statusUpdateInterval_ms - (millis() - lastUpdateTempPump))/1000)+"s max: "+String(statusUpdateInterval_ms/1000)+"s" ));
     int o=8;    //assigned pump pin to toom_temp array
     WebSerial.println("Stan: "+String(room_temp[o].switch_state)+" dig: "+String(digitalRead(room_temp[o].idpinout)));
     room_temp[o].switch_state = !room_temp[o].switch_state;

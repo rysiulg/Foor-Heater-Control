@@ -97,8 +97,7 @@ const String zawor1name = dzawor1name,
 
 const String sepkondname = ":"; //separator between kondygnacja number and sensor name
 #define pumpofftemp 24.3  //24.3 temperatura odlaczenia papy z czujnika 1W na dole zaworu 4d
-#define InitTemp 85             //temperatura inicjalna gdy brak odczuty
-#define DS18B20nodata -127.00
+#define DS18B20nodata InitTemp
 
 #define part_room  "room"
 #define part_room_after "tempS"
