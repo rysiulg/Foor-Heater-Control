@@ -436,7 +436,7 @@ void loop()
 // WebSerial.println("Warunek: "+String((((now - lastUpdate) > statusUpdateInterval_ms) )));
 // delay(5000);
 
-  if (((millis() - lastUpdateTempPump) > statusUpdateInterval_ms) or lastUpdateTempPump==0)
+  if (((millis() - lastUpdateTempPump) > statusUpdateInterval_ms) or lastUpdateTempPump==0 or ((millis() < statusUpdateInterval_ms) and (int(millis()/1000)%30==0)) )   //after start for first defauylt 600s every 30s refresh
   {
     WebSerial.println("now: "+String(millis())+" temps+pumps "+"lastUpdate: "+String(lastUpdateTempPump)+" statusUpdateInterval_ms: "+String(statusUpdateInterval_ms));
     lastUpdateTempPump = millis();
