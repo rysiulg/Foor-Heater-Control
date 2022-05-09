@@ -201,9 +201,9 @@ void reconnect()
       #endif
       mqtt_offline_retrycount = 0;
 
-      for (int x=0;x<8;x++){
+      for (int x=0;x<maxsensors;x++){
         //String identyfikator=getIdentyfikator(x);
-        client.subscribe((ROOM_TEMPERATURE_SETPOINT_SET_TOPIC + getIdentyfikator(x) + SET_LAST).c_str());
+        if (room_temp[x].idpinout!=0) client.subscribe((ROOM_TEMPERATURE_SETPOINT_SET_TOPIC + getIdentyfikator(x) + SET_LAST).c_str());
       }
       client.subscribe(NEWS_GET_TOPIC.c_str());
       client.subscribe(COPUMP_GET_TOPIC.c_str());
