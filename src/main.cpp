@@ -115,18 +115,13 @@ void callback(char *topic, byte *payload, unsigned int length)
 //BOILER OPENTHERM CO Status with flame
   if (topicStr == BOILER_FLAME_STATUS_TOPIC)
   {
-    #ifdef AJson
-    DynamicJsonDocument root(1024);
-    deserializeJson(root, payloadStr);
-    #endif
     String ident = String(millis())+": Status Boiler flame and co pump ";
     #ifdef webserialenable
     WebSerial.print(ident);
     #endif
     receivedmqttdata = true;
-    #ifdef AJson
-    if (PayloadStatus(root[BOILER_FLAME_STATUS_ATTRIBUTE],true) && PayloadStatus(root[BOILER_COPUMP_STATUS_ATTRIBUTE],true)) CO_BoilerPumpWorking = true;
-    else if (PayloadStatus(root[BOILER_FLAME_STATUS_ATTRIBUTE],false) && PayloadStatus(root[BOILER_COPUMP_STATUS_ATTRIBUTE],false)) CO_BoilerPumpWorking = false;
+    if (PayloadStatus(getJsonVal(payloadStr,BOILER_FLAME_STATUS_ATTRIBUTE),true) && PayloadStatus(getJsonVal(payloadStr,BOILER_COPUMP_STATUS_ATTRIBUTE),true)) CO_BoilerPumpWorking = true;
+    else if (PayloadStatus(getJsonVal(payloadStr,BOILER_FLAME_STATUS_ATTRIBUTE),false) && PayloadStatus(getJsonVal(payloadStr,BOILER_COPUMP_STATUS_ATTRIBUTE),false)) CO_BoilerPumpWorking = false;
     else
     {
       receivedmqttdata = false;
@@ -137,15 +132,6 @@ void callback(char *topic, byte *payload, unsigned int length)
       WebSerial.println("Unknown: "+String(payloadStr));
       #endif
     }
-    #endif
-    #ifndef AJson
-    #ifdef debug
-    Serial.Println(ident+"No JSON no data");
-    #endif
-    #ifdef webserialenable
-    WebSerial.Println(ident+"No JSON no data");
-    #endif
-    #endif
     if (receivedmqttdata) {
       #ifdef debug
       Serial.println(CO_PumpWorking ? "Active Heating" : "Disabled Heating" );
@@ -154,6 +140,10 @@ void callback(char *topic, byte *payload, unsigned int length)
       WebSerial.println(CO_BoilerPumpWorking ? "Active Heating" : "Disabled Heating" );
       #endif
       }
+  } else
+  //TEMP_CUTOFF_SET_TOPIC Status with flame
+  if (topicStr == TEMP_CUTOFF_SET_TOPIC)
+  {
   }
 //sensors for setpoint temperature
   for (int x=0;x<maxsensors;x++)
@@ -207,7 +197,10 @@ void reconnect()
       }
       client.subscribe(NEWS_GET_TOPIC.c_str());
       client.subscribe(COPUMP_GET_TOPIC.c_str());
-      client.subscribe(TEMP_CUTOFF_SET_TOPIC.c_str());
+      client.subscribe(BOILER_FLAME_STATUS_TOPIC.c_str());
+
+      client.subscribe(TEMP_CUTOFF_SET_TOPIC.c_str());  //tego nie ma w obsludze
+
     } else {
       #ifdef debug
       Serial.print(F(" failed, rc="));
@@ -528,7 +521,7 @@ void loop()
     Serial.println("now: "+String(millis())+" temps+pumps "+"lastUpdate: "+String(lastUpdateTempPump)+" statusUpdateInterval_ms: "+String(statusUpdateInterval_ms));
     #endif
     #ifdef webserialenable
-    WebSerial.println("now: "+String(millis())+" temps+pumps "+"lastUpdate: "+String(lastUpdateTempPump)+" statusUpdateInterval_ms: "+String(statusUpdateInterval_ms));
+    WebSerial.println(String(millis())+": temps+pumps "+"lastUpdate: "+String(lastUpdateTempPump)+" statusUpdateInterval_ms: "+String(statusUpdateInterval_ms));
     #endif
     lastUpdateTempPump = millis();
     ReadTemperatures();
@@ -539,11 +532,11 @@ void loop()
   if (((millis() - lastUpdatemqtt) > mqttUpdateInterval_ms) or (receivedmqttdata == true) or lastUpdatemqtt==0)   //recived data ronbi co 800ms -wylacze ten sttus dla odebrania news
   {
     #ifdef debug
-    Serial.println("now: "+String(millis())+" mqtt+influ "+"lastUpdatemqtt: "+String(lastUpdatemqtt)+" receivedmqttdata: "+String(receivedmqttdata)+" mqttUpdateInterval_ms: "+String(mqttUpdateInterval_ms));
+    Serial.println(String(millis())+" mqtt+influ "+"lastUpdatemqtt: "+String(lastUpdatemqtt)+" receivedmqttdata: "+String(receivedmqttdata)+" mqttUpdateInterval_ms: "+String(mqttUpdateInterval_ms));
     Serial.println(String(lastUpdatemqtt)+": Update MQTT and InfluxDB data: ");
     #endif
     #ifdef webserialenable
-    WebSerial.println("now: "+String(millis())+" mqtt+influ "+"lastUpdatemqtt: "+String(lastUpdatemqtt)+" receivedmqttdata: "+String(receivedmqttdata)+" mqttUpdateInterval_ms: "+String(mqttUpdateInterval_ms));
+    WebSerial.println(String(millis())+" mqtt+influ "+"lastUpdatemqtt: "+String(lastUpdatemqtt)+" receivedmqttdata: "+String(receivedmqttdata)+" mqttUpdateInterval_ms: "+String(mqttUpdateInterval_ms));
     WebSerial.println(String(lastUpdatemqtt)+": Update MQTT and InfluxDB data: ");
     #endif
     receivedmqttdata = false;

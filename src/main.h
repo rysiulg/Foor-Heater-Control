@@ -50,10 +50,6 @@
   #endif
 #endif
 #include <Update.h>
-#define AJson
-#ifdef AJson
-#include <ArduinoJson.h>
-#endif
 
 const char version[12+1] =
 {
@@ -147,3 +143,6 @@ boolean array_cmp_8( uint8_t *a, uint8_t *b);
 int convertCharToHex(char ch);
 void recvMsg(uint8_t *data, size_t len);
 void updateMQTTData();
+
+//#define debugweb   //to debug getJsonVal but it clips if too much data ;(
+String getJsonVal(String json, String tofind);

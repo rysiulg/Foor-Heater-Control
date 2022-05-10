@@ -403,3 +403,47 @@ https://www.home-assistant.io/integrations/climate.mqtt/
   #endif
 
 }
+String getJsonVal(String json, String tofind)
+{ //function to get value from json payload
+  json.trim();
+  tofind.trim();
+  #ifdef debugweb
+  WebSerial.println("json0: "+json);
+  #endif
+  if (!json.isEmpty() and !tofind.isEmpty() and json.startsWith("{") and json.endsWith("}"))  //check is starts and ends as json data and not null
+  {
+    json=json.substring(1,json.length()-1);                             //cut start and end brackets json
+    #ifdef debugweb
+    WebSerial.println("json1: "+json);
+    #endif
+    int tee=0; //for safety ;)
+    while (json.indexOf(",")>0)
+    {         //parse all nodes
+      int pos = json.indexOf(",");                //position to end of node:value
+      String part = json.substring(0,pos);        //extract parameter node:value
+      part.replace("\"","");                      //clean from text indent
+      part.replace("'","");
+      json=json.substring(pos+1);                      //cut input for extracted node:value
+      String node=part.substring(0,part.indexOf(":"));    //get node name
+      node.trim();
+      String nvalue=part.substring(part.indexOf(":")+1); //get node value
+      nvalue.trim();
+      #ifdef debugweb
+      WebSerial.println("jsonx: "+json);
+      WebSerial.println("tee: "+String(tee)+" tofind: "+tofind+" part: "+part+" node: "+node +" nvalue: "+nvalue);
+      #endif
+      if (tofind==node)
+      {
+        return nvalue;
+        break;
+      }
+      tee++;
+      if (tee>100) break;  //safety bufor
+    }
+    WebSerial.println(String(millis())+": Json "+json+"  Not contain searched value of "+tofind);
+  } else
+  {
+    WebSerial.println(String(millis())+": Inproper Json format or null: "+json+" to find: "+tofind);
+  }
+  return "";
+}
