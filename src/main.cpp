@@ -309,6 +309,7 @@ void updateInfluxDB()
   InfluxSensor.clearFields();
   // Report RSSI of currently connected network
   InfluxSensor.addField("rssi"+String(kondygnacja), (WiFi.RSSI()));
+  InfluxSensor.addField("HallSensorFH"+kondygnacja, (hallRead()));
   InfluxSensor.addField("CRT"+String(kondygnacja),  (runNumber));
   float min = room_temp[0].tempread, max = room_temp[0].tempset;
   for (int x=0;x<maxsensors;x++)
@@ -385,7 +386,7 @@ void setup()
   }
   //get Configuration floor 1 or 2 -if set is 2
 
-  if (digitalRead(choosepin)==0) {
+  if (digitalRead(choosepin)==1) {
     zawor1addr  = String(F(dzawor1addr2));
     zawor2addr  = String(F(dzawor2addr2));
     zawor3addr  = String(F( dzawor3addr2));

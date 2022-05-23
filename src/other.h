@@ -333,6 +333,7 @@ void updateMQTTData() {
 
   String tmpbuilder="{";
   tmpbuilder += "\"rssi\":"+ String(WiFi.RSSI());
+  tmpbuilder += "\"HallSensor"+kondygnacja+"\":"+String(hallRead());
   tmpbuilder += ",\"CRT\":"+ String(runNumber);
   float min = room_temp[0].tempread, max = room_temp[0].tempset;
   for (int x=0;x<createhasensors;x++)

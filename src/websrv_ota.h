@@ -595,6 +595,7 @@ String processor(const String var) {
     a += WiFi.RSSI();
     a += "dBm</b> CRT:";
     a += String(runNumber);
+    a += ", Hall: "+String(hallRead()+"Gauss");
     a += "<br>";
     a += LastboilerResponseError;
     a += " Unassigned: "+UnassignedTempSensor;

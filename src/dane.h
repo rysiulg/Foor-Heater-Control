@@ -1,5 +1,5 @@
 
-#define choosepin 34          //pin for choose if low than kond=1 else kond=2
+#define choosepin 4 //15 must be low during boot 34 have no internal pullup -only input         //pin for choose if low than kond=1 else kond=2
 
 //#if kondygnacja == 1
 #define dzawor1addr1   "281234760400008f"  //+0-1-mama -o+13 -odczyty z dawnej powrotu podlogi teraz 1w
@@ -38,7 +38,7 @@ const int ROOM_TEMP_SENSOR_PIN = 15; // 0; //for Arduino, 14 for ESP8266 (D5), 1
 
 #define zawor1 13
 #define zawor2 32 //35 34x
-#define zawor3 12
+#define zawor3 12                       //
 #define zawor4 33
 #define zawor5 14
 #define zawor6 25
