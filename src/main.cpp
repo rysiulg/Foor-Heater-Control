@@ -24,9 +24,15 @@ PubSubClient client(espClient);
 InfluxDBClient InfluxClient(INFLUXDB_URL, INFLUXDB_DB_NAME);
 Point InfluxSensor(InfluxMeasurments);
 #endif
+#ifdef enableDHT
+DHT dht(DHTPIN, DHTTYPE);
+#endif
+
 
 #include "other.h"
+
 #include "websrv_ota.h"
+
 
 
 
@@ -69,7 +75,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     #ifdef debug
     Serial.print(ident);
     #endif
-    #ifdef webserialenable
+    #ifdef enableWebSerial
     WebSerial.print(ident);
     #endif
     if (PayloadtoValidFloatCheck(payloadStr))
@@ -87,7 +93,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     #ifdef debug
     Serial.print(ident);
     #endif
-    #ifdef webserialenable
+    #ifdef enableWebSerial
     WebSerial.print(ident);
     #endif
     receivedmqttdata = true;
@@ -99,7 +105,7 @@ void callback(char *topic, byte *payload, unsigned int length)
       #ifdef debug
       Serial.println("Unknown: "+String(payloadStr));
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.println("Unknown: "+String(payloadStr));
       #endif
     }
@@ -107,7 +113,7 @@ void callback(char *topic, byte *payload, unsigned int length)
       #ifdef debug
       Serial.println(CO_PumpWorking ? "Active" : "Disabled" );
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.println(CO_PumpWorking ? "Active" : "Disabled" );
       #endif
     }
@@ -116,7 +122,7 @@ void callback(char *topic, byte *payload, unsigned int length)
   if (topicStr == BOILER_FLAME_STATUS_TOPIC)
   {
     String ident = String(millis())+": Status Boiler flame and co pump ";
-    #ifdef webserialenable
+    #ifdef enableWebSerial
     WebSerial.print(ident);
     #endif
     receivedmqttdata = true;
@@ -128,7 +134,7 @@ void callback(char *topic, byte *payload, unsigned int length)
       #ifdef debug
       Serial.println("Unknown: "+String(payloadStr));
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.println("Unknown: "+String(payloadStr));
       #endif
     }
@@ -136,7 +142,7 @@ void callback(char *topic, byte *payload, unsigned int length)
       #ifdef debug
       Serial.println(CO_PumpWorking ? "Active Heating" : "Disabled Heating" );
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.println(CO_BoilerPumpWorking ? "Active Heating" : "Disabled Heating" );
       #endif
       }
@@ -155,7 +161,7 @@ void callback(char *topic, byte *payload, unsigned int length)
         #ifdef debug
         Serial.println(String(millis())+": ROOM"+String(getIdentyfikator(x))+" "));
         #endif
-        #ifdef webserialenable
+        #ifdef enableWebSerial
         WebSerial.println(String(millis())+": ROOM"+String(getIdentyfikator(x))+" ");
         #endif
         room_temp[x].tempset = PayloadtoValidFloat(payloadStr, true, roomtemplo, roomtemphi);
@@ -176,7 +182,7 @@ void reconnect()
     #ifdef debug
     Serial.print(F("Attempting MQTT connection..."));
     #endif
-    #ifdef webserialenable
+    #ifdef enableWebSerial
     WebSerial.print(String(millis())+": "+F("Attempting MQTT connection..."));
     #endif
     const char *clientId = "MARM-test";
@@ -186,7 +192,7 @@ void reconnect()
       #ifdef debug
       Serial.println(F("ok"));
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.println(F("ok"));
       #endif
       mqtt_offline_retrycount = 0;
@@ -205,19 +211,19 @@ void reconnect()
       #ifdef debug
       Serial.print(F(" failed, rc="));
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.print(F(" failed, rc="));
       #endif
       #ifdef debug
       Serial.print(client.state());
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.print(client.state());
       #endif
       #ifdef debug
       Serial.println(F(" try again in 5 seconds"));
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.println(F(" try again in 5 seconds"));
       #endif
       mqtt_offline_retrycount++;
@@ -236,7 +242,9 @@ void ReadTemperatures()
   #ifdef debug
   Serial.println(F("...Reading 1wire sensors..."));
   #endif
+  sensors.setWaitForConversion(true); //
   sensors.requestTemperatures();        //Send the command to get temperatures
+  sensors.setWaitForConversion(false); // switch to async mode
   uint8_t  addr[8];
   float temp1w;
   int count = sensors.getDS18Count();
@@ -265,7 +273,7 @@ void ReadTemperatures()
       #ifdef debug
       Serial.println((String(millis())+": "+j)+":  Collected ROM=: " + addrstr + "  Temp.: "+String(temp1w));
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.println(String(millis())+": "+String(j)+":  Collected ROM=: " + addrstr + "  Temp.: "+String(temp1w));
       #endif
     }
@@ -273,9 +281,26 @@ void ReadTemperatures()
   #ifdef debug
   Serial.println("Unassigned Sensors: "+UnassignedTempSensor);
   #endif
-  #ifdef webserialenable
+  #ifdef enableWebSerial
   WebSerial.println(String(millis())+": "+"Unassigned Sensors: "+UnassignedTempSensor);
   #endif
+
+  #ifdef enableDHT
+  float t = dht.readTemperature();
+  if (isnan(t)) t=InitTemp;
+  float h = dht.readHumidity();
+  if (isnan(h)) h=0;
+  if (isnan(h) or isnan(t)) {
+    #ifdef debug
+    Serial.println("Failed to read from DHT sensor!");
+    #endif
+    #ifdef enableWebSerial
+      WebSerial.println("Failed to read from DHT sensor!");
+    #endif
+    }
+  #endif
+  humiditycor = h;
+  tempcor = t; //to check ds18b20 also ;)
 }
 
 void updateInfluxDB()
@@ -310,7 +335,7 @@ void updateInfluxDB()
   InfluxSensor.addField(String(LOG_GET_TOPIC)+String(kondygnacja), LastboilerResponseError);
 
   // Print what are we exactly writing
-  #ifdef webserialenable
+  #ifdef enableWebSerial
   WebSerial.println(String(millis())+": "+("Writing to InfluxDB: "));
 //  WebSerial.println(InfluxClient.pointToLineProtocol(InfluxSensor));
   #endif
@@ -321,7 +346,7 @@ void updateInfluxDB()
     Serial.print(String(millis())+": "+("InfluxDB write failed: "));
     Serial.println(InfluxClient.getLastErrorMessage());
     #endif
-    #ifdef webserialenable
+    #ifdef enableWebSerial
     WebSerial.print(String(millis())+": "+("InfluxDB write failed: "));
     WebSerial.println(InfluxClient.getLastErrorMessage());
     #endif
@@ -339,6 +364,7 @@ void updateInfluxDB()
 void setup()
 {
   Serial.begin(115200);
+  pinMode(choosepin, INPUT_PULLUP);    // sets the digital pin 13 as output
   delay(3000);
   Serial.println(F("Starting... Delay3000..."));
 
@@ -357,6 +383,43 @@ void setup()
     Serial.println(F("Config not loaded!"));
     saveConfig(); // overwrite with the default settings
   }
+  //get Configuration floor 1 or 2 -if set is 2
+
+  if (digitalRead(choosepin)==0) {
+    zawor1addr  = String(F(dzawor1addr2));
+    zawor2addr  = String(F(dzawor2addr2));
+    zawor3addr  = String(F( dzawor3addr2));
+    zawor4addr  = String(F(dzawor4addr2));
+    zawor5addr  = String(F(dzawor5addr2));
+    zawor6addr  = String(F(dzawor6addr2));
+    zawor7addr  = String(F(dzawor7addr2));
+    zawor8addr  = String(F(dzawor8addr2));
+    zawor9addr  = String(F(dzawor9addr2));
+    zawor10addr = String(F(dzawor10addr2));
+    zawor11addr = String(F(dzawor11addr2));
+    zawor12addr = String(F(dzawor12addr2));
+    zawor13addr = String(F(dzawor13addr2));
+    kondygnacja = "2";
+  } else {
+    zawor1addr  = String(F(dzawor1addr1));
+    zawor2addr  = String(F(dzawor2addr1));
+    zawor3addr  = String(F(dzawor3addr1));
+    zawor4addr  = String(F(dzawor4addr1));
+    zawor5addr  = String(F(dzawor5addr1));
+    zawor6addr  = String(F(dzawor6addr1));
+    zawor7addr  = String(F(dzawor7addr1));
+    zawor8addr  = String(F(dzawor8addr1));
+    zawor9addr  = String(F(dzawor9addr1));
+    zawor10addr = String(F(dzawor10addr1));
+    zawor11addr = String(F(dzawor11addr1));
+    zawor12addr = String(F(dzawor12addr1));
+    zawor13addr = String(F(dzawor13addr1));
+    kondygnacja = "1";
+  }
+  me_lokalizacja += kondygnacja;//+"_mqqt_MARM";
+  mqttident += kondygnacja + "_";
+  mqttdeviceid.replace("me_lokalizacja",me_lokalizacja);
+  OT += kondygnacja+"_";
 
   Serial.println(("Connecting to " + String(ssid)));
 
@@ -418,8 +481,9 @@ void setup()
    // Init DS18B20 sensor
   sensors.begin();
   AssignSensors();
-  sensors.requestTemperatures();
   sensors.setWaitForConversion(true); // switch to async mode
+  sensors.requestTemperatures();
+  sensors.setWaitForConversion(false); // switch to async mode
   ts = millis();
   lastTempSet = -extTempTimeout_ms;
 
@@ -433,7 +497,7 @@ void setup()
 
 
   started = millis();
-  #ifdef webserialenable
+  #ifdef enableWebSerial
   WebSerial.begin(&webserver);
   WebSerial.msgCallback(recvMsg);
   #endif
@@ -447,7 +511,7 @@ void setup()
   // Add tags
   InfluxSensor.addTag("device", me_lokalizacja);
     // Check server connection
-    #ifdef webserialenable
+    #ifdef enableWebSerial
     if (InfluxClient.validateConnection()) {
       WebSerial.print(String(millis())+": "+"Connected to InfluxDB: ");
       WebSerial.println(InfluxClient.getServerUrl());
@@ -476,7 +540,7 @@ void loop()
       #ifdef debug
       Serial.println(String(millis())+": "+F("MQTT connection problem -now reset retry counter and try again..."));
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.println(String(millis())+": "+F("MQTT connection problem -now reset retry counter and try again..."));
       #endif
     }
@@ -498,7 +562,7 @@ void loop()
       #ifdef debug
       Serial.println(String(millis())+": "+F("MQTT connection problem -try to connect again..."));
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.println(String(millis())+": "+F("MQTT connection problem -try to connect again..."));
       #endif
       delay(500);
@@ -520,7 +584,7 @@ void loop()
     #ifdef debug
     Serial.println("now: "+String(millis())+" temps+pumps "+"lastUpdate: "+String(lastUpdateTempPump)+" statusUpdateInterval_ms: "+String(statusUpdateInterval_ms));
     #endif
-    #ifdef webserialenable
+    #ifdef enableWebSerial
     WebSerial.println(String(millis())+": temps+pumps "+"lastUpdate: "+String(lastUpdateTempPump)+" statusUpdateInterval_ms: "+String(statusUpdateInterval_ms));
     #endif
     lastUpdateTempPump = millis();
@@ -535,7 +599,7 @@ void loop()
     Serial.println(String(millis())+" mqtt+influ "+"lastUpdatemqtt: "+String(lastUpdatemqtt)+" receivedmqttdata: "+String(receivedmqttdata)+" mqttUpdateInterval_ms: "+String(mqttUpdateInterval_ms));
     Serial.println(String(lastUpdatemqtt)+": Update MQTT and InfluxDB data: ");
     #endif
-    #ifdef webserialenable
+    #ifdef enableWebSerial
     WebSerial.println(String(millis())+" mqtt+influ "+"lastUpdatemqtt: "+String(lastUpdatemqtt)+" receivedmqttdata: "+String(receivedmqttdata)+" mqttUpdateInterval_ms: "+String(mqttUpdateInterval_ms));
     WebSerial.println(String(lastUpdatemqtt)+": Update MQTT and InfluxDB data: ");
     #endif
@@ -557,7 +621,7 @@ void loop()
     #ifdef debug
     Serial.println("now: "+String(millis())+" "+"lastNEWSSet: "+String(lastNEWSSet)+" "+"temp_NEWS_interval_reduction_time_ms: "+String(temp_NEWS_interval_reduction_time_ms));
     #endif
-    #ifdef webserialenable
+    #ifdef enableWebSerial
     WebSerial.println("now: "+String(millis())+" "+"lastNEWSSet: "+String(lastNEWSSet)+" "+"temp_NEWS_interval_reduction_time_ms: "+String(temp_NEWS_interval_reduction_time_ms));
     #endif
     lastNEWSSet = millis();
@@ -568,7 +632,7 @@ void loop()
       #ifdef debug
       Serial.println(String(millis())+": "+F("Lowering by 5% temp_NEWS (no communication) -after 10times execute every 30minutes lowered temp NEWS"));
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.println(String(millis())+": "+F("Lowering by 5% temp_NEWS (no communication) -after 10times execute every 30minutes lowered temp NEWS"));
       #endif
     }
@@ -582,7 +646,7 @@ void loop()
       #ifdef debug
       Serial.println(F("Force disable CO_PumpWorking flag -after 10times execute every 30minutes lowered temp NEWS"));
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.println(F("Force disable CO_PumpWorking flag -after 10times execute every 30minutes lowered temp NEWS"));
       #endif
       temp_NEWS_count = 0;
@@ -591,7 +655,7 @@ void loop()
     #ifdef debug
     Serial.println(F("Korekta temperatury NEWS z braku połaczenia -pomniejszona o 5%"));
     #endif
-    #ifdef webserialenable
+    #ifdef enableWebSerial
     WebSerial.println(F("Korekta temperatury NEWS z braku połaczenia -pomniejszona o 5%"));
     #endif
   }
@@ -612,7 +676,7 @@ void loop()
     #ifdef debug
     Serial.println(String(millis())+": "+F("Saving config to EEPROM memory..."));
     #endif
-    #ifdef webserialenable
+    #ifdef enableWebSerial
     WebSerial.println(String(millis())+": "+F("Saving config to EEPROM memory..."));
     #endif
     saveConfig(); // According OpenTherm Specification from Ihnor Melryk Master requires max 1s interval communication -przy okazji wg czasu update mqtt zrobie odczyt dallas
@@ -646,7 +710,7 @@ void Pump_Activate_Control () {
   #ifdef debug
   Serial.println(String(millis())+": Pump loop...");
   #endif
-  #ifdef webserialenable
+  #ifdef enableWebSerial
   WebSerial.println(String(millis())+": Pump loop...");
   #endif
   GetSpecificSensorData();
@@ -678,12 +742,13 @@ void Pump_Activate_Control () {
       #ifdef debug
       Serial.println(String(o)+": Switching: "+String(room_temp[o].switch_state)+" pump: "+String(pump));
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.println(String(o)+": Switching: "+String(room_temp[o].switch_state)+" pump: "+String(pump));
       #endif
       digitalWrite(lampPin, !digitalRead(lampPin));
     }
   }
+  digitalWrite(lampPin, false);
 //  if (pump == stop) digitalWrite(pompa_pin, stop_digital); else digitalWrite(pompa_pin, start_digital);
 
 }
@@ -700,7 +765,7 @@ void GetSpecificSensorData () {
       #ifdef debug
       Serial.println("------------------------------"+String(o)+": SetPUMP: "+String(room_temp[o].switch_state)+" to pump: "+String(pump));
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.println("------------------------------"+String(o)+": SetPUMP: "+String(room_temp[o].switch_state)+" to pump: "+String(pump));
       #endif
       room_temp[o].switch_state = pump;
@@ -716,7 +781,7 @@ void GetSpecificSensorData () {
 #ifdef debug
       Serial.println(String(o)+": Pump: "+String(pump)+" tempwe: "+String(tempwe)+" MIN: "+String(min)+" PUMPoffTemp: "+String(pumpOffVal));
 #endif
-#ifdef webserialenable
+#ifdef enableWebSerial
       WebSerial.println(String(o)+": Pump: "+String(pump)+" tempwe: "+String(tempwe)+" MIN: "+String(min)+" PUMPoffTemp: "+String(pumpOffVal));
 #endif
   }

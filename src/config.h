@@ -13,14 +13,15 @@
 
 //#define debug		//Serial Debug
 #define debug1
-#define webserialenable
-#define kondygnacja 2
-const String me_lokalizacja = "FLOORH"+String(kondygnacja);//+"_mqqt_MARM";
+#define enableWebSerial
+//#define kondygnacja 2
+
 #define ATOMIC_FS_UPDATE
 #define MFG "MARM.pl Sp. z o.o."
 #define wwwport 80
 #define PL_lang
 #define  ENABLE_INFLUX        //if defined sending to influx database is performed at time when mqtt messages is send
+#define enableDHT
 
 //#boiler_gas_conversion_to_m3  1
 
@@ -65,7 +66,7 @@ const String me_lokalizacja = "FLOORH"+String(kondygnacja);//+"_mqqt_MARM";
 #define InitTemp -127.00
 #define maxsensors 13            //maksymalna liczba czujnikow w tabeli
 #define namelength 15 //ilosc znakow z nazwy czunika
-
+#define update_path "/update"
 // Your WiFi credentials.
 // Set password to "" for open networks.
 #define sensitive_size 32
@@ -90,7 +91,7 @@ const int OT_OUT_PIN = 26; // for Arduino, 5 for ESP8266 (D1), 22 for ESP32
    if setter is used - thermostat works with external values, bypassing built-in sensor
    if no values on setter for more than 1 minute - thermostat falls back to built-in sensor
 */
-const String BASE_TOPIC = me_lokalizacja;
+String BASE_TOPIC;// jest pozniej definiowane w setup = me_lokalizacja;
 const String BASE_HA_TOPIC = "homeassistant";
 const String ROOM_TEMP = "room";
 const String TEMPERATURE = "_temperature";
@@ -98,7 +99,7 @@ const String SET_LAST = "/set";
 const String SENSOR = "/sensor/";
 const int mqtt_Retain = 1;
 const String QOS = "0";
-const String OT = "FL"+String(kondygnacja)+"_";
+String OT = "FL";// dopisane w setup+String(kondygnacja)+"_";
 
 const String ROOM_TEMPERATURE = ROOM_TEMP + TEMPERATURE;
 const String ROOM_TEMPERATURE_SETPOINT = ROOM_TEMPERATURE + "_setpoint";
@@ -200,24 +201,32 @@ typedef struct
   char mqtt_user[sensitive_size];
   char mqtt_password[sensitive_size];
   int mqtt_port;
-  float roomtempset1;
-  float roomtempset2;
-  float roomtempset3;
-  float roomtempset4;
-  float roomtempset5;
-  float roomtempset6;
-  float roomtempset7;
-  float roomtempset8;
-  float roomtempset9;
-  float roomtempset10;
+  float roomtempset1=0,
+        roomtempset2=0,
+        roomtempset3=0,
+        roomtempset4=0,
+        roomtempset5=0,
+        roomtempset6=0,
+        roomtempset7=0,
+        roomtempset8=0,
+        roomtempset9=0,
+        roomtempset10=0,
   //float roomtemp;        //now is static sensor so for while save last value
-  float temp_NEWS;
-  char COPUMP_GET_TOPIC[255];  //temperatura outside avg NEWS
-  char NEWS_GET_TOPIC[255];   //pompa CO status
-  char BOILER_FLAME_STATUS_TOPIC[255];   //pompa CO status for 1st temp room sensor
-  char BOILER_FLAME_STATUS_ATTRIBUTE[255];   //pompa CO status for 2nd temp room sensor
-  char BOILER_COPUMP_STATUS_ATTRIBUTE[255];
+        temp_NEWS =0;
+  char COPUMP_GET_TOPIC[255],  //temperatura outside avg NEWS
+       NEWS_GET_TOPIC[255],   //pompa CO status
+       BOILER_FLAME_STATUS_TOPIC[255],   //pompa CO status for 1st temp room sensor
+       BOILER_FLAME_STATUS_ATTRIBUTE[255],   //pompa CO status for 2nd temp room sensor
+       BOILER_COPUMP_STATUS_ATTRIBUTE[255];
 } configuration_type;
 
 // with DEFAULT values!
 configuration_type CONFIGURATION;
+
+const String
+        tempicon="<i class=\"fas fa-thermometer-half\" style=\"color:#059e8a;font-size:36px;text-shadow:2px 2px 4px #000000;\"></i>&nbsp;&nbsp;",
+        presicon="<i class=\"fas fa-thermometer-half\" style=\"color:#059e8a;font-size:36px;text-shadow:2px 2px 4px #000000;\"></i>&nbsp;&nbsp;",
+        attiicon="<i class=\"fas fa-water\" style=\"color:#90add6;font-size:36px;text-shadow:2px 2px 4px #000000;\"></i>&nbsp;&nbsp;",
+        ppmicon="<i class=\"fas fa-tint\" style=\"color:#50ad00;font-size:36px;text-shadow:2px 2px 4px #000000;\"></i>&nbsp;&nbsp;",
+        pumpicon="<i class=\"fas fa-tint\" style=\"color:#500d00;font-size:36px;text-shadow:2px 2px 4px #000000;\"></i>&nbsp;&nbsp;",
+        humidicon="<i class=\"fas fa-humidity\" style=\"color:blue;font-size:36px;text-shadow:2px 2px 4px #000000;\"></i>&nbsp;&nbsp;";

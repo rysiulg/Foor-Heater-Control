@@ -50,6 +50,10 @@
   #endif
 #endif
 #include <Update.h>
+#ifdef enableDHT
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#endif
 
 const char version[12+1] =
 {
@@ -82,7 +86,13 @@ const char version[12+1] =
 };
 const String me_version = String(version);
 const String  stopka = String(MFG)+" "+version[4]+version[5]+"-"+version[2]+version[3]+"-20"+version[0]+version[1]+" "+version[6]+version[7]+":"+version[8]+version[9];
-const String deviceid = "\"dev\":{\"ids\":\""+String(me_lokalizacja)+"\",\"name\":\""+String(me_lokalizacja)+"\",\"sw\":\"" + String(me_version) + "\",\"mdl\": \""+String(me_lokalizacja)+"\",\"mf\":\"" + String(MFG) + "\"}";
+String me_lokalizacja = "FLOORH";//pozniej dopisywane +String(kondygnacja);//+"_mqqt_MARM";
+String mqttident = "CO_"; //dopisane w setup + String(kondygnacja) + "_";
+//to testowo tutaj -zobacze czy to zmieni w trakcie me_lokalizacja z dopisaniem kondygnacji -jak nie to trzeba bedzie to przeniesc
+String mqttdeviceid = "\"dev\":{\"ids\":\""+String("me_lokalizacja")+"\",\"name\":\""+String("me_lokalizacja")+"\",\"sw\":\"" + String(me_version) + "\",\"mdl\": \""+String("me_lokalizacja")+"\",\"mf\":\"" + String(MFG) + "\"}";
+
+
+
 
 
 
@@ -109,9 +119,12 @@ struct tempsensor {
 
 tempsensor room_temp[maxsensors];
 
-float tempwe;                   //temp. wejscia co
 
 
+
+String uptimedana(unsigned long started_local);
+String processor(const String var);
+bool isValidNumber(String str);
 
 
 
@@ -146,3 +159,4 @@ void updateMQTTData();
 
 //#define debugweb   //to debug getJsonVal but it clips if too much data ;(
 String getJsonVal(String json, String tofind);
+

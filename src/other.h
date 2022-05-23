@@ -32,9 +32,12 @@ float roomtemp_last = 0, // prior temperature
       cutOffTemp = 2,                      // outside temp setpoint to cutoff heating co. CO heating is disabled if outside temp (temp_NEWS) is above this value
       op_override = noCommandSpOverride, // boiler tempset on heat mode
       room_temp_default = 20.5,     //domyslna temp pokoju
-      pressure = 0;
-
-String LastboilerResponseError;
+      pressure = 0,
+      humiditycor = 0,              //DHT humidity
+      tempcor = 0,                  //DHT temp and mayby dual with 18b20 onboard
+      tempwe = 0;                   //temp. wejscia co
+String LastboilerResponseError,
+       kondygnacja = "\0";          //ident pietra
 
 int temp_NEWS_count = 0,
     mqtt_offline_retrycount = 0,
@@ -58,12 +61,15 @@ bool receivedmqttdata = false,
 
 const int lampPin = LED_BUILTIN;
 
+
+
+
 void Assign_Name_Addr_Pinout(int i, String name, String address, int outpin) {
   //Konwersja adres String to array uint
   uint8_t  adres[address.length() + 1];
   address.toCharArray((char*)adres, address.length() + 1);
   for (int j = 0; j < address.length() / 2; j++) room_temp[i].addressHEX[j] = convertCharToHex((int)adres[j * 2]) * 16 + convertCharToHex((int)adres[(j * 2) + 1]);
-  name=String(kondygnacja)+sepkondname+name;
+  name=kondygnacja+sepkondname+name;
   name.toCharArray((char*)room_temp[i].nameSensor, namelength+1); //cutted last char
   room_temp[i].idpinout = outpin;
   if (outpin>0) {
@@ -201,11 +207,11 @@ void recvMsg(uint8_t *data, size_t len)
   WebSerial.println("Received: " + String(d));
   if (d == "ON")
   {
-    //  digitalWrite(LED, HIGH);
+      digitalWrite(BUILTIN_LED, HIGH);
   }
   if (d == "OFF")
   {
-    //  digitalWrite(LED, LOW);
+      digitalWrite(BUILTIN_LED, LOW);
   }
   if (d == "RESTART")
   {
@@ -222,13 +228,30 @@ void recvMsg(uint8_t *data, size_t len)
     WebSerial.println("Size CONFIG: " + String(sizeof(CONFIGURATION)));
     saveConfig();
   }
-  if (d == "TOGGLEPUMP")
+  if (d.indexOf("TOGGLEPUMP") !=- 1)
   {
+    int o = 0;    //assigned pump pin to toom_temp array
+    bool state = false;
+    if (d.indexOf(" ")!=-1 and d.indexOf("=")!=-1) {
+      String part = d.substring(d.indexOf(" "));
+      part.trim();
+      String pumpno = part.substring(0,part.indexOf("="));
+      String myvalue = part.substring(part.indexOf("="));
+      pumpno.trim();
+      myvalue.trim();
+      //#ifdef enableWebSerial
+      WebSerial.println("Part: "+String(part));
+      WebSerial.println("pumpno: "+String(pumpno));
+      WebSerial.println("myvalue: "+String(myvalue));
+      //#endif
+      o = pumpno.toInt();
+      state = myvalue.toInt()==1;
+    }
     WebSerial.println(String(millis())+": "+("Toggle Pump State by command... to: "+String((statusUpdateInterval_ms - (millis() - lastUpdateTempPump))/1000)+"s max: "+String(statusUpdateInterval_ms/1000)+"s" ));
-    int o=8;    //assigned pump pin to toom_temp array
+    WebSerial.println("numer: "+String(o)+" Stan: "+String(state));
     WebSerial.println("Stan: "+String(room_temp[o].switch_state)+" dig: "+String(digitalRead(room_temp[o].idpinout)));
-    room_temp[o].switch_state = !room_temp[o].switch_state;
-    digitalWrite(room_temp[o].idpinout, room_temp[o].switch_state);
+    room_temp[o].switch_state = state;
+    digitalWrite(room_temp[o].idpinout, state);
     WebSerial.println("Stan2: "+String(room_temp[o].switch_state)+" dig: "+String(digitalRead(room_temp[o].idpinout)));
 
   }
@@ -247,7 +270,7 @@ void recvMsg(uint8_t *data, size_t len)
   }
    if (d == "HELP")
   {
-    WebSerial.println(F("KOMENDY: RESTART, RECONNECT, SAVE, RESET_CONFIG, TOGGLEPUMP"));
+    WebSerial.println(F("KOMENDY: RESTART, RECONNECT, SAVE, RESET_CONFIG, TOGGLEPUMP numer=0/1"));
   }
 }
 
@@ -356,12 +379,14 @@ void updateMQTTData() {
     client.setBufferSize(2048);
     // homeassistant/sensor/BB050B_OPENTHERM_OT10_lo/config = {"name":"Opentherm OPENTHERM OT10 lo","stat_t":"tele/tasmota_BB050B/SENSOR","avty_t":"tele/tasmota_BB050B/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"BB050B_OPENTHERM_OT10_lo","dev":{"ids":["BB050B"]},"unit_of_meas":" ","ic":"mdi:eye","frc_upd":true,"val_tpl":"{{value_json['OPENTHERM']['OT10']['lo']}}"} (retained) problem
     // 21:16:02.724 MQT: homeassistant/sensor/BB050B_OPENTHERM_OT10_hi/config = {"name":"Opentherm OPENTHERM OT10 hi","stat_t":"tele/tasmota_BB050B/SENSOR","avty_t":"tele/tasmota_BB050B/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"BB050B_OPENTHERM_OT10_hi","dev":{"ids":["BB050B"]},"unit_of_meas":" ","ic":"mdi:eye","frc_upd":true,"val_tpl":"{{value_json['OPENTHERM']['OT10']['hi']}}"} (retained)
+    const String temperature_class = "\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer\"";
+    const String temperature_class_lines = "\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer-lines\"";
     for (int x=0;x<createhasensors;x++){
       String identyfikator = getIdentyfikator(x);
-      client.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE + identyfikator + "/config").c_str(), ("{\"name\":\"" + OT + String(room_temp[x].nameSensor) + identyfikator+"\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE + identyfikator+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE + identyfikator+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer\",\"qos\":" + QOS + "," + deviceid + "}").c_str(), mqtt_Retain);
-      //client.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE + identyfikator + "/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMPERATURE + identyfikator+"\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE + identyfikator+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE + identyfikator+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer\",\"qos\":" + QOS + "," + deviceid + "}").c_str(), mqtt_Retain);
-      if (room_temp[x].idpinout>0) client.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE_SETPOINT + identyfikator+"/config").c_str(), ("{\"name\":\"" +  OT + String(room_temp[x].nameSensor) + identyfikator +"SP\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE_SETPOINT + identyfikator+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE_SETPOINT + identyfikator+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer-lines\",\"qos\":" + QOS + "," + deviceid + "}").c_str(), mqtt_Retain);
-      if (room_temp[x].idpinout>0) client.publish((ROOMS_HACLI_TOPIC + identyfikator + "_climate/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMP + String(room_temp[x].nameSensor) + identyfikator + "\",\"uniq_id\": \"" + OT + ROOM_TEMP + identyfikator + "\", \
+      if (room_temp[x].tempread!=InitTemp) client.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE + identyfikator + "/config").c_str(), ("{\"name\":\"" + OT + String(room_temp[x].nameSensor) + identyfikator+"\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE + identyfikator+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE + identyfikator+"}}\","+temperature_class+",\"qos\":" + QOS + "," + mqttdeviceid + "}").c_str(), mqtt_Retain);
+      //client.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE + identyfikator + "/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMPERATURE + identyfikator+"\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE + identyfikator+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE + identyfikator+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer\",\"qos\":" + QOS + "," + mqttdeviceid + "}").c_str(), mqtt_Retain);
+      if (room_temp[x].idpinout>0 and room_temp[x].tempread!=InitTemp) client.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE_SETPOINT + identyfikator+"/config").c_str(), ("{\"name\":\"" +  OT + String(room_temp[x].nameSensor) + identyfikator +"SP\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE_SETPOINT + identyfikator+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE_SETPOINT + identyfikator+"}}\","+temperature_class_lines+",\"qos\":" + QOS + "," + mqttdeviceid + "}").c_str(), mqtt_Retain);
+      if (room_temp[x].idpinout>0 and room_temp[x].tempread!=InitTemp) client.publish((ROOMS_HACLI_TOPIC + identyfikator + "_climate/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMP + String(room_temp[x].nameSensor) + identyfikator + "\",\"uniq_id\": \"" + OT + ROOM_TEMP + identyfikator + "\", \
 \"modes\":[\"heat\"], \
 \"mode_state_topic\": \"" + ROOMS_TOPIC_SENSOR + "\", \
 \"mode_state_template\": \"{{'heat' if now() > today_at('0:00') else 'heat'}}\", \
@@ -377,11 +402,11 @@ void updateMQTTData() {
 \"target_temp_step\": 0.5, \
 \"min_temp\": " + roomtemplo + ", \
 \"max_temp\": " + roomtemphi + ", \
-\"qos\":" + QOS + "," + deviceid + "}").c_str(), mqtt_Retain);
+\"qos\":" + QOS + "," + mqttdeviceid + "}").c_str(), mqtt_Retain);
     }
     //max tempset for rooms and min temp in rooms
-    client.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE + getIdentyfikator(-1) + "/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMPERATURE + getIdentyfikator(-1)+"_min\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE + getIdentyfikator(-1)+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE + getIdentyfikator(-1)+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer\",\"qos\":" + QOS + "," + deviceid + "}").c_str(), mqtt_Retain);
-    client.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1)+"/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1)+"_max\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1)+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1)+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer-lines\",\"qos\":" + QOS + "," + deviceid + "}").c_str(), mqtt_Retain);
+    client.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE + getIdentyfikator(-1) + "/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMPERATURE + getIdentyfikator(-1)+"_min\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE + getIdentyfikator(-1)+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE + getIdentyfikator(-1)+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer\",\"qos\":" + QOS + "," + mqttdeviceid + "}").c_str(), mqtt_Retain);
+    client.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1)+"/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1)+"_max\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1)+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1)+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer-lines\",\"qos\":" + QOS + "," + mqttdeviceid + "}").c_str(), mqtt_Retain);
 
 /*
 https://www.home-assistant.io/integrations/climate.mqtt/
@@ -398,7 +423,7 @@ https://www.home-assistant.io/integrations/climate.mqtt/
   #ifdef debug
   Serial.println(String(millis())+": MQTT Data Sended...");  String(millis())+": "+
   #endif
-  #ifdef webserialenable
+  #ifdef enableWebSerial
   WebSerial.println(String(millis())+": MQTT Data Sended...");
   #endif
 
@@ -410,40 +435,64 @@ String getJsonVal(String json, String tofind)
   #ifdef debugweb
   WebSerial.println("json0: "+json);
   #endif
-  if (!json.isEmpty() and !tofind.isEmpty() and json.startsWith("{") and json.endsWith("}"))  //check is starts and ends as json data and not null
+  if (!json.isEmpty() and !tofind.isEmpty() and json.startsWith("{") and json.endsWith("}"))  //check is starts and ends as json data and nmqttident null
   {
     json=json.substring(1,json.length()-1);                             //cut start and end brackets json
     #ifdef debugweb
     WebSerial.println("json1: "+json);
     #endif
     int tee=0; //for safety ;)
-    while (json.indexOf(",")>0)
+    #define maxtee 500
+    while (tee!=maxtee)
     {         //parse all nodes
-      int pos = json.indexOf(",");                //position to end of node:value
-      String part = json.substring(0,pos);        //extract parameter node:value
+      int pos = json.indexOf(",",1);                //position to end of node:value
+      if (pos==-1) {tee=maxtee;}
+      String part;
+      if (pos>-1) {part = json.substring(0,pos);} else {part=json; }       //extract parameter node:value
       part.replace("\"","");                      //clean from text indent
       part.replace("'","");
       json=json.substring(pos+1);                      //cut input for extracted node:value
-      String node=part.substring(0,part.indexOf(":"));    //get node name
+      if (part.indexOf(":",1)==-1) {
+        #ifdef debugweb
+        WebSerial.println("Return no : data");
+        #endif
+        break;
+      }
+      String node=part.substring(0,part.indexOf(":",1));    //get node name
       node.trim();
-      String nvalue=part.substring(part.indexOf(":")+1); //get node value
+      String nvalue=part.substring(part.indexOf(":",1)+1); //get node value
       nvalue.trim();
       #ifdef debugweb
       WebSerial.println("jsonx: "+json);
-      WebSerial.println("tee: "+String(tee)+" tofind: "+tofind+" part: "+part+" node: "+node +" nvalue: "+nvalue);
+      WebSerial.println("tee: "+String(tee)+" tofind: "+tofind+" part: "+part+" node: "+node +" nvalue: "+nvalue + " indexof , :"+String(json.indexOf(",",1)));
       #endif
       if (tofind==node)
       {
+         #ifdef debugweb
+         WebSerial.println("Found node return val");
+         #endif
         return nvalue;
         break;
       }
       tee++;
-      if (tee>100) break;  //safety bufor
+      #ifdef debugweb
+      delay(1000);
+      #endif
+      if (tee>maxtee) {
+        #ifdef debugweb
+         WebSerial.println("tee exit: "+String(tee));
+        #endif
+        break;  //safety bufor
+      }
     }
-    WebSerial.println(String(millis())+": Json "+json+"  Not contain searched value of "+tofind);
+    #ifdef enableWebSerial
+    WebSerial.println(String(millis())+": Json "+json+"  No mqttident contain searched value of "+tofind);
+    #endif
   } else
   {
+    #ifdef enableWebSerial
     WebSerial.println(String(millis())+": Inproper Json format or null: "+json+" to find: "+tofind);
+    #endif
   }
-  return "";
+  return "\0";
 }

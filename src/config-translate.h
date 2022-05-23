@@ -34,6 +34,8 @@
 #define t_min "min."
 #define t_sek "sek."
 #define room "Pokój"
+#define humidcorstr "Wilgotność"
+#define tempcorstr "Temperatura"
 #else
 #define Boiler_And_CO_Temperature "Boiler And CO Temperature"
 #define Set_Temperature_for_CO_heat "Set Temperature for CO heat: "
@@ -70,4 +72,6 @@
 #define t_min "min."
 #define t_sek "sec."
 #define room "Room"
+#define humidcorstr "Humidity"
+#define tempcorstr "Temperature"
 #endif

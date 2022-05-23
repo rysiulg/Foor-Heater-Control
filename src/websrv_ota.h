@@ -1,28 +1,6 @@
-String uptimedana(unsigned long started_local);
-String processor(const String var);
-bool isValidNumber(String str);
-
-#define uptimelink "uptimelink"
-#define dallThermometerS "dallThermometerS"
-
-#define tempCORETThermometerS "tempCORETThermometerS"
-
-#define stopkawebsite "stopkawebsite"
-
-#define cutOffTempS "cutOffTempS"
-#define cutOffTempSet "cutOffTempSet"
-#define cutOffTempVAL "tempCutOffset"
-#define flameprocS "flameprocS"
-#define flameprocSVAL "flameprocSVAL"
-#define NEWS_lastTimeS "NEWS_lastTimeS"
-#define NEWS_lastTime "NEWS_lastTime"
-#define do_stopkawebsiteS "do_stopkawebsiteS"
 
 
-
-const char* PARAM_MESSAGE_cutOffTempSet = cutOffTempVAL;
-
-uint8_t mac[6] = {strtol(WiFi.macAddress().substring(0,2).c_str(),0,16), strtol(WiFi.macAddress().substring(3,5).c_str(),0,16),strtol(WiFi.macAddress().substring(6,8).c_str(),0,16),strtol(WiFi.macAddress().substring(9,11).c_str(),0,16),strtol(WiFi.macAddress().substring(12,14).c_str(),0,16),strtol(WiFi.macAddress().substring(15,17).c_str(),0,16)};
+uint8_t mac[6] = {(uint8_t)strtol(WiFi.macAddress().substring(0,2).c_str(),0,16), (uint8_t)strtol(WiFi.macAddress().substring(3,5).c_str(),0,16),(uint8_t)strtol(WiFi.macAddress().substring(6,8).c_str(),0,16),(uint8_t)strtol(WiFi.macAddress().substring(9,11).c_str(),0,16),(uint8_t)strtol(WiFi.macAddress().substring(12,14).c_str(),0,16),(uint8_t)strtol(WiFi.macAddress().substring(15,17).c_str(),0,16)};
 unsigned long  started = 0; //do mierzenia czasu uptime bez resetu
 
 const char htmlup[] PROGMEM = R"rawliteral(
@@ -123,7 +101,7 @@ void handleGetTemp() {
 size_t content_len;
 void printProgress(size_t prg, size_t sz) {
   Serial.printf("Progress: %d%%\n", (prg*100)/content_len);
-  #ifdef webserialenable
+  #ifdef enableWebSerial
   WebSerial.println("Progress: "+String((prg*100)/content_len));
   #endif
 }
@@ -293,7 +271,14 @@ void WebServers() {
         request->send(200, "text/plain; charset=utf-8",  String(room_temp[12].tempread==InitTemp ? "--.-" : String(room_temp[12].tempread,1)));
       }).setAuthentication("", "");
 
-
+#ifdef enableDHT
+    webserver.on( ("/"+String(dhumidcor)).c_str(), HTTP_GET, [](AsyncWebServerRequest * request) {
+        request->send(200, "text/plain; charset=utf-8",  String(humiditycor,1));
+      }).setAuthentication("", "");
+    webserver.on( ("/"+String(dtempcor)).c_str(), HTTP_GET, [](AsyncWebServerRequest * request) {
+        request->send(200, "text/plain; charset=utf-8",  String(tempcor,1));
+      }).setAuthentication("", "");
+#endif
 
   webserver.on("/" NEWS_lastTimeS, HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain; charset=utf-8", String(uptimedana(temp_NEWS_count*temp_NEWS_interval_reduction_time_ms+lastNEWSSet)));
@@ -310,7 +295,7 @@ void WebServers() {
       #ifdef debug
       Serial.print(ident);
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.print(ident);
       #endif
       room_temp[0].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
@@ -319,7 +304,7 @@ void WebServers() {
         #ifdef debug
         Serial.println(ident + " is not a valid number, ignoring...");
         #endif
-        #ifdef webserialenable
+        #ifdef enableWebSerial
         WebSerial.println(ident + " is not a valid number, ignoring...");
         #endif
         }
@@ -335,7 +320,7 @@ void WebServers() {
       #ifdef debug
       Serial.print(ident);
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.print(ident);
       #endif
       room_temp[1].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
@@ -344,7 +329,7 @@ void WebServers() {
         #ifdef debug
         Serial.println(ident + " is not a valid number, ignoring...");
         #endif
-        #ifdef webserialenable
+        #ifdef enableWebSerial
         WebSerial.println(ident + " is not a valid number, ignoring...");
         #endif
         }
@@ -360,7 +345,7 @@ void WebServers() {
       #ifdef debug
       Serial.print(ident);
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.print(ident);
       #endif
       room_temp[2].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
@@ -369,7 +354,7 @@ void WebServers() {
         #ifdef debug
         Serial.println(ident + " is not a valid number, ignoring...");
         #endif
-        #ifdef webserialenable
+        #ifdef enableWebSerial
         WebSerial.println(ident + " is not a valid number, ignoring...");
         #endif
         }
@@ -385,7 +370,7 @@ void WebServers() {
       #ifdef debug
       Serial.print(ident);
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.print(ident);
       #endif
       room_temp[3].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
@@ -394,7 +379,7 @@ void WebServers() {
         #ifdef debug
         Serial.println(ident + " is not a valid number, ignoring...");
         #endif
-        #ifdef webserialenable
+        #ifdef enableWebSerial
         WebSerial.println(ident + " is not a valid number, ignoring...");
         #endif
         }
@@ -410,7 +395,7 @@ void WebServers() {
       #ifdef debug
       Serial.print(ident);
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.print(ident);
       #endif
       room_temp[4].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
@@ -419,7 +404,7 @@ void WebServers() {
         #ifdef debug
         Serial.println(ident + " is not a valid number, ignoring...");
         #endif
-        #ifdef webserialenable
+        #ifdef enableWebSerial
         WebSerial.println(ident + " is not a valid number, ignoring...");
         #endif
         }
@@ -435,7 +420,7 @@ void WebServers() {
       #ifdef debug
       Serial.print(ident);
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.print(ident);
       #endif
       room_temp[5].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
@@ -444,7 +429,7 @@ void WebServers() {
         #ifdef debug
         Serial.println(ident + " is not a valid number, ignoring...");
         #endif
-        #ifdef webserialenable
+        #ifdef enableWebSerial
         WebSerial.println(ident + " is not a valid number, ignoring...");
         #endif
         }
@@ -460,7 +445,7 @@ void WebServers() {
       #ifdef debug
       Serial.print(ident);
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.print(ident);
       #endif
       room_temp[6].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
@@ -469,7 +454,7 @@ void WebServers() {
         #ifdef debug
         Serial.println(ident + " is not a valid number, ignoring...");
         #endif
-        #ifdef webserialenable
+        #ifdef enableWebSerial
         WebSerial.println(ident + " is not a valid number, ignoring...");
         #endif
         }
@@ -485,7 +470,7 @@ void WebServers() {
       #ifdef debug
       Serial.print(ident);
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.print(ident);
       #endif
       room_temp[7].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
@@ -494,7 +479,7 @@ void WebServers() {
         #ifdef debug
         Serial.println(ident + " is not a valid number, ignoring...");
         #endif
-        #ifdef webserialenable
+        #ifdef enableWebSerial
         WebSerial.println(ident + " is not a valid number, ignoring...");
         #endif
         }
@@ -510,7 +495,7 @@ void WebServers() {
       #ifdef debug
       Serial.print(ident);
       #endif
-      #ifdef webserialenable
+      #ifdef enableWebSerial
       WebSerial.print(ident);
       #endif
       room_temp[8].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
@@ -519,7 +504,7 @@ void WebServers() {
         #ifdef debug
         Serial.println(ident + " is not a valid number, ignoring...");
         #endif
-        #ifdef webserialenable
+        #ifdef enableWebSerial
         WebSerial.println(ident + " is not a valid number, ignoring...");
         #endif
         }
@@ -534,7 +519,7 @@ void WebServers() {
             #ifdef debug
             Serial.print(ident);
             #endif
-            #ifdef webserialenable
+            #ifdef enableWebSerial
             WebSerial.print(ident);
             #endif
             cutOffTemp = PayloadtoValidFloat(message, true, cutofflo, cutoffhi);
@@ -543,7 +528,7 @@ void WebServers() {
             #ifdef debug
             Serial.println(ident + " is not a valid number, ignoring...");
             #endif
-            #ifdef webserialenable
+            #ifdef enableWebSerial
             WebSerial.println(ident + " is not a valid number, ignoring...");
             #endif
           }
@@ -588,21 +573,19 @@ String processor(const String var) {
 //    Serial.println(var);
   #endif
   if (var == "ver") {
-    String a = "ESP CO Server v. ";
+    String a = "</B>ESP CO Server dla: <B>" + String(me_lokalizacja) + "</B><BR>v. ";
     a += me_version;
     a += "<br><font size=\"2\" color=\"DarkGreen\">";
     a += client.connected()? "MQTT "+String(msg_Connected)+": "+String(mqtt_server)+":"+String(mqtt_port) : "MQTT "+String(msg_disConnected)+": "+String(mqtt_server)+":"+String(mqtt_port) ;  //1 conn, 0 not conn
     #ifdef ENABLE_INFLUX
     a += " + INFLUXDB: "+String(INFLUXDB_DB_NAME)+"/"+String(InfluxMeasurments);
-    a += "</font>";
     #endif
+    a += "</font>";
     return a;
   }
 
   if (var == "dane") {
-    String a = "Raport dla Hosta: <B>";  //PrintHex8c(GUID,0x0,sizeof(GUID)/sizeof(GUID[0]));
-    a += me_lokalizacja;
-    a += "</B>&nbsp;&nbsp;&nbsp;MAC: <B>";
+    String a = "MAC: <B>";
     #ifdef debug
       Serial.println(F("Raport Hosta "));
     #endif
@@ -643,9 +626,11 @@ String processor(const String var) {
     .units{font-size:1.1rem}\
     .dht-labels{font-size:1.3rem;vertical-align:middle;padding-bottom:8px}\
     .dht-labels-temp{font-size:3.3rem;font-weight:700;vertical-align:middle;padding-bottom:8px}\
-    table,td,th{border-color:green;border-collapse:collapse;border-style:outset;margin-left:auto;margin-right:auto;border:0;text-align:center;padding-left: 40px;padding-right: 50px;padding-top: 5px;padding-bottom: 10px;}\
+    table,td,th{border-color:green;border-collapse:collapse;border-style:outset;margin-left:auto;margin-right:auto;border:0;text-align:center;padding-left: 5px;padding-right: 10px;padding-top: 5px;padding-bottom: 10px;}\
     input{margin:.4rem}\
     td{height:auto;width:auto}");
+    if (kondygnacja=="1") ptr+=F("body{background-color:lightorange;}"); else ptr+=F("body{background-color:white;}");
+
     ptr+="#blink{font-weight:bold;font-size:20px;font-family:sans-serif;transition: 0.5s;}";//         color: #2d38be;   font-size: 20px; font-weight: bold; color: #2d38be;
 
     return String(ptr);
@@ -656,7 +641,10 @@ String processor(const String var) {
   }
   if (var == "stopkawebsite0") {
     String ptr;
-      ptr = "<br><span class='units'><a href='/update' target=\"_blank\">"+String(Update_web_link)+"</a> &nbsp; &nbsp;&nbsp; <a href='/webserial' target=\"_blank\">"+String(Web_Serial)+"</a>&nbsp;";
+      ptr = "<br><span class='units'><a href='"+String(update_path)+"' target=\"_blank\">"+String(Update_web_link)+"</a> &nbsp; &nbsp;&nbsp;";
+      #ifdef enableWebSerial
+      ptr += "<a href='/webserial' target=\"_blank\">"+String(Web_Serial)+"</a>&nbsp;";
+      #endif
       ptr += "<br>&copy; ";
       ptr += stopka;
       ptr += "<br>";
@@ -667,7 +655,6 @@ String processor(const String var) {
   if (var=="bodywstaw") {
     String ptr;
     const float tempstep=0.5;
-    const String tempicon="<i class=\"fas fa-thermometer-half\" style=\"color:#059e8a;font-size:36px;text-shadow:2px 2px 4px #000000;\"></i>&nbsp;&nbsp;";
     ptr="<form action=\"/get\">";
 
     ptr+="<p>"+tempicon+"<span class=\"dht-labels\">"+String(Temp_NEWS)+"</span><B><span class=\"dht-labels-temp\" id=\""+String(dallThermometerS)+"\">"+String(temp_NEWS)+"</span><sup class=\"units\">&deg;C</sup></B>";
@@ -683,30 +670,34 @@ String processor(const String var) {
 
 
     for (int x=0;x<maxsensors;x++) {
-      if ((x % 2) == 0) {ptr+="<tr>";}//else ptr+="<td>";
-      ptr+="<td>";
-      ptr+=tempicon+"<span class=\"dht-labels\">"+String(room_temp[x].nameSensor)+" id"+getIdentyfikator(x)+"</span>";
-      ptr+="<br><B>";
-      if (room_temp[x].tempread<room_temp[x].tempset and x<8)  ptr += "<font color=\"Red\">";
-      if (room_temp[x].tempread>room_temp[x].tempset and x>=8) ptr += "<font color=\"Blue\">";
-      if (room_temp[x].switch_state) ptr += "<p id=\"blink\">"; else ptr+="<p>";
-      ptr+="<span class=\"dht-labels-temp\" id=\""+String(roomtempS)+getIdentyfikator(x)+"\">"+String(room_temp[x].tempread==InitTemp ? "--.-" : String(room_temp[x].tempread,1))+"</span><sup class=\"units\">&deg;C</sup></B>";
-      if (room_temp[x].switch_state) ptr += "</p>"; else ptr += "</p>"; //end blink
-      if ((room_temp[x].tempread<room_temp[x].tempset and x<8) or (room_temp[x].tempread>room_temp[x].tempset and x>=8)) ptr += "</font>";
-      ptr+="<br>";//</td><td>";
+      if ((x % 2) == 0) {ptr+=F("<tr>");}//else ptr+="<td>";
+      ptr+=F("<td>");
+      ptr+=tempicon+"<span class=\"dht-labels\">"+String(room_temp[x].nameSensor)+F(" id")+getIdentyfikator(x)+F("</span>");
+      ptr+=F("<br><B>");
+      if (room_temp[x].tempread<room_temp[x].tempset and x<8)  ptr += F("<font color=\"Red\">");
+      if (room_temp[x].tempread>room_temp[x].tempset and x>=8) ptr += F("<font color=\"Blue\">");
+      if (room_temp[x].switch_state) ptr += F("<p id=\"blink\")>"); else ptr+=F("<p>");
+      ptr+="<span class=\"dht-labels-temp\" id=\""+String(roomtempS)+getIdentyfikator(x)+F("\">")+String(room_temp[x].tempread==InitTemp ? "--.-" : String(room_temp[x].tempread,1))+F("</span><sup class=\"units\">&deg;C</sup></B>");
+      if (room_temp[x].switch_state) ptr += F("</p>"); else ptr += F("</p>"); //end blink
+      if ((room_temp[x].tempread<room_temp[x].tempset and x<8) or (room_temp[x].tempread>room_temp[x].tempset and x>=8)) ptr += F("</font>");
+      ptr+=F("<br>");//</td><td>";
       //ptr+=tempicon+"<span class=\"dht-labels\">"+String(room4tempset)+"</span>";
       if (room_temp[x].idpinout!=0 and room_temp[x].tempset!=0 and room_temp[x].tempread!=InitTemp)
       {
-        ptr+="<br>";
-        ptr+="<font size=\"4\" color=\"blue\"><input type=\"number\" id=\"T"+String(roomtempSetS)+getIdentyfikator(x)+"\" min=\""+String(roomtemplo,1)+"\" max=\""+String(roomtemphi,1)+"\" step=\""+String(tempstep,1)+"\" value=\""+String(room_temp[x].tempset,1)+"\" style=\"width:auto\" onchange=\"uTI(this.value, '"+String(roomtempSetS)+getIdentyfikator(x)+"');\"><sup class=\"units\">&deg;C</sup></B><input id=\""+String(roomtempSetS)+getIdentyfikator(x)+"\" type=\"range\" min=\""+String(roomtemplo,1)+"\" max=\""+String(roomtemphi,1)+"\" step=\""+String(tempstep,1)+"\" name=\""+String(roomtempset)+getIdentyfikator(x)+"\" value=\""+String(room_temp[x].tempset,1)+"\" style=\"width:50px\" onchange=\"uTI(this.value, 'T"+String(roomtempSetS)+getIdentyfikator(x)+"');\">";
-        ptr+="<input type=\"submit\" style=\"width:45px\"></font>";
-        ptr+="</td>";
+        ptr+=F("<br>");
+        ptr+="<font size=\"4\" color=\"blue\"><input type=\"number\" id=\"T"+String(roomtempSetS)+getIdentyfikator(x)+F("\" min=\"")+String(roomtemplo,1)+F("\" max=\"")+String(roomtemphi,1)+F("\" step=\"")+String(tempstep,1)+F("\" value=\"")+String(room_temp[x].tempset,1)+F("\" style=\"width:auto\" onchange=\"uTI(this.value, '")+String(roomtempSetS)+getIdentyfikator(x)+F("');\"><sup class=\"units\">&deg;C</sup></B><input id=\"")+String(roomtempSetS)+getIdentyfikator(x)+F("\" type=\"range\" min=\"")+String(roomtemplo,1)+F("\" max=\"")+String(roomtemphi,1)+F("\" step=\"")+String(tempstep,1)+F("\" name=\"")+String(roomtempset)+getIdentyfikator(x)+F("\" value=\"")+String(room_temp[x].tempset,1)+F("\" style=\"width:50px\" onchange=\"uTI(this.value, 'T")+String(roomtempSetS)+getIdentyfikator(x)+F("');\">");
+        ptr+=F("<input type=\"submit\" style=\"width:45px\"></font>");
+        ptr+=F("</td>");
       }
       if ((x % 2) == 1) {ptr+="</tr>"; }//else ptr+="</td>";
     }
-
-
-
+    #ifdef enableDHT
+    ptr+=F("<tr><td>");
+    ptr+="<p>"+humidicon+F("<span class=\"dht-labels\">")+String(humidcorstr)+F("</span><BR><B><span class=\"dht-labels-temp\" id=\"")+String(dhumidcor)+F("\">&nbsp;<font color=\"Blue\">")+String(humiditycor,1)+F("</font></span><sup class=\"units\">&deg;C</sup></B></p>");
+    ptr+=F("<td></td");
+    ptr+="<p>"+tempicon+F("<span class=\"dht-labels\">")+String(tempcorstr)+F("</span><BR><B><span class=\"dht-labels-temp\" id=\"")+String(dtempcor)+F("\">&nbsp;<font color=\"blue\">")+String(tempcor,1)+F("</font></span><sup class=\"units\">&deg;C</sup></B></p>");
+    ptr+=F("</td></tr>");
+    #endif
 
 
   //  ptr+="<tr><td>";
@@ -717,9 +708,9 @@ String processor(const String var) {
   //   ptr+="<input type=\"submit\" style=\"width:45px\"></font>";
   //   ptr+="</td></tr>";
 
-    ptr+="</table></form><br>";
+    ptr+=F("</table></form><br>");
 
-    ptr += "<p id=\"blink\"></p>"; //to avoid error of no finded
+    ptr += F("<p id=\"blink\"></p>"); //to avoid error of no finded
     return ptr;
   }
 
@@ -729,26 +720,29 @@ String processor(const String var) {
     String tmp;
     unsigned long int step=125;
     unsigned long int refreshtime = 9100;
-    ptr="function uTI(e,n){document.getElementById(n).value=e};\n";
+    const String autoref0 = F("setInterval(function(){var e=new XMLHttpRequest;e.onreadystatechange=function(){4==this.readyState&&200==this.status&&(document.getElementById(\"");
+    const String autoref1 = "\").innerHTML=this.responseText)},e.open(\"GET\",\"/"+tmp+"\",!0),e.send()},";
+    const String autoref2 = ");\n";
+
+    ptr=F("function uTI(e,n){document.getElementById(n).value=e};\n");
     tmp=String(uptimelink);  //spanid
-    refreshtime+=step; ptr+="setInterval(function(){var e=new XMLHttpRequest;e.onreadystatechange=function(){4==this.readyState&&200==this.status&&(document.getElementById(\""+tmp+"\").innerHTML=this.responseText)},e.open(\"GET\",\"/"+tmp+"\",!0),e.send()},"+String(refreshtime/2)+");\n";
+    refreshtime+=step; ptr+=autoref0+tmp+autoref1+String(refreshtime/2)+autoref2;
     for (int x=0;x<13;x++) {  ///was 8
       if (room_temp[x].idpinout!=0)
       {
-        tmp=String(roomtempS)+getIdentyfikator(x); refreshtime+=step; ptr+="setInterval(function(){var e=new XMLHttpRequest;e.onreadystatechange=function(){4==this.readyState&&200==this.status&&(document.getElementById(\""+tmp+"\").innerHTML=this.responseText)},e.open(\"GET\",\"/"+tmp+"\",!0),e.send()},"+String(refreshtime)+");\n";
-        tmp=String(roomtempSetS)+getIdentyfikator(x); refreshtime+=step; ptr+="setInterval(function(){var e=new XMLHttpRequest;e.onreadystatechange=function(){4==this.readyState&&200==this.status&&(document.getElementById(\""+tmp+"\").innerHTML=this.responseText)},e.open(\"GET\",\"/"+tmp+"\",!0),e.send()},"+String(refreshtime)+");\n";
+        tmp=String(roomtempS)+getIdentyfikator(x); refreshtime+=step; ptr+=autoref0+tmp+autoref1+String(refreshtime)+autoref1;
+        tmp=String(roomtempSetS)+getIdentyfikator(x); refreshtime+=step; ptr+=autoref0+tmp+autoref1+String(refreshtime)+autoref2;
       }
     }
 
-    tmp=String(dallThermometerS); refreshtime+=step; ptr+="setInterval(function(){var e=new XMLHttpRequest;e.onreadystatechange=function(){4==this.readyState&&200==this.status&&(document.getElementById(\""+tmp+"\").innerHTML=this.responseText)},e.open(\"GET\",\"/"+tmp+"\",!0),e.send()},"+String(refreshtime)+");\n";
-    tmp=String(NEWS_lastTimeS); refreshtime+=step; ptr+="setInterval(function(){var e=new XMLHttpRequest;e.onreadystatechange=function(){4==this.readyState&&200==this.status&&(document.getElementById(\""+tmp+"\").innerHTML=this.responseText)},e.open(\"GET\",\"/"+tmp+"\",!0),e.send()},"+String(refreshtime)+");\n";
-    tmp=String(do_stopkawebsiteS); refreshtime+=step; ptr+="setInterval(function(){var e=new XMLHttpRequest;e.onreadystatechange=function(){4==this.readyState&&200==this.status&&(document.getElementById(\""+tmp+"\").innerHTML=this.responseText)},e.open(\"GET\",\"/"+tmp+"\",!0),e.send()},"+String(refreshtime)+");\n";
+    tmp=String(dallThermometerS); refreshtime+=step; ptr+=autoref0+tmp+autoref1+String(refreshtime)+autoref2;
+    tmp=String(NEWS_lastTimeS); refreshtime+=step; ptr+=autoref0+tmp+autoref1+String(refreshtime)+autoref2;
+    tmp=String(do_stopkawebsiteS); refreshtime+=step; ptr+=autoref0+tmp+autoref1+String(refreshtime)+autoref2;
+    tmp=String(dhumidcor); refreshtime+=step; ptr+=autoref0+tmp+autoref1+String(refreshtime)+autoref2;
+    tmp=String(dtempcor); refreshtime+=step; ptr+=autoref0+tmp+autoref1+String(refreshtime)+autoref2;
+
     //ptr+="if(document.getElementById(\"blink\")){var blink=document.getElementById('blink');setInterval(function(){blink.style.color=(blink.style.color=='red'?'blue':'red');}, 1200);}"; //blink
-    ptr+="function bt(){document.querySelectorAll('.blink').forEach(e =>{setInterval(()=>{console.log(e);e.style.color=(blink.style.color=='red'?'blue':'red')},500);});}document.addEventListener('DOMContentLoaded',()=>{bt();});"; //classList.toggle('hide');
-
-
-
-
+    ptr+=F("function bt(){document.querySelectorAll('.blink').forEach(e =>{setInterval(()=>{console.log(e);e.style.color=(blink.style.color=='red'?'blue':'red')},500);});}document.addEventListener('DOMContentLoaded',()=>{bt();});"); //classList.toggle('hide');
 
 
     return String(ptr);
@@ -765,11 +759,11 @@ String do_stopkawebsite() {
       String ptr;
       ptr = "&nbsp;";
       if (room_temp[8].switch_state) {
-        ptr += "<i class='fas fa-fire' style='color: red'></i>"; ptr += "<span class='dht-labels'>"+String(Flame_Active_Flame_level)+"</span><B>"+ String("flame_level",0)+"<sup class=\"units\">&#37;</sup></B>";
-        ptr += "<br>";
+        ptr += F("<i class='fas fa-fire' style='color: red'></i>"); ptr += "<span class='dht-labels'>"+String(Flame_Active_Flame_level)+F("</span><B>")+ String("flame_level",0)+F("<sup class=\"units\">&#37;</sup></B>");
+        ptr += F("<br>");
       }
-      if (CO_BoilerPumpWorking) ptr += "<font color=\"red\"><span class='dht-labels'><B>"+String(BOILER_IS_HEATING)+"<br></B></span></font>";
-      if (CO_PumpWorking) ptr += "<font color=\"blue\"><span class='dht-labels'><B>"+String(Second_Engine_Heating_PompActive)+"<br></B><br></span></font>";
+      if (CO_BoilerPumpWorking) ptr += "<font color=\"red\"><span class='dht-labels'><B>"+String(BOILER_IS_HEATING)+F("<br></B></span></font>");
+      if (CO_PumpWorking) ptr += "<font color=\"blue\"><span class='dht-labels'><B>"+String(Second_Engine_Heating_PompActive)+F("<br></B><br></span></font>");
 
 
       // if (status_Fault) ptr += "<span class='dht-labels'><B>!!!!!!!!!!!!!!!!! status_Fault !!!!!!!<br></B></span>";
@@ -787,11 +781,11 @@ String do_stopkawebsite() {
 //******************************************************************************************
 String uptimedana(unsigned long started_local) {
   String wynik = " ";
-  if (started_local<1000) return "< 1 "+String(t_sek)+" ";
+  unsigned long  partia = millis() - started_local;
+  if (partia<1000) return "< 1 "+String(t_sek)+" ";
   #ifdef debug
     Serial.print(F("Uptimedana: "));
   #endif
-  unsigned long  partia = millis() - started_local;
   if (partia >= 24 * 60 * 60 * 1000 ) {
     unsigned long  podsuma = partia / (24 * 60 * 60 * 1000);
     partia -= podsuma * 24 * 60 * 60 * 1000;

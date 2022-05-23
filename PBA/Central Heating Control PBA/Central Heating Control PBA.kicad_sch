@@ -7837,34 +7837,34 @@
       (reference "PS1") (unit 1) (value "HLK-PM03") (footprint "Converter_ACDC:Converter_ACDC_HiLink_HLK-PMxx")
     )
     (path "/00000000-0000-0000-0000-00005a5d1e00"
-      (reference "Q1") (unit 1) (value "BT136-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
+      (reference "Q1") (unit 1) (value "BTA12-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
     )
     (path "/00000000-0000-0000-0000-00005a5d6b11"
-      (reference "Q2") (unit 1) (value "BT136-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
+      (reference "Q2") (unit 1) (value "BTA12-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
     )
     (path "/00000000-0000-0000-0000-00005a5d6f68"
-      (reference "Q3") (unit 1) (value "BT136-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
+      (reference "Q3") (unit 1) (value "BTA12-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
     )
     (path "/00000000-0000-0000-0000-00005a5d713d"
-      (reference "Q4") (unit 1) (value "BT136-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
+      (reference "Q4") (unit 1) (value "BTA12-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
     )
     (path "/00000000-0000-0000-0000-00005a5d75ac"
-      (reference "Q5") (unit 1) (value "BT136-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
+      (reference "Q5") (unit 1) (value "BTA12-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
     )
     (path "/00000000-0000-0000-0000-00005a5d7b1a"
-      (reference "Q6") (unit 1) (value "BT136-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
+      (reference "Q6") (unit 1) (value "BTA12-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
     )
     (path "/00000000-0000-0000-0000-00005a5d805c"
-      (reference "Q7") (unit 1) (value "BT136-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
+      (reference "Q7") (unit 1) (value "BTA12-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
     )
     (path "/00000000-0000-0000-0000-00005a5d89a8"
-      (reference "Q8") (unit 1) (value "BT136-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
+      (reference "Q8") (unit 1) (value "BTA12-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
     )
     (path "/00000000-0000-0000-0000-00005a5d96c6"
-      (reference "Q9") (unit 1) (value "BT136-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
+      (reference "Q9") (unit 1) (value "BTA12-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
     )
     (path "/00000000-0000-0000-0000-00005a5f13b9"
-      (reference "Q10") (unit 1) (value "BT136-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
+      (reference "Q10") (unit 1) (value "BTA12-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
     )
     (path "/1aaeb17f-a91d-42f8-ad7c-0de2149eb7c0"
       (reference "Q11") (unit 1) (value "BC857") (footprint "Package_TO_SOT_SMD:SOT-23")
@@ -7900,7 +7900,7 @@
       (reference "Q21") (unit 1) (value "BC857") (footprint "Package_TO_SOT_SMD:SOT-23")
     )
     (path "/f0304f6b-503b-4f20-8d71-e07ba2a3a85b"
-      (reference "Q22") (unit 1) (value "BT136-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
+      (reference "Q22") (unit 1) (value "BTA12-600") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
     )
     (path "/0b8ef4c2-9b77-40cc-b616-bbc98c45382c"
       (reference "R1") (unit 1) (value "4k7") (footprint "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder")
