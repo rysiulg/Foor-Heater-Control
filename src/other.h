@@ -230,13 +230,13 @@ void recvMsg(uint8_t *data, size_t len)
   }
   if (d.indexOf("TOGGLEPUMP") !=- 1)
   {
-    int o = 0;    //assigned pump pin to toom_temp array
+    int o = maxsensors;    //assigned pump pin to toom_temp array
     bool state = false;
     if (d.indexOf(" ")!=-1 and d.indexOf("=")!=-1) {
       String part = d.substring(d.indexOf(" "));
       part.trim();
       String pumpno = part.substring(0,part.indexOf("="));
-      String myvalue = part.substring(part.indexOf("="));
+      String myvalue = part.substring(part.indexOf("=")+1);
       pumpno.trim();
       myvalue.trim();
       //#ifdef enableWebSerial

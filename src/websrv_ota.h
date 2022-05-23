@@ -629,7 +629,7 @@ String processor(const String var) {
     table,td,th{border-color:green;border-collapse:collapse;border-style:outset;margin-left:auto;margin-right:auto;border:0;text-align:center;padding-left: 5px;padding-right: 10px;padding-top: 5px;padding-bottom: 10px;}\
     input{margin:.4rem}\
     td{height:auto;width:auto}");
-    if (kondygnacja=="1") ptr+=F("body{background-color:lightorange;}"); else ptr+=F("body{background-color:white;}");
+    if (kondygnacja=="1") ptr+=F("body{background-color:lightorange;}"); else ptr+=F("body{background-color:lightpink;}");
 
     ptr+="#blink{font-weight:bold;font-size:20px;font-family:sans-serif;transition: 0.5s;}";//         color: #2d38be;   font-size: 20px; font-weight: bold; color: #2d38be;
 
