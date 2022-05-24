@@ -275,7 +275,7 @@ void WebServers() {
 #endif
 
   webserver.on("/" NEWS_lastTimeS, HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "text/plain; charset=utf-8", String(uptimedana(millis()-lastNEWSSet)));
+    request->send(200, "text/plain; charset=utf-8", String(uptimedana(lastNEWSSet)));
   }).setAuthentication("", "");
 
   webserver.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
@@ -656,7 +656,7 @@ String processor(const String var) {
     ptr="<form action=\"/get\">";
 
     ptr+="<p>"+tempicon+"<span class=\"dht-labels\">"+String(Temp_NEWS)+"</span><B><span class=\"dht-labels-temp\" id=\""+String(dallThermometerS)+"\">"+String(temp_NEWS)+"</span><sup class=\"units\">&deg;C</sup></B>";
-    ptr+="<font size=\"4\" color=\"blue\">"+String(ActualFrom)+"<B><span id=\""+String(NEWS_lastTimeS)+"\">"+String(uptimedana(millis()-lastNEWSSet))+"</span></B> </font></p>";
+    ptr+="<font size=\"4\" color=\"blue\">"+String(ActualFrom)+"<B><span id=\""+String(NEWS_lastTimeS)+"\">"+String(uptimedana(lastNEWSSet))+"</span></B> </font></p>";
 
     ptr+="<p><table><tr>";
     // ptr+="<td><B><LABEL FOR=\"BOILMOD\">"+String(Boler_mode)+"</LABEL></B><br><INPUT TYPE=\"Radio\" ID=\"BOILMOD\" Name=\"boilermodewww\" Value=\"2\" "+String(automodeCO?"Checked":"")+">"+String(Automatic_mode)+"</td>";
