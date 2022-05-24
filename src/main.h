@@ -42,7 +42,7 @@
 
 #ifdef ENABLE_INFLUX
   #ifdef ESP32
-  #include <HTTPClient.h>
+//  #include <HTTPClient.h>
   #include <InfluxDbClient.h>
   #else
   #include <ESP8266HTTPClient.h>
@@ -159,4 +159,3 @@ void updateMQTTData();
 
 //#define debugweb   //to debug getJsonVal but it clips if too much data ;(
 String getJsonVal(String json, String tofind);
-

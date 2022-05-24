@@ -16,7 +16,7 @@ AsyncWebServer webserver(wwwport);
 OneWire oneWire(ROOM_TEMP_SENSOR_PIN);
 DallasTemperature sensors(&oneWire);
 WiFiClient espClient;
-PubSubClient client(espClient);
+PubSubClient mqttclient(espClient);
 
 // ESP8266WebServer server(80);
 
@@ -63,6 +63,8 @@ bool isValidNumber(String str)
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
+  #include "configmqtttopics.h"
+
   const String topicStr(topic);
 
   String payloadStr = convertPayloadToStr(payload, length);
@@ -96,9 +98,9 @@ void callback(char *topic, byte *payload, unsigned int length)
     #ifdef enableWebSerial
     WebSerial.print(ident);
     #endif
-    receivedmqttdata = true;
-    if (PayloadStatus(payloadStr, true)) CO_PumpWorking = true;
-    else if (PayloadStatus(payloadStr, false)) CO_PumpWorking = false;
+    bool tmp = false;
+    if (PayloadStatus(payloadStr, true)) tmp = true;
+    else if (PayloadStatus(payloadStr, false)) tmp = false;
     else
     {
       receivedmqttdata = false;
@@ -109,6 +111,8 @@ void callback(char *topic, byte *payload, unsigned int length)
       WebSerial.println("Unknown: "+String(payloadStr));
       #endif
     }
+    if (CO_PumpWorking!=tmp) receivedmqttdata = true;
+    CO_PumpWorking = tmp;
     if (receivedmqttdata) {
       #ifdef debug
       Serial.println(CO_PumpWorking ? "Active" : "Disabled" );
@@ -125,9 +129,9 @@ void callback(char *topic, byte *payload, unsigned int length)
     #ifdef enableWebSerial
     WebSerial.print(ident);
     #endif
-    receivedmqttdata = true;
-    if (PayloadStatus(getJsonVal(payloadStr,BOILER_FLAME_STATUS_ATTRIBUTE),true) && PayloadStatus(getJsonVal(payloadStr,BOILER_COPUMP_STATUS_ATTRIBUTE),true)) CO_BoilerPumpWorking = true;
-    else if (PayloadStatus(getJsonVal(payloadStr,BOILER_FLAME_STATUS_ATTRIBUTE),false) && PayloadStatus(getJsonVal(payloadStr,BOILER_COPUMP_STATUS_ATTRIBUTE),false)) CO_BoilerPumpWorking = false;
+    bool tmp = false;
+    if (PayloadStatus(getJsonVal(payloadStr,BOILER_FLAME_STATUS_ATTRIBUTE),true) && PayloadStatus(getJsonVal(payloadStr,BOILER_COPUMP_STATUS_ATTRIBUTE),true)) tmp = true;
+    else if (PayloadStatus(getJsonVal(payloadStr,BOILER_FLAME_STATUS_ATTRIBUTE),false) && PayloadStatus(getJsonVal(payloadStr,BOILER_COPUMP_STATUS_ATTRIBUTE),false)) tmp = false;
     else
     {
       receivedmqttdata = false;
@@ -138,6 +142,8 @@ void callback(char *topic, byte *payload, unsigned int length)
       WebSerial.println("Unknown: "+String(payloadStr));
       #endif
     }
+    if (CO_BoilerPumpWorking!=tmp) receivedmqttdata = true;
+    CO_BoilerPumpWorking = tmp;
     if (receivedmqttdata) {
       #ifdef debug
       Serial.println(CO_PumpWorking ? "Active Heating" : "Disabled Heating" );
@@ -147,10 +153,7 @@ void callback(char *topic, byte *payload, unsigned int length)
       #endif
       }
   } else
-  //TEMP_CUTOFF_SET_TOPIC Status with flame
-  if (topicStr == TEMP_CUTOFF_SET_TOPIC)
-  {
-  }
+
 //sensors for setpoint temperature
   for (int x=0;x<maxsensors;x++)
   {
@@ -164,8 +167,10 @@ void callback(char *topic, byte *payload, unsigned int length)
         #ifdef enableWebSerial
         WebSerial.println(String(millis())+": ROOM"+String(getIdentyfikator(x))+" ");
         #endif
-        room_temp[x].tempset = PayloadtoValidFloat(payloadStr, true, roomtemplo, roomtemphi);
-        receivedmqttdata = true;
+        float tmp = PayloadtoValidFloat(payloadStr, true, roomtemplo, roomtemphi);
+        if (tmp!=room_temp[x].tempset) {receivedmqttdata = true;}
+        room_temp[x].tempset = tmp;
+
       }
     }
   }
@@ -176,19 +181,22 @@ void callback(char *topic, byte *payload, unsigned int length)
 
 void reconnect()
 {
+  #include "configmqtttopics.h"
   // Loop until we're reconnected
-  while (!client.connected() and mqtt_offline_retrycount < mqtt_offline_retries)
+  while (!mqttclient.connected() and mqtt_offline_retrycount < mqtt_offline_retries)
   {
     #ifdef debug
     Serial.print(F("Attempting MQTT connection..."));
     #endif
     #ifdef enableWebSerial
-    WebSerial.print(String(millis())+": "+F("Attempting MQTT connection..."));
+    WebSerial.print(String(millis())+": "+F("Attempting MQTT connection...     "));
     #endif
-    const char *clientId = "MARM-test";
+    const char *clientId = me_version.c_str();
+    mqttclient.setBufferSize(2048);
 
-    if (client.connect(clientId, mqtt_user, mqtt_password))
+    if (mqttclient.connect(clientId, mqtt_user, mqtt_password))
     {
+      mqttclient.setBufferSize(2048);
       #ifdef debug
       Serial.println(F("ok"));
       #endif
@@ -199,13 +207,13 @@ void reconnect()
 
       for (int x=0;x<maxsensors;x++){
         //String identyfikator=getIdentyfikator(x);
-        if (room_temp[x].idpinout!=0) client.subscribe((ROOM_TEMPERATURE_SETPOINT_SET_TOPIC + getIdentyfikator(x) + SET_LAST).c_str());
+        if (room_temp[x].idpinout!=0) mqttclient.subscribe((ROOM_TEMPERATURE_SETPOINT_SET_TOPIC + getIdentyfikator(x) + SET_LAST).c_str());
       }
-      client.subscribe(NEWS_GET_TOPIC.c_str());
-      client.subscribe(COPUMP_GET_TOPIC.c_str());
-      client.subscribe(BOILER_FLAME_STATUS_TOPIC.c_str());
+      mqttclient.subscribe(NEWS_GET_TOPIC.c_str());
+      mqttclient.subscribe(COPUMP_GET_TOPIC.c_str());
+      mqttclient.subscribe(BOILER_FLAME_STATUS_TOPIC.c_str());
 
-      client.subscribe(TEMP_CUTOFF_SET_TOPIC.c_str());  //tego nie ma w obsludze
+
 
     } else {
       #ifdef debug
@@ -215,10 +223,10 @@ void reconnect()
       WebSerial.print(F(" failed, rc="));
       #endif
       #ifdef debug
-      Serial.print(client.state());
+      Serial.print(mqttclient.state());
       #endif
       #ifdef enableWebSerial
-      WebSerial.print(client.state());
+      WebSerial.print(mqttclient.state());
       #endif
       #ifdef debug
       Serial.println(F(" try again in 5 seconds"));
@@ -306,6 +314,8 @@ void ReadTemperatures()
 void updateInfluxDB()
 {
   #ifdef ENABLE_INFLUX
+  #include "configmqtttopics.h"
+
   InfluxSensor.clearFields();
   // Report RSSI of currently connected network
   InfluxSensor.addField("rssi"+String(kondygnacja), (WiFi.RSSI()));
@@ -329,11 +339,11 @@ void updateInfluxDB()
 
 
 
-  InfluxSensor.addField(String(TEMP_CUTOFF)+String(kondygnacja), cutOffTemp);
-//  InfluxSensor.addField(String(DIAGS_OTHERS_FAULT), status_Fault ? "1" : "0");
-//  InfluxSensor.addField(String(DIAGS_OTHERS_DIAG), status_Diagnostic ? "1" : "0");
-  InfluxSensor.addField(String(INTEGRAL_ERROR_GET_TOPIC)+String(kondygnacja), ierr);
-  InfluxSensor.addField(String(LOG_GET_TOPIC)+String(kondygnacja), LastboilerResponseError);
+//   InfluxSensor.addField(String(TEMP_CUTOFF)+String(kondygnacja), cutOffTemp);
+// //  InfluxSensor.addField(String(DIAGS_OTHERS_FAULT), status_Fault ? "1" : "0");
+// //  InfluxSensor.addField(String(DIAGS_OTHERS_DIAG), status_Diagnostic ? "1" : "0");
+//   InfluxSensor.addField(String(INTEGRAL_ERROR_GET_TOPIC)+String(kondygnacja), ierr);
+//   InfluxSensor.addField(String(LOG_GET_TOPIC)+String(kondygnacja), LastboilerResponseError);
 
   // Print what are we exactly writing
   #ifdef enableWebSerial
@@ -420,7 +430,8 @@ void setup()
   me_lokalizacja += kondygnacja;//+"_mqqt_MARM";
   mqttident += kondygnacja + "_";
   mqttdeviceid.replace("me_lokalizacja",me_lokalizacja);
-  OT += kondygnacja+"_";
+
+
 
   Serial.println(("Connecting to " + String(ssid)));
 
@@ -476,8 +487,9 @@ void setup()
   Serial.println(WiFi.localIP());
 
 
-  client.setServer(mqtt_server, mqtt_port);
-  client.setCallback(callback);
+  mqttclient.setServer(mqtt_server, mqtt_port);
+  mqttclient.setBufferSize(2048);
+  mqttclient.setCallback(callback);
 
    // Init DS18B20 sensor
   sensors.begin();
@@ -558,7 +570,7 @@ void loop()
   }
   else
   {
-    if (!client.connected())
+    if (!mqttclient.connected())
     {
       #ifdef debug
       Serial.println(String(millis())+": "+F("MQTT connection problem -try to connect again..."));
@@ -571,7 +583,7 @@ void loop()
     }
     else
     {
-      client.loop();
+      mqttclient.loop();
     }
   }
 
@@ -606,9 +618,9 @@ void loop()
     #endif
     receivedmqttdata = false;
     lastUpdatemqtt = millis();
-    if (client.connected()) {
+    if (mqttclient.connected()) {
       updateMQTTData();
-      updateInfluxDB(); //i have on same server mqtt and influx so when mqtt is down influx probably also ;(  This   if (InfluxClient.isConnected())  doesn't work forme 202205
+      updateInfluxDB(); //i have on same server mqtt and influx so when mqtt is down influx probably also ;(  This   if (Influxclient.isConnected())  doesn't work forme 202205
     }
 
   }
@@ -617,7 +629,7 @@ void loop()
 
 
   //#define abs(x) ((x)>0?(x):-(x))
-  if ((millis() - lastNEWSSet) > temp_NEWS_interval_reduction_time_ms)
+  if ((millis() - lastNEWSSet)*temp_NEWS_count > temp_NEWS_interval_reduction_time_ms)
   { // at every 0,5hour lower temp NEWS when no communication why -2>1800000 is true ???
     #ifdef debug
     Serial.println("now: "+String(millis())+" "+"lastNEWSSet: "+String(lastNEWSSet)+" "+"temp_NEWS_interval_reduction_time_ms: "+String(temp_NEWS_interval_reduction_time_ms));
@@ -625,7 +637,6 @@ void loop()
     #ifdef enableWebSerial
     WebSerial.println("now: "+String(millis())+" "+"lastNEWSSet: "+String(lastNEWSSet)+" "+"temp_NEWS_interval_reduction_time_ms: "+String(temp_NEWS_interval_reduction_time_ms));
     #endif
-    lastNEWSSet = millis();
     temp_NEWS_count++;
     if (temp_NEWS > cutOffTemp)
     {
@@ -650,7 +661,7 @@ void loop()
       #ifdef enableWebSerial
       WebSerial.println(F("Force disable CO_PumpWorking flag -after 10times execute every 30minutes lowered temp NEWS"));
       #endif
-      temp_NEWS_count = 0;
+      //temp_NEWS_count = 0;
     }
     // dobre miejsce do try get data by http api
     #ifdef debug
@@ -659,7 +670,7 @@ void loop()
     #ifdef enableWebSerial
     WebSerial.println(F("Korekta temperatury NEWS z braku połaczenia -pomniejszona o 5%"));
     #endif
-  }
+  } else { temp_NEWS_count =0; }
 
   // if WiFi is down, try reconnecting
   if ((WiFi.status() != WL_CONNECTED) && (millis() - WiFipreviousMillis >= WiFiinterval))

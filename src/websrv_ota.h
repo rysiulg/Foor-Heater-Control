@@ -181,12 +181,6 @@ void WebServers() {
   webserver.on("/" tempCORETThermometerS, HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain; charset=utf-8", String(retTemp,1));
   }).setAuthentication("", "");
-  // webserver.on("/" cutOffTempS, HTTP_GET, [](AsyncWebServerRequest * request) {
-  //   request->send(200, "text/plain; charset=utf-8", String(cutOffTemp,1));
-  // }).setAuthentication("", "");
-  webserver.on("/" cutOffTempS, HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "text/plain; charset=utf-8", String(uptimedana(temp_NEWS_count*temp_NEWS_interval_reduction_time_ms+lastNEWSSet)));
-  }).setAuthentication("", "");
 
 
 
@@ -281,7 +275,7 @@ void WebServers() {
 #endif
 
   webserver.on("/" NEWS_lastTimeS, HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "text/plain; charset=utf-8", String(uptimedana(temp_NEWS_count*temp_NEWS_interval_reduction_time_ms+lastNEWSSet)));
+    request->send(200, "text/plain; charset=utf-8", String(uptimedana(millis()-lastNEWSSet)));
   }).setAuthentication("", "");
 
   webserver.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
@@ -575,31 +569,34 @@ String processor(const String var) {
   if (var == "ver") {
     String a = "</B>ESP CO Server dla: <B>" + String(me_lokalizacja) + "</B><BR>v. ";
     a += me_version;
-    a += "<br><font size=\"2\" color=\"DarkGreen\">";
-    a += client.connected()? "MQTT "+String(msg_Connected)+": "+String(mqtt_server)+":"+String(mqtt_port) : "MQTT "+String(msg_disConnected)+": "+String(mqtt_server)+":"+String(mqtt_port) ;  //1 conn, 0 not conn
+    a += F("<br><font size=\"2\" color=\"DarkGreen\">");
+    a += mqttclient.connected()? "MQTT "+String(msg_Connected)+": "+String(mqtt_server)+":"+String(mqtt_port) : "MQTT "+String(msg_disConnected)+": "+String(mqtt_server)+":"+String(mqtt_port) ;  //1 conn, 0 not conn
     #ifdef ENABLE_INFLUX
     a += " + INFLUXDB: "+String(INFLUXDB_DB_NAME)+"/"+String(InfluxMeasurments);
     #endif
-    a += "</font>";
+    a += F("</font>");
     return a;
   }
 
   if (var == "dane") {
-    String a = "MAC: <B>";
+    String a = F("MAC: <B>");
     #ifdef debug
       Serial.println(F("Raport Hosta "));
     #endif
     a += PrintHex8(mac, ':', sizeof(mac) / sizeof(mac[0]));
-    a += "</b>&nbsp;&nbsp;<B>";
-    a += "</B>WiFi (RSSI): <B>";
+    a += F("</b>&nbsp;&nbsp;<B>");
+    a += F("</B>WiFi (RSSI): <B>");
     a += WiFi.RSSI();
-    a += "dBm</b> CRT:";
+    a += F("dBm</b> CRT:");
     a += String(runNumber);
-    a += ", Hall: "+String(hallRead()+"Gauss");
-    a += "<br>";
+    a += F(", Hall: ");
+    a += String(hallRead());
+    a += F("Gauss");
+    a += F("<br>");
     a += LastboilerResponseError;
-    a += " Unassigned: "+UnassignedTempSensor;
-    a += "<br></B>";
+    a += F(" Unassigned: ");
+    a += UnassignedTempSensor;
+    a += F("<br></B>");
 
     #ifdef debug
       Serial.println(F("Raport Hosta po read_eprom: "));
@@ -659,7 +656,7 @@ String processor(const String var) {
     ptr="<form action=\"/get\">";
 
     ptr+="<p>"+tempicon+"<span class=\"dht-labels\">"+String(Temp_NEWS)+"</span><B><span class=\"dht-labels-temp\" id=\""+String(dallThermometerS)+"\">"+String(temp_NEWS)+"</span><sup class=\"units\">&deg;C</sup></B>";
-    ptr+="<font size=\"4\" color=\"blue\">"+String(ActualFrom)+"<B><span id=\""+String(NEWS_lastTimeS)+"\">"+String(uptimedana(temp_NEWS_count*temp_NEWS_interval_reduction_time_ms+lastNEWSSet))+"</span></B> </font></p>";
+    ptr+="<font size=\"4\" color=\"blue\">"+String(ActualFrom)+"<B><span id=\""+String(NEWS_lastTimeS)+"\">"+String(uptimedana(millis()-lastNEWSSet))+"</span></B> </font></p>";
 
     ptr+="<p><table><tr>";
     // ptr+="<td><B><LABEL FOR=\"BOILMOD\">"+String(Boler_mode)+"</LABEL></B><br><INPUT TYPE=\"Radio\" ID=\"BOILMOD\" Name=\"boilermodewww\" Value=\"2\" "+String(automodeCO?"Checked":"")+">"+String(Automatic_mode)+"</td>";
@@ -823,6 +820,7 @@ String uptimedana(unsigned long started_local) {
 
 // load whats in EEPROM in to the local CONFIGURATION if it is a valid setting
 bool loadConfig() {
+  #include "configmqtttopics.h"
   // is it correct?
   if (sizeof(CONFIGURATION)<1024) EEPROM.begin(1024); else EEPROM.begin(sizeof(CONFIGURATION)+128); //Size can be anywhere between 4 and 4096 bytes.
   EEPROM.get(1,runNumber);
@@ -872,6 +870,7 @@ bool loadConfig() {
 
 // save the CONFIGURATION in to EEPROM
 void saveConfig() {
+  #include "configmqtttopics.h"
 
   EEPROM.put(1, runNumber);
   //EEPROM.put(1+sizeof(runNumber), flame_used_power_kwh);

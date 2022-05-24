@@ -91,97 +91,77 @@ const int OT_OUT_PIN = 26; // for Arduino, 5 for ESP8266 (D1), 22 for ESP32
    if setter is used - thermostat works with external values, bypassing built-in sensor
    if no values on setter for more than 1 minute - thermostat falls back to built-in sensor
 */
-String BASE_TOPIC;// jest pozniej definiowane w setup = me_lokalizacja;
-const String BASE_HA_TOPIC = "homeassistant";
-const String ROOM_TEMP = "room";
-const String TEMPERATURE = "_temperature";
-const String SET_LAST = "/set";
-const String SENSOR = "/sensor/";
-const int mqtt_Retain = 1;
-const String QOS = "0";
-String OT = "FL";// dopisane w setup+String(kondygnacja)+"_";
-
-const String ROOM_TEMPERATURE = ROOM_TEMP + TEMPERATURE;
-const String ROOM_TEMPERATURE_SETPOINT = ROOM_TEMPERATURE + "_setpoint";
-const String ROOM_TEMPERATURE_SETPOINT_SET_TOPIC = BASE_TOPIC + "/SET/" + ROOM_TEMPERATURE_SETPOINT; //+SET_LAST + "/set"; // t
-
-const String ROOMS_TOPIC_SENSOR = BASE_TOPIC + SENSOR + ROOM_TEMP + "/attributes";
-const String ROOMS_HA_TOPIC = BASE_HA_TOPIC + "/sensor/" + BASE_TOPIC + "/" + ROOM_TEMP;     //+"/state"
-const String ROOMS_HACLI_TOPIC = BASE_HA_TOPIC + "/climate/" + BASE_TOPIC + "/" + ROOM_TEMP; //+"/state"
 
 
 
 
 
-const String BOILER = "boiler";
-const String HOT_WATER = "domestic_hot_water";
-const String ROOM_OTHERS = "room_other";
 
-const String BOILER_TEMPERATURE = BOILER + TEMPERATURE;
+// const String BOILER = "boiler";
+// const String HOT_WATER = "domestic_hot_water";
+// const String ROOM_OTHERS = "room_other";
+
+// const String BOILER_TEMPERATURE = BOILER + TEMPERATURE;
 // const String BOILER_MOD = BOILER+"-mode";   //tryb pracy
-const String BOILER_TEMPERATURE_RET = BOILER + TEMPERATURE + "_return";
-const String BOILER_TEMPERATURE_SETPOINT = BOILER + TEMPERATURE + "_setpoint";
+// const String BOILER_TEMPERATURE_RET = BOILER + TEMPERATURE + "_return";
+// const String BOILER_TEMPERATURE_SETPOINT = BOILER + TEMPERATURE + "_setpoint";
 // const String BOILER_CH_STATE = BOILER + "_ch_state";
-const String BOILER_SOFTWARE_CH_STATE_MODE = BOILER + "_software_ch_state_and_mode";
+// const String BOILER_SOFTWARE_CH_STATE_MODE = BOILER + "_software_ch_state_and_mode";
 // const String FLAME_STATE = "flame_state";
 // const String FLAME_LEVEL = "flame_level";
-const String TEMP_CUTOFF = "temp_cutoff";
+// const String TEMP_CUTOFF = "temp_cutoff";
 // const String FLAME_W = "flame_used_energy";
 // const String FLAME_W_TOTAL = "flame_used_energy_total";
 
 // const String HOT_WATER_TEMPERATURE = HOT_WATER + TEMPERATURE;
-const String HOT_WATER_TEMPERATURE_SETPOINT = HOT_WATER + TEMPERATURE + "_setpoint";
+// const String HOT_WATER_TEMPERATURE_SETPOINT = HOT_WATER + TEMPERATURE + "_setpoint";
 // const String HOT_WATER_CH_STATE = HOT_WATER + "_dhw_state";
-const String HOT_WATER_SOFTWARE_CH_STATE = HOT_WATER + "_software_dhw_state";
+// const String HOT_WATER_SOFTWARE_CH_STATE = HOT_WATER + "_software_dhw_state";
 
 
 // const String ROOM_OTHERS_PRESSURE = ROOM_OTHERS + "_pressure";
 
-const String BOILER_TOPIC = BASE_TOPIC + "/" + BOILER + "/attributes";
+// const String BOILER_TOPIC = BASE_TOPIC + "/" + BOILER + "/attributes";
 // const String HOT_WATER_TOPIC = BASE_TOPIC + "/" + HOT_WATER + "/attributes";
 
 
 
-const String TEMP_SETPOINT_SET_TOPIC = BASE_TOPIC + "/SET/" + BOILER_TEMPERATURE_SETPOINT + "/set";  // sp
-const String TEMP_CUTOFF_SET_TOPIC = BASE_TOPIC + "/SET/" + TEMP_CUTOFF + "/set";                    // cutOffTemp
-const String STATE_DHW_SET_TOPIC = BASE_TOPIC + "/SET/" + HOT_WATER_SOFTWARE_CH_STATE + "/set";      // enableHotWater
-const String MODE_SET_TOPIC = BASE_TOPIC + "/SET/" + BOILER_SOFTWARE_CH_STATE_MODE + "/set";         // 012 auto, heat, off ch
-const String TEMP_DHW_SET_TOPIC = BASE_TOPIC + "/SET/" + HOT_WATER_TEMPERATURE_SETPOINT + "/set";    // dhwTarget
-String COPUMP_GET_TOPIC = "COWoda_mqqt_MARM/switch/bcddc2b2c08e/pump2CO/state";                      // temperatura outside avg NEWS
-String NEWS_GET_TOPIC = "COWoda_mqqt_MARM/sensor/bcddc2b2c08e/WENS_Outside_Temp_AVG/state";          // pompa CO status
-String BOILER_FLAME_STATUS_TOPIC = "opentherm-thermostat/boiler/attributes";                              //flme status of co gaz boiler
-String BOILER_FLAME_STATUS_ATTRIBUTE = "ot_flame_state";                              //boiler flame status of co gaz boiler
-String BOILER_COPUMP_STATUS_ATTRIBUTE = "ot_boiler_ch_state";                          //boiler pump status
+// const String TEMP_SETPOINT_SET_TOPIC = BASE_TOPIC + "/SET/" + BOILER_TEMPERATURE_SETPOINT + "/set";  // sp
+// const String TEMP_CUTOFF_SET_TOPIC = BASE_TOPIC + "/SET/" + TEMP_CUTOFF + "/set";                    // cutOffTemp
+// const String STATE_DHW_SET_TOPIC = BASE_TOPIC + "/SET/" + HOT_WATER_SOFTWARE_CH_STATE + "/set";      // enableHotWater
+// const String MODE_SET_TOPIC = BASE_TOPIC + "/SET/" + BOILER_SOFTWARE_CH_STATE_MODE + "/set";         // 012 auto, heat, off ch
+// const String TEMP_DHW_SET_TOPIC = BASE_TOPIC + "/SET/" + HOT_WATER_TEMPERATURE_SETPOINT + "/set";    // dhwTarget
+
 
 // logs topic
-const String DIAGS = "diag";
-const String DIAG_TOPIC = BASE_TOPIC + "/" + DIAGS + "/attributes";
-const String DIAG_HA_TOPIC = BASE_HA_TOPIC + "/sensor/" + BASE_TOPIC + "/";
-const String DIAG_HABS_TOPIC = BASE_HA_TOPIC + "/binary_sensor/" + BASE_TOPIC + "/";
+// const String DIAGS = "diag";
+// const String DIAG_TOPIC = BASE_TOPIC + "/" + DIAGS + "/attributes";
+// const String DIAG_HA_TOPIC = BASE_HA_TOPIC + "/sensor/" + BASE_TOPIC + "/";
+// const String DIAG_HABS_TOPIC = BASE_HA_TOPIC + "/binary_sensor/" + BASE_TOPIC + "/";
 
-const String LOGS = "log";
-const String LOG_GET_TOPIC = BASE_TOPIC + "/" + DIAGS + "/" + LOGS;
-const String INTEGRAL_ERROR_GET_TOPIC = DIAGS + "_" + "interr";
-const String DIAGS_OTHERS_FAULT = DIAGS + "_" + "fault";
-const String DIAGS_OTHERS_DIAG = DIAGS + "_" + "diagnostic";
+// const String LOGS = "log";
+// const String LOG_GET_TOPIC = BASE_TOPIC + "/" + DIAGS + "/" + LOGS;
+// const String INTEGRAL_ERROR_GET_TOPIC = DIAGS + "_" + "interr";
+// const String DIAGS_OTHERS_FAULT = DIAGS + "_" + "fault";
+// const String DIAGS_OTHERS_DIAG = DIAGS + "_" + "diagnostic";
 
 //Homeassistant Autodiscovery topics
-const String BOILER_HA_TOPIC = BASE_HA_TOPIC + "/sensor/" + BASE_TOPIC + "/";              //+"/state"
-const String BOILER_HABS_TOPIC = BASE_HA_TOPIC + "/binary_sensor/" + BASE_TOPIC + "/";     //+"/state"
-const String BOILER_HACLI_TOPIC = BASE_HA_TOPIC + "/climate/" + BASE_TOPIC + "/" + BOILER; //+"/state"
+// const String BOILER_HA_TOPIC = BASE_HA_TOPIC + "/sensor/" + BASE_TOPIC + "/";              //+"/state"
+// const String BOILER_HABS_TOPIC = BASE_HA_TOPIC + "/binary_sensor/" + BASE_TOPIC + "/";     //+"/state"
+// const String BOILER_HACLI_TOPIC = BASE_HA_TOPIC + "/climate/" + BASE_TOPIC + "/" + BOILER; //+"/state"
 
-const String HOT_WATER_HA_TOPIC = BASE_HA_TOPIC + "/sensor/" + BASE_TOPIC + "/";                 //+"/state"
-const String HOT_WATER_HABS_TOPIC = BASE_HA_TOPIC + "/binary_sensor/" + BASE_TOPIC + "/";        //+"/state"
-const String HOT_WATER_HACLI_TOPIC = BASE_HA_TOPIC + "/climate/" + BASE_TOPIC + "/" + HOT_WATER; //+"/state"
+// const String HOT_WATER_HA_TOPIC = BASE_HA_TOPIC + "/sensor/" + BASE_TOPIC + "/";                 //+"/state"
+// const String HOT_WATER_HABS_TOPIC = BASE_HA_TOPIC + "/binary_sensor/" + BASE_TOPIC + "/";        //+"/state"
+// const String HOT_WATER_HACLI_TOPIC = BASE_HA_TOPIC + "/climate/" + BASE_TOPIC + "/" + HOT_WATER; //+"/state"
 
 
 
 
 
 // setpoint topic
-const String SETPOINT_OVERRIDE = "setpoint-override";
-const String SETPOINT_OVERRIDE_SET_TOPIC = BASE_TOPIC + "/" + SETPOINT_OVERRIDE + "/set";     // op_override
-const String SETPOINT_OVERRIDE_RESET_TOPIC = BASE_TOPIC + "/" + SETPOINT_OVERRIDE + "/reset"; //
+// const String SETPOINT_OVERRIDE = "setpoint-override";
+// const String SETPOINT_OVERRIDE_SET_TOPIC = BASE_TOPIC + "/" + SETPOINT_OVERRIDE + "/set";     // op_override
+// const String SETPOINT_OVERRIDE_RESET_TOPIC = BASE_TOPIC + "/" + SETPOINT_OVERRIDE + "/reset"; //
 
 
 
