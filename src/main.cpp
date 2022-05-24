@@ -71,55 +71,52 @@ void callback(char *topic, byte *payload, unsigned int length)
 
 
 //NEWS temperature
-  if (topicStr == NEWS_GET_TOPIC)
+  if (topicStr == NEWS_GET_TOPIC)               //NEWS averange temp -outside temp
   {
     String ident = String(millis())+": NEWS temp ";
     #ifdef debug
     Serial.print(ident);
     #endif
-    #ifdef enableWebSerial
     WebSerial.print(ident);
-    #endif
-    if (PayloadtoValidFloatCheck(payloadStr))
+    if (PayloadtoValidFloatCheck(getJsonVal(payloadStr,NEWStemp_json)))           //invalid val is displayed in funct
     {
-      temp_NEWS = PayloadtoValidFloat(payloadStr,true);     //true to get output to serial and webserial
+      temp_NEWS = PayloadtoValidFloat(getJsonVal(payloadStr,NEWStemp_json),true);     //true to get output to serial and webserial
       lastNEWSSet = millis();
       temp_NEWS_count = 0;
 //      receivedmqttdata = true;    //makes every second run mqtt send and influx
+      #ifdef enableWebSerial
+      WebSerial.print(("NEWS updated from MQTT to ")+String(temp_NEWS)+" Payl: "+payloadStr);
+      #endif
     }
   } else
-//CO Pump Status
-  if (topicStr == COPUMP_GET_TOPIC)
+//CO Pump Status #define COPumpStatus_json "CO0_boilerroom_pump2CO"
+//#define WaterPumpStatus_json "CO0_boilerroom_pump1Water"
+  if (topicStr == COPUMP_GET_TOPIC)                                                                   //external CO Pump Status
   {
-    String ident = String(millis())+": Status CO Pomp ";
+    String ident = String(millis())+": Wood/coax CO Pump Status ";
     #ifdef debug
     Serial.print(ident);
     #endif
-    #ifdef enableWebSerial
     WebSerial.print(ident);
-    #endif
+    receivedmqttdata = true;
     bool tmp = false;
-    if (PayloadStatus(payloadStr, true)) tmp = true;
-    else if (PayloadStatus(payloadStr, false)) tmp = false;
+    if (PayloadStatus(getJsonVal(payloadStr,COPumpStatus_json),true) && PayloadStatus(getJsonVal(payloadStr,COPumpStatus_json),true)) tmp = true;
+    if (CO_BoilerPumpWorking!=tmp) receivedmqttdata = true;
+    if (PayloadStatus(getJsonVal(payloadStr,COPumpStatus_json), true)) {CO_PumpWorking = true;}
+    else if (PayloadStatus(getJsonVal(payloadStr,COPumpStatus_json), false)) {CO_PumpWorking = false;}
     else
     {
       receivedmqttdata = false;
-      #ifdef debug
+#ifdef debug
       Serial.println("Unknown: "+String(payloadStr));
-      #endif
-      #ifdef enableWebSerial
+#endif
       WebSerial.println("Unknown: "+String(payloadStr));
-      #endif
     }
-    if (CO_PumpWorking!=tmp) receivedmqttdata = true;
-    CO_PumpWorking = tmp;
     if (receivedmqttdata) {
       #ifdef debug
       Serial.println(CO_PumpWorking ? "Active" : "Disabled" );
       #endif
-      #ifdef enableWebSerial
       WebSerial.println(CO_PumpWorking ? "Active" : "Disabled" );
-      #endif
     }
   } else
 //BOILER OPENTHERM CO Status with flame
@@ -617,10 +614,10 @@ void loop()
     WebSerial.println(String(lastUpdatemqtt)+": Update MQTT and InfluxDB data: ");
     #endif
     receivedmqttdata = false;
-    lastUpdatemqtt = millis();
     if (mqttclient.connected()) {
       updateMQTTData();
       updateInfluxDB(); //i have on same server mqtt and influx so when mqtt is down influx probably also ;(  This   if (Influxclient.isConnected())  doesn't work forme 202205
+      lastUpdatemqtt = millis();
     }
 
   }
@@ -629,13 +626,13 @@ void loop()
 
 
   //#define abs(x) ((x)>0?(x):-(x))
-  if ((millis() - lastNEWSSet)*temp_NEWS_count > temp_NEWS_interval_reduction_time_ms)
+  if ((millis() - lastNEWSSet) > temp_NEWS_interval_reduction_time_ms)
   { // at every 0,5hour lower temp NEWS when no communication why -2>1800000 is true ???
     #ifdef debug
     Serial.println("now: "+String(millis())+" "+"lastNEWSSet: "+String(lastNEWSSet)+" "+"temp_NEWS_interval_reduction_time_ms: "+String(temp_NEWS_interval_reduction_time_ms));
     #endif
     #ifdef enableWebSerial
-    WebSerial.println("now: "+String(millis())+" "+"lastNEWSSet: "+String(lastNEWSSet)+" "+"temp_NEWS_interval_reduction_time_ms: "+String(temp_NEWS_interval_reduction_time_ms));
+    WebSerial.println("now: "+String(millis())+" "+"lastNEWSSet: "+String(lastNEWSSet)+" "+"temp_NEWS_interval_reduction_time_ms: "+String("temp_NEWS_interval_reduction_time_ms"));
     #endif
     temp_NEWS_count++;
     if (temp_NEWS > cutOffTemp)
