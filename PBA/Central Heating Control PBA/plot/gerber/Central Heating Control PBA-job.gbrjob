@@ -5,13 +5,13 @@
       "Application": "Pcbnew",
       "Version": "(6.0.4)"
     },
-    "CreationDate": "2022-05-09T22:27:08+02:00"
+    "CreationDate": "2022-05-29T19:49:36+02:00"
   },
   "GeneralSpecs": {
     "ProjectId": {
       "Name": "Central Heating Control PBA",
       "GUID": "43656e74-7261-46c2-9048-656174696e67",
-      "Revision": "2.0"
+      "Revision": "2.1"
     },
     "Size": {
       "X": 173.505,
@@ -27,7 +27,7 @@
       "PadToPad": 0.1,
       "PadToTrack": 0.1,
       "TrackToTrack": 0.1,
-      "MinLineWidth": 0.4,
+      "MinLineWidth": 0.5,
       "TrackToRegion": 0.508,
       "RegionToRegion": 0.508
     }
@@ -49,7 +49,7 @@
       "FilePolarity": "Positive"
     },
     {
-      "Path": "Central Heating Control PBA-Dolna kleju.gbr",
+      "Path": "Central Heating Control PBA-B_Adhesive.gbr",
       "FileFunction": "Glue,Bot",
       "FilePolarity": "Positive"
     },
@@ -69,7 +69,7 @@
       "FilePolarity": "Positive"
     },
     {
-      "Path": "Central Heating Control PBA-Dolna opisowa.gbr",
+      "Path": "Central Heating Control PBA-B_Silkscreen.gbr",
       "FileFunction": "Legend,Bot",
       "FilePolarity": "Positive"
     },

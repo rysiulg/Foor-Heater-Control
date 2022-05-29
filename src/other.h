@@ -72,7 +72,7 @@ void Assign_Name_Addr_Pinout(int i, String name, String address, int outpin) {
   name=kondygnacja+sepkondname+name;
   name.toCharArray((char*)room_temp[i].nameSensor, namelength+1); //cutted last char
   room_temp[i].idpinout = outpin;
-  if (outpin>0) {
+  if (outpin>-1) {
     pinMode (outpin, OUTPUT);       //set pin as output
     digitalWrite (outpin, start_digital);    //set active high
     if (room_temp[i].tempset==InitTemp or room_temp[i].tempset==0) room_temp[i].tempset = room_temp_default;
@@ -422,7 +422,7 @@ https://www.home-assistant.io/integrations/climate.mqtt/
 
   }
   #ifdef debug
-  Serial.println(String(millis())+": MQTT Data Sended...");  String(millis())+": "+
+  Serial.println(String(millis())+": MQTT Data Sended...");
   #endif
   #ifdef enableWebSerial
   WebSerial.println(String(millis())+": MQTT Data Sended...");

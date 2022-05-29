@@ -159,7 +159,7 @@ void callback(char *topic, byte *payload, unsigned int length)
       if (PayloadtoValidFloatCheck(payloadStr))  //wrong value are displayed in function
       {
         #ifdef debug
-        Serial.println(String(millis())+": ROOM"+String(getIdentyfikator(x))+" "));
+        Serial.println(String(millis())+": ROOM"+String(getIdentyfikator(x))+" ");
         #endif
         #ifdef enableWebSerial
         WebSerial.println(String(millis())+": ROOM"+String(getIdentyfikator(x))+" ");
@@ -291,10 +291,9 @@ void ReadTemperatures()
   #endif
 
   #ifdef enableDHT
+  dht.read(true);
   float t = dht.readTemperature();
-  if (isnan(t)) t=InitTemp;
   float h = dht.readHumidity();
-  if (isnan(h)) h=0;
   if (isnan(h) or isnan(t)) {
     #ifdef debug
     Serial.println("Failed to read from DHT sensor!");
@@ -302,10 +301,19 @@ void ReadTemperatures()
     #ifdef enableWebSerial
       WebSerial.println("Failed to read from DHT sensor!");
     #endif
+    //if (isnan(t)) t=InitTemp;
+    //if (isnan(h)) h=0;
     }
+  #endif
+  #ifdef debug
+    Serial.println("gET dht VAL t="+String(t)+" humid: "+String(h));
+  #endif
+  #ifdef enableWebSerial
+    WebSerial.println("gET dht VAL t="+String(t)+" humid: "+String(h));
   #endif
   humiditycor = h;
   tempcor = t; //to check ds18b20 also ;)
+
 }
 
 void updateInfluxDB()
@@ -372,25 +380,10 @@ void updateInfluxDB()
 void setup()
 {
   Serial.begin(115200);
-  pinMode(choosepin, INPUT_PULLUP);    // sets the digital pin 13 as output
+  pinMode(choosepin,INPUT_PULLUP);    // sets the digital pin 13 as output
   delay(3000);
   Serial.println(F("Starting... Delay3000..."));
 
-  if (loadConfig())
-  {
-    Serial.println(F("Config loaded:"));
-    Serial.println(CONFIGURATION.version);
-    Serial.println(CONFIGURATION.ssid);
-    Serial.println(CONFIGURATION.pass);
-    Serial.println(CONFIGURATION.mqtt_server);
-    Serial.println(CONFIGURATION.COPUMP_GET_TOPIC);
-    Serial.println(CONFIGURATION.NEWS_GET_TOPIC);
-  }
-  else
-  {
-    Serial.println(F("Config not loaded!"));
-    saveConfig(); // overwrite with the default settings
-  }
   //get Configuration floor 1 or 2 -if set is 2
 
   if (digitalRead(choosepin)==1) {
@@ -427,14 +420,35 @@ void setup()
   me_lokalizacja += kondygnacja;//+"_mqqt_MARM";
   mqttident += kondygnacja + "_";
   mqttdeviceid.replace("me_lokalizacja",me_lokalizacja);
+  Serial.println("choosePin: "+String(choosepin)+" status: "+String(digitalRead(choosepin))+" czyli: "+(digitalRead(choosepin)? "Kondygnacja 2":"Kondygnacja 1")+" - "+String(kondygnacja));
+  pinMode(choosepin, DISABLED );
 
 
+  if (loadConfig())
+  {
+    Serial.println(F("Config loaded:"));
+    Serial.println(CONFIGURATION.version);
+    Serial.println(CONFIGURATION.ssid);
+    Serial.println(CONFIGURATION.pass);
+    Serial.println(CONFIGURATION.mqtt_server);
+    Serial.println(CONFIGURATION.COPUMP_GET_TOPIC);
+    Serial.println(CONFIGURATION.NEWS_GET_TOPIC);
+  }
+  else
+  {
+    Serial.println(F("Config not loaded!"));
+    saveConfig(); // overwrite with the default settings
+  }
 
   Serial.println(("Connecting to " + String(ssid)));
 
   #ifndef ESP32
   WiFi.hostname(String(me_lokalizacja).c_str());      //works for esp8266
   #else
+  btStop();   //disable bluetooth
+  setCpuFrequencyMhz(80);   //STANDARD 240mHz
+
+
   WiFi.disconnect(true);
   WiFi.config(((u32_t)0x0UL),((u32_t)0x0UL),((u32_t)0x0UL));//IPADDR_NONE, INADDR_NONE, INADDR_NONE); //none gives 255.255.255.255 error in libraries
   WiFi.setHostname((me_lokalizacja).c_str());  //for esp32
@@ -487,6 +501,9 @@ void setup()
   mqttclient.setServer(mqtt_server, mqtt_port);
   mqttclient.setBufferSize(2048);
   mqttclient.setCallback(callback);
+#ifdef enableDHT
+  dht.begin();
+#endif
 
    // Init DS18B20 sensor
   sensors.begin();

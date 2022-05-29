@@ -1,5 +1,5 @@
 
-#define choosepin 4 //15 must be low during boot 34 have no internal pullup -only input         //pin for choose if low than kond=1 else kond=2
+#define choosepin 18 //15 must be low during boot 34 have no internal pullup -only input         //pin for choose if low than kond=1 else kond=2
 
 //#if kondygnacja == 1
 #define dzawor1addr1   "281234760400008f"  //+0-1-mama -o+13 -odczyty z dawnej powrotu podlogi teraz 1w
@@ -20,7 +20,7 @@
 //#if kondygnacja==2
 #define dzawor1addr2   "28ffe13f80140284"    //0-1-mama -o+13 -odczyty z dawnej powrotu podlogi teraz 1w
 #define dzawor2addr2   "28ff684280140289"    //0-8-piotrek -pok 8 28ffd06480140289
-#define dzawor3addr2   "28ff256d80140266" //"28ff056e80140216"  //0-2: Podloga 2 lazienka+wc
+#define dzawor3addr2   "28ff256d80100000" //"28ff056e80140216"  //0-2: Podloga 2 lazienka+wc
 #define dzawor4addr2   "28ffd06480140281"    //0-7-maja 28ff684280140281 /podmienilem z 21 bo ten ma wysoki odczyt
 #define dzawor5addr2   "28ff556580140217"  //0-3: Podloga 3 Kuchnia
 #define dzawor6addr2   "28ffcd43801402e7"    //0-6-salon
@@ -30,15 +30,15 @@
 #define dzawor10addr2  "28ff5867801402fc"   //tempwename
 #define dzawor11addr2  "28ff2f57241703eb"  //b Zas.4D dol--   tttttttttttyyyyyyyyyyyyyyyyyyyymmmmmmmmmmmmmmmmmmmmmmmmmccccccccccccccccccczzzzzzzzzzzzzzzzzzaaaaaaaaaaaaaaaasssssssssssssssss
 #define dzawor12addr2  "28ff347080140272"  //Zasilanie-powrot (od zaworu 4D lewo)
-#define dzawor13addr2  "28ff586780130200"  //nie wiem bzy
+#define dzawor13addr2  "28ff256d80140266"  //nie wiem bzy
 //#endif
 
 // Temperature sensor pin
-const int ROOM_TEMP_SENSOR_PIN = 15; // 0; //for Arduino, 14 for ESP8266 (D5), 18 for ESP32
+const int ROOM_TEMP_SENSOR_PIN = 15; //18b20pin 0; //for Arduino, 14 for ESP8266 (D5), 18 for ESP32
 
 #define zawor1 13
 #define zawor2 32 //35 34x
-#define zawor3 12                       //
+#define zawor3 19  //12 must be low during boot                       //
 #define zawor4 33
 #define zawor5 14
 #define zawor6 25
@@ -47,11 +47,11 @@ const int ROOM_TEMP_SENSOR_PIN = 15; // 0; //for Arduino, 14 for ESP8266 (D5), 1
 #define zawor9 21 //pump
 #define zawor10 22 //reserved pompa_alter_pin
 #define zawor11 23 //reserved pompa_alter_pin
-#define zawor12 0 //reserved pompa_alter_pin
-#define zawor13 0 //reserved pompa_alter_pin
+#define zawor12 -1 //reserved pompa_alter_pin
+#define zawor13 -1 //reserved pompa_alter_pin
 
 #ifdef enableDHT
-#define DHTPIN 20     // Digital pin connected to the DHT sensor
+#define DHTPIN 5     // Digital pin connected to the DHT sensor
 // Uncomment the type of sensor in use:
 //#define DHTTYPE    DHT11     // DHT 11
 #define DHTTYPE    DHT22     // DHT 22 (AM2302)
@@ -73,7 +73,7 @@ const int ROOM_TEMP_SENSOR_PIN = 15; // 0; //for Arduino, 14 for ESP8266 (D5), 1
 #define dzawor10name tempwename    //listwa we -temp odcinania pompy
 #define dzawor11name "unknown"
 #define dzawor12name "RETURN(zaw.4D lewo)"      //wyjscie z podlogi
-#define dzawor13name "nie wiem bzy"
+#define dzawor13name "temp_komora"
 
 
 const String zawor1name = dzawor1name,

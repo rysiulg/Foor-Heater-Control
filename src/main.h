@@ -96,10 +96,10 @@ String mqttdeviceid = "\"dev\":{\"ids\":\""+String("me_lokalizacja")+"\",\"name\
 
 
 
-#define start HIGH     //active state
-#define stop LOW   //deactive state
-#define start_digital HIGH     //active state physically digitalwrite
-#define stop_digital LOW   //deactive state physically digitalwrite
+#define start LOW //HIGH     //active state
+#define stop HIGH //LOW   //deactive state
+#define start_digital LOW     //active state physically digitalwrite
+#define stop_digital HIGH   //deactive state physically digitalwrite
 
 
 
