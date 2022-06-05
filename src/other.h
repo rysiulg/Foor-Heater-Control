@@ -3,13 +3,13 @@
 #include <Arduino.h>
 
 const unsigned long extTempTimeout_ms = 180 * 1000,
-                    statusUpdateInterval_ms = 45 * 60 * 1000,    //update pumps i dallas  -i check mqtt for active boiler ch pump and co pump and if active one or both change time to next value
+                    statusUpdateInterval_ms = 60 * 1 * 1000,    //update pumps i dallas  -i check mqtt for active boiler ch pump and co pump and if active one or both change time to next value
                     statusUpdateShortenInterval_s = 60,          //update pumps i dallas  -i check mqtt for active boiler ch pump and co pump and if active one or both change time to this value
                     spOverrideTimeout_ms = 180 * 1000,
                     mqttUpdateInterval_ms = 1 * 60 * 1000,      //send data to mqtt and influxdb
                     temp_NEWS_interval_reduction_time_ms = 30 * 60 * 1000, // time to laps between temp_NEWS reduction by 5%
                     mqtt_offline_reconnect_after_ms = 15 * 60 * 1000,      // time when mqtt is offline to wait for next reconnect (15minutes)
-                    save_config_every = 5 * 60 * 60 * 1000,                    // time saveing config values in eeprom (15minutes)
+                    save_config_every = 5 * 60 * 1000,                    // time saveing config values in eeprom (15minutes) -changed to shorter time -implemented save only if value are changed
                     WiFiinterval = 30 * 1000;
 
 // upper and lower bounds on heater level
@@ -52,7 +52,8 @@ unsigned long ts = 0, new_ts = 0, // timestamp
               lastmqtt_reconnect = 0,
               lastSaveConfig = 0,
               lastSpSet = 0,
-              WiFipreviousMillis = 0;
+              WiFipreviousMillis = 0,
+              dhtreadtime = 0;
 
 bool receivedmqttdata = false,
      CO_PumpWorking = false,

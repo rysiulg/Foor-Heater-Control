@@ -269,8 +269,11 @@ void WebServers() {
     webserver.on( ("/"+String(dhumidcor)).c_str(), HTTP_GET, [](AsyncWebServerRequest * request) {
         request->send(200, "text/plain; charset=utf-8",  String(humiditycor,1));
       }).setAuthentication("", "");
+
     webserver.on( ("/"+String(dtempcor)).c_str(), HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8",  String(tempcor,1));
+        String tempw = "\0";
+        if (millis()-dhtreadtime > (60*1000)) tempw="  Last update was "+uptimedana(dhtreadtime)+" ago";
+        request->send(200, "text/plain; charset=utf-8",  String(tempcor,1)+tempw);
       }).setAuthentication("", "");
 #endif
 
@@ -694,6 +697,7 @@ String processor(const String var) {
     ptr+="<p>"+humidicon+F("<span class=\"dht-labels\">")+String(humidcorstr)+F("</span><BR><B><span class=\"dht-labels-temp\" id=\"")+String(dhumidcor)+F("\">&nbsp;<font color=\"Blue\">")+String(humiditycor,1)+F("</font></span><sup class=\"units\">&deg;C</sup></B></p>");
     ptr+=F("<td></td");
     ptr+="<p>"+tempicon+F("<span class=\"dht-labels\">")+String(tempcorstr)+F("</span><BR><B><span class=\"dht-labels-temp\" id=\"")+String(dtempcor)+F("\">&nbsp;<font color=\"blue\">")+String(tempcor,1)+F("</font></span><sup class=\"units\">&deg;C</sup></B></p>");
+    if (millis()-dhtreadtime > (60*1000)) ptr+="Last update was "+uptimedana(dhtreadtime)+" ago";
     ptr+=F("</td></tr>");
     #endif
 
@@ -846,6 +850,7 @@ bool loadConfig() {
     room_temp[6].tempset = CONFIGURATION.roomtempset7;
     room_temp[7].tempset = CONFIGURATION.roomtempset8;
     room_temp[8].tempset = CONFIGURATION.roomtempset9;
+    room_temp[9].tempset = CONFIGURATION.roomtempset10;
 
     //roomtemp = CONFIGURATION.roomtemp;
     temp_NEWS = CONFIGURATION.temp_NEWS;
@@ -871,37 +876,89 @@ bool loadConfig() {
 // save the CONFIGURATION in to EEPROM
 void saveConfig() {
   #include "configmqtttopics.h"
+  #ifdef debug1
+    Serial.println("Saving config...........................prepare ");
+    #endif
+    #ifdef enableWebSerial
+    WebSerial.println("Saving config...........................prepare ");
+    #endif
+  unsigned int temp =0;
+  //firs read content of eeprom
+  EEPROM.get(1,temp);
+  if (EEPROM.read(CONFIG_START + 0) == CONFIG_VERSION[0] &&
+      EEPROM.read(CONFIG_START + 1) == CONFIG_VERSION[1] &&
+      EEPROM.read(CONFIG_START + 2) == CONFIG_VERSION[2] &&
+      EEPROM.read(CONFIG_START + 3) == CONFIG_VERSION[3] &&
+      EEPROM.read(CONFIG_START + 4) == CONFIG_VERSION[4]){
 
-  EEPROM.put(1, runNumber);
-  //EEPROM.put(1+sizeof(runNumber), flame_used_power_kwh);
+  // load (overwrite) the local configuration struct
+    for (unsigned int i=0; i<sizeof(configuration_type); i++){
+      *((char*)&CONFTMP + i) = EEPROM.read(CONFIG_START + i);
+    }
+  }
+//now compare and if changed than save
+  if (temp != runNumber ||
+      CONFTMP.roomtempset1 != room_temp[0].tempset ||
+      CONFTMP.roomtempset2 != room_temp[1].tempset ||
+      CONFTMP.roomtempset3 != room_temp[2].tempset ||
+      CONFTMP.roomtempset4 != room_temp[3].tempset ||
+      CONFTMP.roomtempset5 != room_temp[4].tempset ||
+      CONFTMP.roomtempset6 != room_temp[5].tempset ||
+      CONFTMP.roomtempset7 != room_temp[6].tempset ||
+      CONFTMP.roomtempset8 != room_temp[7].tempset ||
+      CONFTMP.roomtempset9 != room_temp[8].tempset ||
+      CONFTMP.roomtempset10 != room_temp[9].tempset ||
+      strcmp(CONFTMP.ssid, ssid) != 0 ||
+      strcmp(CONFTMP.pass, pass) != 0 ||
+      strcmp(CONFTMP.mqtt_server, mqtt_server) != 0 ||
+      strcmp(CONFTMP.mqtt_user, mqtt_user) != 0 ||
+      strcmp(CONFTMP.mqtt_password, mqtt_password) != 0 ||
+      CONFTMP.mqtt_port != mqtt_port ||
+      strcmp(CONFTMP.COPUMP_GET_TOPIC,String(COPUMP_GET_TOPIC).c_str()) != 0 ||
+      strcmp(CONFTMP.NEWS_GET_TOPIC, String(NEWS_GET_TOPIC).c_str()) != 0 ||
+      strcmp(CONFTMP.BOILER_FLAME_STATUS_TOPIC, String(BOILER_FLAME_STATUS_TOPIC).c_str()) != 0 ||
+      strcmp(CONFTMP.BOILER_FLAME_STATUS_ATTRIBUTE, String(BOILER_FLAME_STATUS_ATTRIBUTE).c_str()) != 0 ||
+      strcmp(CONFTMP.BOILER_COPUMP_STATUS_ATTRIBUTE, String(BOILER_COPUMP_STATUS_ATTRIBUTE).c_str()) != 0 ) {  //skip save if runnumber = saved runnumber to avoid too much memory save and wear eeprom
+    EEPROM.put(1, runNumber);
+    //EEPROM.put(1+sizeof(runNumber), flame_used_power_kwh);
+    #ifdef debug1
+    Serial.println(String(millis())+": Saving config........................... to EEPROM some data changed");
+    #endif
+    #ifdef enableWebSerial
+    WebSerial.println(String(millis())+": Saving config........................... to EEPROM some data changed");
+    #endif
 
-  strcpy(CONFIGURATION.version,CONFIG_VERSION);
-  CONFIGURATION.roomtempset1 = room_temp[0].tempset;
-  CONFIGURATION.roomtempset2 = room_temp[1].tempset;
-  CONFIGURATION.roomtempset3 = room_temp[2].tempset;
-  CONFIGURATION.roomtempset4 = room_temp[3].tempset;
-  CONFIGURATION.roomtempset5 = room_temp[4].tempset;
-  CONFIGURATION.roomtempset6 = room_temp[5].tempset;
-  CONFIGURATION.roomtempset7 = room_temp[6].tempset;
-  CONFIGURATION.roomtempset8 = room_temp[7].tempset;
-  CONFIGURATION.roomtempset9 = room_temp[8].tempset;
 
-  CONFIGURATION.temp_NEWS = temp_NEWS;
-  strcpy(CONFIGURATION.ssid,ssid);
-  strcpy(CONFIGURATION.pass,pass);
-  strcpy(CONFIGURATION.mqtt_server,mqtt_server);
-  strcpy(CONFIGURATION.mqtt_user,mqtt_user);
-  strcpy(CONFIGURATION.mqtt_password,mqtt_password);
-  CONFIGURATION.mqtt_port = mqtt_port;
-  strcpy(CONFIGURATION.COPUMP_GET_TOPIC,COPUMP_GET_TOPIC.c_str());
-  strcpy(CONFIGURATION.NEWS_GET_TOPIC,NEWS_GET_TOPIC.c_str());
-  strcpy(CONFIGURATION.BOILER_FLAME_STATUS_TOPIC,BOILER_FLAME_STATUS_TOPIC.c_str());
-  strcpy(CONFIGURATION.BOILER_FLAME_STATUS_ATTRIBUTE,BOILER_FLAME_STATUS_ATTRIBUTE.c_str());
-  strcpy(CONFIGURATION.BOILER_COPUMP_STATUS_ATTRIBUTE,BOILER_COPUMP_STATUS_ATTRIBUTE.c_str());
 
-  for (unsigned int i=0; i<sizeof(configuration_type); i++)
-    EEPROM.write(CONFIG_START + i, *((char*)&CONFIGURATION + i));
-  EEPROM.commit();
+    strcpy(CONFIGURATION.version,CONFIG_VERSION);
+    CONFIGURATION.roomtempset1 = room_temp[0].tempset;
+    CONFIGURATION.roomtempset2 = room_temp[1].tempset;
+    CONFIGURATION.roomtempset3 = room_temp[2].tempset;
+    CONFIGURATION.roomtempset4 = room_temp[3].tempset;
+    CONFIGURATION.roomtempset5 = room_temp[4].tempset;
+    CONFIGURATION.roomtempset6 = room_temp[5].tempset;
+    CONFIGURATION.roomtempset7 = room_temp[6].tempset;
+    CONFIGURATION.roomtempset8 = room_temp[7].tempset;
+    CONFIGURATION.roomtempset9 = room_temp[8].tempset;
+    CONFIGURATION.roomtempset10 = room_temp[9].tempset;
+
+    CONFIGURATION.temp_NEWS = temp_NEWS;
+    strcpy(CONFIGURATION.ssid,ssid);
+    strcpy(CONFIGURATION.pass,pass);
+    strcpy(CONFIGURATION.mqtt_server,mqtt_server);
+    strcpy(CONFIGURATION.mqtt_user,mqtt_user);
+    strcpy(CONFIGURATION.mqtt_password,mqtt_password);
+    CONFIGURATION.mqtt_port = mqtt_port;
+    strcpy(CONFIGURATION.COPUMP_GET_TOPIC,COPUMP_GET_TOPIC.c_str());
+    strcpy(CONFIGURATION.NEWS_GET_TOPIC,NEWS_GET_TOPIC.c_str());
+    strcpy(CONFIGURATION.BOILER_FLAME_STATUS_TOPIC,BOILER_FLAME_STATUS_TOPIC.c_str());
+    strcpy(CONFIGURATION.BOILER_FLAME_STATUS_ATTRIBUTE,BOILER_FLAME_STATUS_ATTRIBUTE.c_str());
+    strcpy(CONFIGURATION.BOILER_COPUMP_STATUS_ATTRIBUTE,BOILER_COPUMP_STATUS_ATTRIBUTE.c_str());
+
+    for (unsigned int i=0; i<sizeof(configuration_type); i++)
+      EEPROM.write(CONFIG_START + i, *((char*)&CONFIGURATION + i));
+    EEPROM.commit();
+  }
 }
 
 void restart()

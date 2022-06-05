@@ -11,7 +11,7 @@
 
 // v.2.0 Initial after move from Arduino Mega to ESP32
 
-#define debug		//Serial Debug
+//#define debug		//Serial Debug
 #define debug1
 #define enableWebSerial
 //#define kondygnacja 2
@@ -81,8 +81,8 @@ char mqtt_password[sensitive_size] = MQTT_Password_data;
 int mqtt_port = MQTT_port_No;
 
 // Master OpenTherm Shield pins configuration
-const int OT_IN_PIN = 26;  // for Arduino, 4 for ESP8266 (D2), 21 for ESP32
-const int OT_OUT_PIN = 26; // for Arduino, 5 for ESP8266 (D1), 22 for ESP32
+//const int OT_IN_PIN = 26;  // for Arduino, 4 for ESP8266 (D2), 21 for ESP32
+//const int OT_OUT_PIN = 26; // for Arduino, 5 for ESP8266 (D1), 22 for ESP32
 
 
 
@@ -202,6 +202,7 @@ typedef struct
 
 // with DEFAULT values!
 configuration_type CONFIGURATION;
+configuration_type CONFTMP;
 
 const String
         tempicon="<i class=\"fas fa-thermometer-half\" style=\"color:#059e8a;font-size:36px;text-shadow:2px 2px 4px #000000;\"></i>&nbsp;&nbsp;",
