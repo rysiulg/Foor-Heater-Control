@@ -789,10 +789,10 @@ void Pump_Activate_Control () {
       #ifdef enableWebSerial
       WebSerial.println(String(millis())+": "+String(o)+": Switching: "+String(room_temp[o].switch_state)+" pump: "+String(pump));
       #endif
-      digitalWrite(lampPin, !digitalRead(lampPin));
+
     }
   }
-  digitalWrite(lampPin, false);
+
 //  if (pump == stop) digitalWrite(pompa_pin, stop_digital); else digitalWrite(pompa_pin, start_digital);
 
 }
