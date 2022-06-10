@@ -58,7 +58,8 @@ unsigned long ts = 0, new_ts = 0, // timestamp
 bool receivedmqttdata = false,
      CO_PumpWorking = false,
      CO_BoilerPumpWorking = false,
-     tmanual = false;
+     tmanual = false,
+     starting = true;
 
 const int lampPin = LED_BUILTIN;
 
@@ -251,13 +252,13 @@ void recvMsg(uint8_t *data, size_t len)
     WebSerial.println(String(millis())+": "+("Toggle Pump State by command... to: "+String((statusUpdateInterval_ms - (millis() - lastUpdateTempPump))/1000)+"s max: "+String(statusUpdateInterval_ms/1000)+"s" ));
     WebSerial.println("numer: "+String(o)+" Stan: "+String(state));
     WebSerial.println("Stan: "+String(room_temp[o].switch_state)+" dig: "+String(digitalRead(room_temp[o].idpinout)));
-    room_temp[o].switch_state = state;
-    digitalWrite(room_temp[o].idpinout, state);
+    room_temp[o].switch_state = !state;
+    digitalWrite(room_temp[o].idpinout, !state);    //aktywny stan niski
     WebSerial.println("Stan2: "+String(room_temp[o].switch_state)+" dig: "+String(digitalRead(room_temp[o].idpinout)));
 
   }
 
-  if (d == "RESET_CONFIG")
+  if (d == F("RESET_CONFIG"))
   {
     WebSerial.println(F("RESET config to DEFAULT VALUES and restart..."));
     WebSerial.println("Size CONFIG: " + String(sizeof(CONFIGURATION)));
@@ -271,7 +272,14 @@ void recvMsg(uint8_t *data, size_t len)
   }
    if (d == "HELP")
   {
-    WebSerial.println(F("KOMENDY: RESTART, RECONNECT, SAVE, RESET_CONFIG, TOGGLEPUMP numer=0/1"));
+    WebSerial.println(F("KOMENDY:\n \
+      TOGGLEPUMP n=0/1 -Zmiana statusu pompy n (numer od 0 do 10) na stan (0 wyłącza, 1 włącza),\n \
+	    RESTART          -Uruchamia ponownie układ,\n \
+	    RECONNECT        -Dokonuje ponownej próby połączenia z bazami,\n \
+	    SAVE             -Wymusza zapis konfiguracji,\n \
+	    RESET_CONFIG     -UWAGA!!!! Resetuje konfigurację do wartości domyślnych"));
+    //WebSerial.println(F("  FORCECOBELOW xx  -Zmienia wartość xx 'wymusza pompe CO poniżej temperatury średniej zewnetrznej',"));
+    //WebSerial.println(F("  COCUTOFFTEMP xx  -Zmienia wartość xx 'Temperatura graniczna na wymienniku oznacza ze piec sie grzeje',"));
   }
 }
 
@@ -303,6 +311,7 @@ float PayloadtoValidFloat(String payloadStr, bool withtemps_minmax, float mintem
     #ifdef debug
     Serial.println(F("Value is not a valid number, ignoring..."));
     #endif
+    WebSerial.print(String(millis())+": ");
     WebSerial.println(F("Value is not a valid number, ignoring..."));
     return InitTemp;
   } else
@@ -314,6 +323,7 @@ float PayloadtoValidFloat(String payloadStr, bool withtemps_minmax, float mintem
       #ifdef debug
       Serial.println("Value is valid number: "+String(valuefromStr,2));
       #endif
+	WebSerial.print(String(millis())+": ");
       WebSerial.println("Value is valid number: "+String(valuefromStr,2));
       if (valuefromStr>maxtemp and maxtemp!=InitTemp) valuefromStr = maxtemp;
       if (valuefromStr<mintemp and mintemp!=InitTemp) valuefromStr = mintemp;

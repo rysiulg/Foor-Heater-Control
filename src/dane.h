@@ -30,22 +30,24 @@
 #define dzawor10addr2  "28ff5867801402fc"   //tempwename
 #define dzawor11addr2  "28ff2f57241703eb"  //b Zas.4D dol--   tttttttttttyyyyyyyyyyyyyyyyyyyymmmmmmmmmmmmmmmmmmmmmmmmmccccccccccccccccccczzzzzzzzzzzzzzzzzzaaaaaaaaaaaaaaaasssssssssssssssss
 #define dzawor12addr2  "28ff347080140272"  //Zasilanie-powrot (od zaworu 4D lewo)
-#define dzawor13addr2  "28ff256d80140266"  //nie wiem bzy
+//#define dzawor13addr2  "28ff256d80140266"  //nie wiem bzy parter
+#define dzawor13addr2  "28ff266b80140221"  //nie wiem bzy pietro
+
 //#endif
 
 // Temperature sensor pin
 const int ROOM_TEMP_SENSOR_PIN = 15; //18b20pin 0; //for Arduino, 14 for ESP8266 (D5), 18 for ESP32
 
 #define zawor1 13
-#define zawor2 32 //35 34x
-#define zawor3 19  //12 must be low during boot                       //
-#define zawor4 33
-#define zawor5 14
+#define zawor2 19 //12 must be low during boot
+#define zawor3 14
+#define zawor4 27
+#define zawor5 26
 #define zawor6 25
-#define zawor7 27
-#define zawor8 26
+#define zawor7 33
+#define zawor8 32
 #define zawor9 21 //pump
-#define zawor10 22 //reserved pompa_alter_pin
+#define zawor10 22
 #define zawor11 23 //reserved pompa_alter_pin
 #define zawor12 -1 //reserved pompa_alter_pin
 #define zawor13 -1 //reserved pompa_alter_pin

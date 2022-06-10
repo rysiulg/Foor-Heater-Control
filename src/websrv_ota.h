@@ -761,7 +761,7 @@ String do_stopkawebsite() {
       String ptr;
       ptr = "&nbsp;";
       if (room_temp[8].switch_state) {
-        ptr += F("<i class='fas fa-fire' style='color: red'></i>"); ptr += "<span class='dht-labels'>"+String(Flame_Active_Flame_level)+F("</span><B>")+ String("flame_level",0)+F("<sup class=\"units\">&#37;</sup></B>");
+        ptr += F("<i class='fas fa-fire' style='color: red'></i>"); ptr += "<span class='dht-labels'>"+String(FloorPumpActive)+F("</span><B>")+F("<sup class=\"units\"> </sup></B>");
         ptr += F("<br>");
       }
       if (CO_BoilerPumpWorking) ptr += "<font color=\"red\"><span class='dht-labels'><B>"+String(BOILER_IS_HEATING)+F("<br></B></span></font>");
@@ -880,7 +880,7 @@ void saveConfig() {
     Serial.println("Saving config...........................prepare ");
     #endif
     #ifdef enableWebSerial
-    WebSerial.println("Saving config...........................prepare ");
+    if (!starting) {WebSerial.println("Saving config...........................prepare ");}
     #endif
   unsigned int temp =0;
   //firs read content of eeprom
@@ -925,7 +925,7 @@ void saveConfig() {
     Serial.println(String(millis())+": Saving config........................... to EEPROM some data changed");
     #endif
     #ifdef enableWebSerial
-    WebSerial.println(String(millis())+": Saving config........................... to EEPROM some data changed");
+    if (!starting) {WebSerial.println(String(millis())+": Saving config........................... to EEPROM some data changed");}
     #endif
 
 

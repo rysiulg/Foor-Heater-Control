@@ -383,7 +383,7 @@ void updateInfluxDB()
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(74880);
   pinMode(choosepin,INPUT_PULLUP);    // sets the digital pin 13 as output
   delay(3000);
   Serial.println(F("Starting... Delay3000..."));
@@ -555,6 +555,7 @@ void setup()
     }
     #endif
   #endif
+  starting = false;
 
 
 }
@@ -627,7 +628,11 @@ void loop()
 //    opentherm_update_data(lastUpdatemqtt); // According OpenTherm Specification from Ihnor Melryk Master requires max 1s interval communication -przy okazji wg czasu update mqtt zrobie odczyt dallas
   }
 
-  if (((millis() - lastUpdatemqtt) > mqttUpdateInterval_ms) or (receivedmqttdata == true) or lastUpdatemqtt==0)   //recived data ronbi co 800ms -wylacze ten sttus dla odebrania news
+  if (millis()%2000==0 and mqttclient.connected()) {
+    digitalWrite(lampPin, !digitalRead(lampPin));
+  }
+
+  if (((millis() - lastUpdatemqtt) > mqttUpdateInterval_ms) or (receivedmqttdata == true) or (lastUpdatemqtt == 0) )   //recived data ronbi co 800ms -wylacze ten sttus dla odebrania news
   {
     #ifdef debug
     Serial.println(String(millis())+": mqtt+influ "+"lastUpdatemqtt: "+String(lastUpdatemqtt)+" receivedmqttdata: "+String(receivedmqttdata)+" mqttUpdateInterval_ms: "+String(mqttUpdateInterval_ms));
@@ -638,10 +643,16 @@ void loop()
     WebSerial.println(String(millis())+": "+String(lastUpdatemqtt)+": Update MQTT and InfluxDB data: ");
     #endif
     receivedmqttdata = false;
+    lastUpdatemqtt = millis();
     if (mqttclient.connected()) {
       updateMQTTData();
-      updateInfluxDB(); //i have on same server mqtt and influx so when mqtt is down influx probably also ;(  This   if (Influxclient.isConnected())  doesn't work forme 202205
-      lastUpdatemqtt = millis();
+      updateInfluxDB(); //i have on same server mqtt and influx so when mqtt is down influx probably also ;(  This   if (Influxclient.isConnected())  doesn't work forme 202205      digitalWrite(lampPin, !digitalRead(lampPin));
+      digitalWrite(lampPin, HIGH);
+    } else {
+      WebSerial.println(String(millis())+": Disconnected -Unable send data to MQTT and InfluxDB");
+      digitalWrite(lampPin, LOW);
+      delay(800);
+      digitalWrite(lampPin, HIGH);
     }
 
   }
