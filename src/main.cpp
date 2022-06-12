@@ -13,7 +13,7 @@ AsyncWebServer webserver(wwwport);
 
 
 
-OneWire oneWire(ROOM_TEMP_SENSOR_PIN);
+OneWire oneWire(DALLAS_SENSOR_PIN);
 DallasTemperature sensors(&oneWire);
 WiFiClient espClient;
 PubSubClient mqttclient(espClient);
@@ -55,7 +55,7 @@ bool isValidNumber(String str)
     char ch = str.charAt(i);
     valid &= isDigit(ch) ||
              ch == '+' || ch == '-' || ch == ',' || ch == '.' ||
-             ch == '\r' || ch == '\n';
+             ch == '\r' || ch == '\r';
   }
   return valid;
 }
@@ -85,7 +85,7 @@ void callback(char *topic, byte *payload, unsigned int length)
       temp_NEWS_count = 0;
 //      receivedmqttdata = true;    //makes every second run mqtt send and influx
       #ifdef enableWebSerial
-      WebSerial.print(("NEWS updated from MQTT to ")+String(temp_NEWS)+" Payl: "+payloadStr);
+      WebSerial.print(String(millis())+": NEWS updated from MQTT to "+String(temp_NEWS));//+" Payl: "+payloadStr);
       #endif
     }
   } else
@@ -247,15 +247,18 @@ void ReadTemperatures()
   #ifdef debug
   Serial.println(String(millis())+": "+F("...Reading 1wire 18B20 and DHT sensors..."));
   #endif
-  sensors.setWaitForConversion(true); //
+  //sensors.setWaitForConversion(true); //
   sensors.requestTemperatures();        //Send the command to get temperatures
-  sensors.setWaitForConversion(false); // switch to async mode
+  //sensors.setWaitForConversion(false); // switch to async mode
   uint8_t  addr[8];
   float temp1w;
   int count = sensors.getDS18Count();
-  if (count==0) count = maxsensors;
   #ifdef debug
-  Serial.println(String(millis())+": "+"Sensors new: "+String(count));
+  Serial.println(String(millis())+": "+"Sensors new count: "+String(count));
+  #endif
+  //if (count==0) count = maxsensors;
+  #ifdef debug
+  Serial.println(String(millis())+": "+"Sensors new mxsensors: "+String(count));
   #endif
   for (int j = 0; j < count; j++) {
       temp1w = sensors.getTempCByIndex(j);
@@ -270,7 +273,7 @@ void ReadTemperatures()
         #endif
         if (array_cmp_8(room_temp[z].addressHEX, addr, sizeof(room_temp[z].addressHEX) / sizeof(room_temp[z].addressHEX[0]),sizeof(addr) / sizeof(addr[0])) == true) {
           assignedsensor=true;
-          if (temp1w!=DS18B20nodata) room_temp[z].tempread = temp1w;
+          if (temp1w!=DS18B20nodata and temp1w!=DS18B20nodata2 and temp1w!=InitTemp) room_temp[z].tempread = temp1w;
         }
       }
       if (!assignedsensor and UnassignedTempSensor.indexOf(addrstr)==-1) UnassignedTempSensor += ";"+String(addrstr)+" "+String(temp1w);
@@ -384,6 +387,7 @@ void updateInfluxDB()
 void setup()
 {
   Serial.begin(74880);
+  pinMode(lampPin, OUTPUT );
   pinMode(choosepin,INPUT_PULLUP);    // sets the digital pin 13 as output
   delay(3000);
   Serial.println(F("Starting... Delay3000..."));
@@ -424,8 +428,8 @@ void setup()
   me_lokalizacja += kondygnacja;//+"_mqqt_MARM";
   mqttident += kondygnacja + "_";
   mqttdeviceid.replace("me_lokalizacja",me_lokalizacja);
-  Serial.println(String(millis())+": "+"choosePin: "+String(choosepin)+" status: "+String(digitalRead(choosepin))+" czyli: "+(digitalRead(choosepin)? "Kondygnacja 2":"Kondygnacja 1")+" - "+String(kondygnacja));
-  pinMode(choosepin, DISABLED );
+  Serial.println(String(millis())+": "+"choosePin: "+String(choosepin)+" status: "+String(digitalRead(choosepin))+" czyli: "+(digitalRead(choosepin)? "Kondygnacja 2":"Kondygnacja 1")+" - "+String(kondygnacja)+" : "+String(me_lokalizacja));
+ // pinMode(choosepin, DISABLED );
 
 
   if (loadConfig())
@@ -441,19 +445,18 @@ void setup()
   else
   {
     Serial.println(F("Config not loaded!"));
-    saveConfig(); // overwrite with the default settings
   }
-
+  saveConfig(); // overwrite with the default settings or save CRT
 //  #include "configmqtttopics.h"
 // Serial.println ("compare:     ");
 // Serial.println(strcmp(CONFIGURATION.BOILER_COPUMP_STATUS_ATTRIBUTE, String(BOILER_FLAME_STATUS_ATTRIBUTE).c_str()) );
-  Serial.println(("Connecting to " + String(ssid)));
+  Serial.println(("Connecting to " + String(ssid) +" from: "+String(me_lokalizacja)));
 
   #ifndef ESP32
   WiFi.hostname(String(me_lokalizacja).c_str());      //works for esp8266
   #else
   btStop();   //disable bluetooth
-  setCpuFrequencyMhz(80);   //STANDARD 240mHz
+//  setCpuFrequencyMhz(80);   //STANDARD 240mHz
 
 
   WiFi.disconnect(true);
@@ -461,7 +464,7 @@ void setup()
   WiFi.setHostname((me_lokalizacja).c_str());  //for esp32
   #endif
   WiFi.mode(WIFI_AP_STA);
-  WiFi.softAP("ESPFL2");
+  WiFi.softAP(String(me_lokalizacja).c_str());
 
   WiFi.begin(ssid, pass);
 
@@ -480,7 +483,8 @@ void setup()
   }
   else
   {
-    Serial.println(F("ok"));
+    Serial.print(F("ok "));
+    Serial.println(String(me_lokalizacja));
   }
   WiFi.enableSTA(true);
   WiFi.setAutoConnect(true);
@@ -492,34 +496,92 @@ void setup()
     //   the fully-qualified domain name is "esp32.local"
     // - second argument is the IP address to advertise
     //   we send our IP address on the WiFi network
-    if (!MDNS.begin(me_lokalizacja.c_str())) {
-        Serial.println("Error setting up MDNS responder!");
-        while(1) {
-            delay(1000);
-        }
-    }
-    Serial.println("mDNS responder started");
-    // Add service to MDNS-SD
-    MDNS.addService("http", "tcp", 80);
+
+    // if (!MDNS.begin(me_lokalizacja.c_str())) {
+    //     Serial.println("Error setting up MDNS responder!");
+    //     while(1) {
+    //         delay(1000);
+    //     }
+    // }
+    // Serial.println("mDNS responder started");
+    // // Add service to MDNS-SD
+    // MDNS.addService("http", "tcp", 80);
 
   Serial.println(WiFi.localIP());
+
+  #ifdef enableWebSerial
+  WebSerial.begin(&webserver);
+  WebSerial.msgCallback(recvMsg);
+  #endif
+
+   // Init DS18B20 sensor
+  sensors.begin();
+
+  ts = millis();
+  lastTempSet = -extTempTimeout_ms;
+
+  #ifdef enableDHT
+  dht.begin();
+  #endif
 
 
   mqttclient.setServer(mqtt_server, mqtt_port);
   mqttclient.setBufferSize(2048);
   mqttclient.setCallback(callback);
-#ifdef enableDHT
-  dht.begin();
-#endif
 
-   // Init DS18B20 sensor
-  sensors.begin();
-  AssignSensors();
-  sensors.setWaitForConversion(true); // switch to async mode
+  #ifdef ENABLE_INFLUX
+  //InfluxDB
+  InfluxClient.setConnectionParamsV1(INFLUXDB_URL, INFLUXDB_DB_NAME, INFLUXDB_USER, INFLUXDB_PASSWORD);
+  // Alternatively, set insecure connection to skip server certificate validation
+  InfluxClient.setInsecure();
+  // Add tags
+  #ifdef debug
+  Serial.print("me-lokalizacja:  ");
+  Serial.println(String(me_lokalizacja));
+  #endif
+  InfluxSensor.addTag("device", me_lokalizacja);
+    // Check server connection
+    #ifdef enableWebSerial
+    if (InfluxClient.validateConnection()) {
+      WebSerial.print(String(millis())+": "+"Connected to InfluxDB: ");//+String(InfluxClient.getServerUrl()));
+    } else {
+      WebSerial.print("InfluxDB connection failed: "+String(InfluxClient.getLastErrorMessage()));
+    }
+    #endif
+  #endif
+  WebServers();
+
+
+
+
+
+
+  AssignSensors();  //po tym ginie mi me_lokalizacja
+  sensors.setWaitForConversion(false); //
+    //sensors.setWaitForConversion(true); //
   sensors.requestTemperatures();
-  sensors.setWaitForConversion(false); // switch to async mode
-  ts = millis();
-  lastTempSet = -extTempTimeout_ms;
+  //sensors.setWaitForConversion(false); // switch to async mode
+
+//   Serial.println("Devices: "+String(sensors.getDeviceCount()));
+//   Serial.println("Devices getDS18Count: "+String(sensors.getDS18Count()));
+// Serial.println("getResolution: "+String(sensors.getResolution()));
+// Serial.println("getWaitForConversion: "+String(sensors.getWaitForConversion()));
+// Serial.println("getCheckForConversion: "+String(sensors.getCheckForConversion()));
+// Serial.println("isConversionComplete: "+String(sensors.isConversionComplete()));
+
+// Serial.println("getAutoSaveScratchPad: "+String(sensors.getAutoSaveScratchPad()));
+
+// Serial.println("isParasitePowerMode: "+String(sensors.isParasitePowerMode()));
+
+// Serial.println("getCheckForConversion: "+String(sensors.getCheckForConversion()));
+// Serial.println("DALLAS_SENSOR_PIN: "+String(DALLAS_SENSOR_PIN));
+// Serial.println("DHTPIN: "+String(DHTPIN));
+
+
+
+// delay(15000);
+
+
 
 
 
@@ -531,30 +593,10 @@ void setup()
 
 
   started = millis();
-  #ifdef enableWebSerial
-  WebSerial.begin(&webserver);
-  WebSerial.msgCallback(recvMsg);
-  #endif
-  WebServers();
 
-  #ifdef ENABLE_INFLUX
-  //InfluxDB
-  InfluxClient.setConnectionParamsV1(INFLUXDB_URL, INFLUXDB_DB_NAME, INFLUXDB_USER, INFLUXDB_PASSWORD);
-  // Alternatively, set insecure connection to skip server certificate validation
-  InfluxClient.setInsecure();
-  // Add tags
-  InfluxSensor.addTag("device", me_lokalizacja);
-    // Check server connection
-    #ifdef enableWebSerial
-    if (InfluxClient.validateConnection()) {
-      WebSerial.print(String(millis())+": "+"Connected to InfluxDB: ");
-      WebSerial.println(InfluxClient.getServerUrl());
-    } else {
-      WebSerial.print("InfluxDB connection failed: ");
-      WebSerial.println(InfluxClient.getLastErrorMessage());
-    }
-    #endif
-  #endif
+
+
+
   starting = false;
 
 
@@ -601,10 +643,14 @@ void loop()
       WebSerial.println(String(millis())+": "+F("MQTT connection problem -try to connect again..."));
       #endif
       delay(500);
+      //if ((unsigned long)(millis()/100)%5 == 0) {   //blink every 0.5s if not connected
+      digitalWrite(lampPin, !digitalRead(lampPin)); //}
       reconnect();
     }
     else
     {
+      if ((unsigned long)(millis()/1000)%2 == 0) {  //blink every 2s if ok
+      digitalWrite(lampPin, !digitalRead(lampPin)); }
       mqttclient.loop();
     }
   }
@@ -628,9 +674,7 @@ void loop()
 //    opentherm_update_data(lastUpdatemqtt); // According OpenTherm Specification from Ihnor Melryk Master requires max 1s interval communication -przy okazji wg czasu update mqtt zrobie odczyt dallas
   }
 
-  if (millis()%2000==0 and mqttclient.connected()) {
-    digitalWrite(lampPin, !digitalRead(lampPin));
-  }
+
 
   if (((millis() - lastUpdatemqtt) > mqttUpdateInterval_ms) or (receivedmqttdata == true) or (lastUpdatemqtt == 0) )   //recived data ronbi co 800ms -wylacze ten sttus dla odebrania news
   {
@@ -644,15 +688,13 @@ void loop()
     #endif
     receivedmqttdata = false;
     lastUpdatemqtt = millis();
+
+
     if (mqttclient.connected()) {
       updateMQTTData();
       updateInfluxDB(); //i have on same server mqtt and influx so when mqtt is down influx probably also ;(  This   if (Influxclient.isConnected())  doesn't work forme 202205      digitalWrite(lampPin, !digitalRead(lampPin));
-      digitalWrite(lampPin, HIGH);
     } else {
       WebSerial.println(String(millis())+": Disconnected -Unable send data to MQTT and InfluxDB");
-      digitalWrite(lampPin, LOW);
-      delay(800);
-      digitalWrite(lampPin, HIGH);
     }
 
   }
@@ -758,6 +800,7 @@ void Pump_Activate_Control () {
   WebSerial.println(String(millis())+": Pump loop...");
   #endif
   GetSpecificSensorData();
+  String tmpval="\0";
   for (int o = 0; o < maxsensors; o++) {
     if (room_temp[o].tempread == InitTemp) room_temp[o].switch_state = stop; //-wylacz gdy temp na wartosci inicjalnej
     //aktywacja przekaznika low, moja plyta HIGH
@@ -783,15 +826,15 @@ void Pump_Activate_Control () {
 
 
       digitalWrite(room_temp[o].idpinout, room_temp[o].switch_state); //chyba raczej do 8 bo tyle czujnikow w pokoju
+      tmpval += String("    ")+String(o)+": Switching: "+String((room_temp[o].switch_state)?"OFF":"ON")+" pump: "+String(pump?"OFF":"ON") + "\r";
       #ifdef debug
       Serial.println(String(millis())+": "+String(o)+": Switching: "+String(room_temp[o].switch_state)+" pump: "+String(pump));
       #endif
-      #ifdef enableWebSerial
-      WebSerial.println(String(millis())+": "+String(o)+": Switching: "+String(room_temp[o].switch_state)+" pump: "+String(pump));
-      #endif
-
     }
   }
+  #ifdef enableWebSerial
+  WebSerial.println(String(millis())+": \r"+tmpval);
+  #endif
 
 //  if (pump == stop) digitalWrite(pompa_pin, stop_digital); else digitalWrite(pompa_pin, start_digital);
 
@@ -799,18 +842,25 @@ void Pump_Activate_Control () {
 
 void GetSpecificSensorData () {
   float min = room_temp[0].tempread, max = room_temp[0].tempset;
-  for (int x=0;x<8;x++) if (min>room_temp[x].tempread) min = room_temp[x].tempread;
-  if (min<roomtemplo) min = roomtemplo;   //get minimal value of all rooms temp
+  String tmpval="\0";
+  for (int x=0;x<8;x++)
+  {
+    if (min>room_temp[x].tempread) min = room_temp[x].tempread;
+    if (max<room_temp[x].tempset) max = room_temp[x].tempset;
+    if (max>roomtemphi) { max = roomtemphi; room_temp[x].tempset = max; }
+    if (min<roomtemplo) { min = roomtemplo; room_temp[x].tempread = min; }  //get minimal value of all rooms temp
+  }
+
 
   for (int o = 0; o < maxsensors; o++) {
     if (String(room_temp[o].nameSensor) == (String(kondygnacja)+sepkondname+String(tempcutoff)).substring(0,namelength)) {
       pumpOffVal = room_temp[o].tempset;
-      if ((room_temp[o].tempread > min) and (room_temp[o].tempread > pumpOffVal)) pump = start; else pump = stop;  //raczej na wejsciu z 4d dol
+      if ((room_temp[o].tempread > min) and (room_temp[o].tempread > room_temp[o].tempset)) pump = start; else pump = stop;  //raczej na wejsciu z 4d dol
       #ifdef debug
       Serial.println(String(millis())+": "+"------------------------------"+String(o)+": SetPUMP: "+String(room_temp[o].switch_state)+" to pump: "+String(pump));
       #endif
       #ifdef enableWebSerial
-      WebSerial.println(String(millis())+": "+"------------------------------"+String(o)+": SetPUMP: "+String(room_temp[o].switch_state)+" to pump: "+String(pump));
+      WebSerial.println(String(millis())+": "+"------------------------------"+String(o)+": SetPUMP: "+String(room_temp[o].switch_state?"OFF":"ON")+" to pump: "+String(pump?"OFF":"ON"));
       #endif
       room_temp[o].switch_state = pump;
     }
@@ -822,11 +872,13 @@ void GetSpecificSensorData () {
       //room_temp[o].tempset = pumpofftemp;
       //if ((tempwe > min) and (tempwe > pumpOffVal)) pump = start; else pump = stop; //"Wejscie podloga -gora"
       //room_temp[o].switch_state = pump;
+    tmpval +="      "+String(o)+": Pump: "+String(pump?"OFF":"ON")+" tempwe: "+String(tempwe)+" MIN: "+String(min)+" PUMPoffTemp: "+String(pumpOffVal)+"\r";
 #ifdef debug
       Serial.println(String(millis())+": "+String(o)+": Pump: "+String(pump)+" tempwe: "+String(tempwe)+" MIN: "+String(min)+" PUMPoffTemp: "+String(pumpOffVal));
 #endif
-#ifdef enableWebSerial
-      WebSerial.println(String(millis())+": "+String(o)+": Pump: "+String(pump)+" tempwe: "+String(tempwe)+" MIN: "+String(min)+" PUMPoffTemp: "+String(pumpOffVal));
-#endif
+
   }
+  #ifdef enableWebSerial
+      WebSerial.println(String(millis())+": \r"+tmpval);
+  #endif
 }

@@ -37,7 +37,7 @@ float roomtemp_last = 0, // prior temperature
       tempcor = 0,                  //DHT temp and mayby dual with 18b20 onboard
       tempwe = 0;                   //temp. wejscia co
 String LastboilerResponseError,
-       kondygnacja = "\0";          //ident pietra
+       kondygnacja = "0";          //ident pietra
 
 int temp_NEWS_count = 0,
     mqtt_offline_retrycount = 0,
@@ -84,10 +84,6 @@ void Assign_Name_Addr_Pinout(int i, String name, String address, int outpin) {
   #ifdef debug
   Serial.println(String(i)+": "+String(room_temp[i].nameSensor)+" "+String(address)+" "+String(outpin)+" "+String(name.length()));
   #endif
-
-      pinMode(lampPin, OUTPUT);
-    digitalWrite(lampPin, LOW); // initially off
-
 
 }
 
@@ -210,26 +206,26 @@ void recvMsg(uint8_t *data, size_t len)
   if (d == "ON")
   {
       digitalWrite(BUILTIN_LED, HIGH);
-  }
+  } else
   if (d == "OFF")
   {
       digitalWrite(BUILTIN_LED, LOW);
-  }
+  } else
   if (d == "RESTART")
   {
     WebSerial.println(F("OK. Restarting... by command..."));
     restart();
-  }
+  } else
   if (d == "RECONNECT")
   {
     reconnect();
-  }
+  } else
   if (d == "SAVE")
   {
     WebSerial.println(F("Saving config to EEPROM memory by command..."));
     WebSerial.println("Size CONFIG: " + String(sizeof(CONFIGURATION)));
     saveConfig();
-  }
+  } else
   if (d.indexOf("TOGGLEPUMP") !=- 1)
   {
     int o = maxsensors;    //assigned pump pin to toom_temp array
@@ -241,11 +237,9 @@ void recvMsg(uint8_t *data, size_t len)
       String myvalue = part.substring(part.indexOf("=")+1);
       pumpno.trim();
       myvalue.trim();
-      //#ifdef enableWebSerial
       WebSerial.println("Part: "+String(part));
       WebSerial.println("pumpno: "+String(pumpno));
       WebSerial.println("myvalue: "+String(myvalue));
-      //#endif
       o = pumpno.toInt();
       state = myvalue.toInt()==1;
     }
@@ -256,8 +250,21 @@ void recvMsg(uint8_t *data, size_t len)
     digitalWrite(room_temp[o].idpinout, !state);    //aktywny stan niski
     WebSerial.println("Stan2: "+String(room_temp[o].switch_state)+" dig: "+String(digitalRead(room_temp[o].idpinout)));
 
-  }
-
+  } else
+  if (d == F("TEMPCUTOFF"))
+  {
+    String part = d.substring(d.indexOf(" "));
+    part.trim();
+    WebSerial.print(String(millis())+F(": TEMPCUTOFF: ")+String(pumpOffVal)+F("   "));
+    if (d.indexOf(" ")!=-1) {
+      if (PayloadtoValidFloatCheck(part)) {pumpOffVal = PayloadtoValidFloat(part,true,18,36);}
+      WebSerial.println(" -> ZMIENIONO NA: " + String(pumpOffVal) + ("    Payload: ") + String(d));
+      for (int i=0;i<maxsensors;i++)
+      {
+        if (String(room_temp[i].nameSensor) == String(tempcutoff).substring(0,namelength)) room_temp[i].tempset=pumpOffVal;      //assign pump to sensor
+      }
+    } else { WebSerial.println("");}
+  } else
   if (d == F("RESET_CONFIG"))
   {
     WebSerial.println(F("RESET config to DEFAULT VALUES and restart..."));
@@ -269,11 +276,12 @@ void recvMsg(uint8_t *data, size_t len)
     CONFIGURATION.version[4] = 'T';
     saveConfig();
     restart();
-  }
+  } else
    if (d == "HELP")
   {
     WebSerial.println(F("KOMENDY:\n \
       TOGGLEPUMP n=0/1 -Zmiana statusu pompy n (numer od 0 do 10) na stan (0 wyłącza, 1 włącza),\n \
+      TEMPCUTOFF val   -zmiana temperatury odłączenia pompy poniżej temp val.\n \
 	    RESTART          -Uruchamia ponownie układ,\n \
 	    RECONNECT        -Dokonuje ponownej próby połączenia z bazami,\n \
 	    SAVE             -Wymusza zapis konfiguracji,\n \

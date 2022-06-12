@@ -11,10 +11,10 @@
 #define dzawor7addr1   "28875076040000db"  //0-4: Podloga 4 kuchnia
 #define dzawor8addr1   "28c39a5d04000009"  //0-5
 #define dzawor9addr1   "283b4c64040000c3"   //+zas,we pumpoff
-#define dzawor10addr1  "281a67630400004c"   //+listwa we
+#define dzawor10addr1  "281a67630400004c"  //listwa góra    tempwename                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         00004c"   //+listwa we
 #define dzawor11addr1  "283b4c6404000000"   //Zas.4D dol--
 #define dzawor12addr1  "28d13fe103000024"   //+Zasilanie-powrot (od zaworu 4D lewo)
-#define dzawor13addr1  "28ff5867801302fd"  //nie wiem bzy
+#define dzawor13addr1  "28ff256d80140266"  //komora temp -czujnik weryfikacyjny na PBA
 
 //#endif
 //#if kondygnacja==2
@@ -30,13 +30,12 @@
 #define dzawor10addr2  "28ff5867801402fc"   //tempwename
 #define dzawor11addr2  "28ff2f57241703eb"  //b Zas.4D dol--   tttttttttttyyyyyyyyyyyyyyyyyyyymmmmmmmmmmmmmmmmmmmmmmmmmccccccccccccccccccczzzzzzzzzzzzzzzzzzaaaaaaaaaaaaaaaasssssssssssssssss
 #define dzawor12addr2  "28ff347080140272"  //Zasilanie-powrot (od zaworu 4D lewo)
-//#define dzawor13addr2  "28ff256d80140266"  //nie wiem bzy parter
-#define dzawor13addr2  "28ff266b80140221"  //nie wiem bzy pietro
+#define dzawor13addr2  "28ff266b80140221"  //komora temp -czujnik weryfikacyjny na PBA
 
 //#endif
 
 // Temperature sensor pin
-const int ROOM_TEMP_SENSOR_PIN = 15; //18b20pin 0; //for Arduino, 14 for ESP8266 (D5), 18 for ESP32
+const int DALLAS_SENSOR_PIN = 15; //18b20pin 0; //for Arduino, 14 for ESP8266 (D5), 18 for ESP32
 
 #define zawor1 13
 #define zawor2 19 //12 must be low during boot
@@ -109,7 +108,9 @@ String
 
 const String sepkondname = ":"; //separator between kondygnacja number and sensor name
 #define pumpofftemp 24.3  //24.3 temperatura odlaczenia papy z czujnika 1W na dole zaworu 4d
-#define DS18B20nodata InitTemp
+#define DS18B20nodata -127
+#define DS18B20nodata2 -255
+#define limitsetsensor 9 //limitacja wskazania na web suwaka ustawienia tempset -czujniki + prog pompy
 
 #define part_room  "room"
 #define part_room_after "tempS"
@@ -126,6 +127,10 @@ const char* PARAM_roomtempset5 = roomtempset"_6";
 const char* PARAM_roomtempset6 = roomtempset"_7";
 const char* PARAM_roomtempset7 = roomtempset"_8";
 const char* PARAM_roomtempset8 = roomtempset"_9";
+const char* PARAM_roomtempset9 = roomtempset"_10";
+const char* PARAM_roomtempset10 = roomtempset"_11";
+const char* PARAM_roomtempset11 = roomtempset"_12";
+const char* PARAM_roomtempset12 = roomtempset"_13";
 
 #define uptimelink "uptimelink"
 #define dallThermometerS "dallThermometerS"
@@ -155,5 +160,5 @@ const char* PARAM_MESSAGE_cutOffTempSet = String(cutOffTempVAL).c_str();
 
 bool pump;
 int pompa_pin;
-float  pumpOffVal;
+float  pumpOffVal = pumpofftemp ;
 String dana;

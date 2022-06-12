@@ -13,8 +13,8 @@
 
 //#define debug		//Serial Debug
 #define debug1
+//#define debug2
 #define enableWebSerial
-//#define kondygnacja 2
 
 #define ATOMIC_FS_UPDATE
 #define MFG "MARM.pl Sp. z o.o."
