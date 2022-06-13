@@ -628,7 +628,7 @@ void loop()
       #ifdef debug
       Serial.println(F("MQTT connection problem -now try get temp data alternative way (room temp and NEWS temp and Carbon CO Water pump status")); //Insert some delay to limit messages to webserial or errors
       #endif
-      delay(1500);
+      delay(2000);
       if (millis()>(10*60*1000)) restart();
       // best place to function get values from http when mqtt is unavailable
       //lastNEWSSet = now; // reset counter news temp with alternative parse value way
@@ -637,7 +637,7 @@ void loop()
   }
   else
   {
-    if (!mqttclient.connected())
+    if (!mqttclient.connected() and (millis()-lastNEWSSet)>30000)
     {
       #ifdef debug
       Serial.println(String(millis())+": "+F("MQTT connection problem -try to connect again..."));
@@ -645,7 +645,7 @@ void loop()
       #ifdef enableWebSerial
       WebSerial.println(String(millis())+": "+F("MQTT connection problem -try to connect again..."));
       #endif
-      delay(500);
+      delay(1200);
       //if ((unsigned long)(millis()/100)%5 == 0) {   //blink every 0.5s if not connected
       digitalWrite(lampPin, !digitalRead(lampPin)); //}
       reconnect();
