@@ -41,7 +41,7 @@ String LastboilerResponseError,
 
 int temp_NEWS_count = 0,
     mqtt_offline_retrycount = 0,
-    mqtt_offline_retries = 10; // retries to mqttconnect before timewait
+    mqtt_offline_retries = 15; // retries to mqttconnect before timewait
 
 unsigned long ts = 0, new_ts = 0, // timestamp
               lastUpdateTempPump = 0,

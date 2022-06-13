@@ -629,6 +629,7 @@ void loop()
       Serial.println(F("MQTT connection problem -now try get temp data alternative way (room temp and NEWS temp and Carbon CO Water pump status")); //Insert some delay to limit messages to webserial or errors
       #endif
       delay(1500);
+      if (millis()>(10*60*1000)) restart();
       // best place to function get values from http when mqtt is unavailable
       //lastNEWSSet = now; // reset counter news temp with alternative parse value way
       //temp_NEWS_count = 0;
