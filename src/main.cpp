@@ -339,11 +339,11 @@ void updateInfluxDB()
     String identyfikator=getIdentyfikator(x);
     if (room_temp[x].tempread!=InitTemp and room_temp[x].tempread>=roomtemplo and room_temp[x].tempread<=roomtemphi) {
       InfluxSensor.addField(String(ROOM_TEMPERATURE)+String(kondygnacja)+identyfikator, room_temp[x].tempread);
-      if (min>room_temp[x].tempread) min = room_temp[x].tempread;
+      if (min>room_temp[x].tempread and room_temp[x].tempread != roomtemplo) min = room_temp[x].tempread;
     }
     if (room_temp[x].tempset!=InitTemp and room_temp[x].tempset>=roomtemplo and room_temp[x].tempset<=roomtemphi) {
       InfluxSensor.addField(String(ROOM_TEMPERATURE_SETPOINT) +String(kondygnacja)+identyfikator, room_temp[x].tempset);
-      if (max<room_temp[x].tempset) max = room_temp[x].tempset;
+      if (max<room_temp[x].tempset and room_temp[x].tempread != roomtemphi) max = room_temp[x].tempset;
     }
   }
   if (min!=InitTemp and min>=roomtemplo and min<=roomtemphi) InfluxSensor.addField(String(ROOM_TEMPERATURE)+String(kondygnacja)+getIdentyfikator(-1), min);

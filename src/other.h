@@ -361,11 +361,11 @@ void updateMQTTData() {
     String identyfikator = getIdentyfikator(x);
     if (room_temp[x].tempread!=InitTemp) {
       tmpbuilder += ",\"" + OT + ROOM_TEMPERATURE + identyfikator + "\": " + payloadvalue_startend_val + String(room_temp[x].tempread) + payloadvalue_startend_val;
-      if (min>room_temp[x].tempread and x<8) min = room_temp[x].tempread;
+      if (min>room_temp[x].tempread and x<8 and room_temp[x].tempread != roomtemplo) min = room_temp[x].tempread;
     }
     if (room_temp[x].tempread!=InitTemp and room_temp[x].idpinout>0) {
       tmpbuilder += ",\"" + OT + ROOM_TEMPERATURE_SETPOINT + identyfikator + "\": " + payloadvalue_startend_val + String(room_temp[x].tempset) + payloadvalue_startend_val;
-      if (max<room_temp[x].tempset and x<8) max = room_temp[x].tempset;
+      if (max<room_temp[x].tempset and x<8 and room_temp[x].tempread != roomtemphi) max = room_temp[x].tempset;
     }
   }
   if (min!=InitTemp) tmpbuilder += ",\"" + OT + ROOM_TEMPERATURE + getIdentyfikator(-1) + "\": " + payloadvalue_startend_val + String(min) + payloadvalue_startend_val;

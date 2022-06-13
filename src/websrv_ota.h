@@ -296,7 +296,7 @@ void WebServers() {
 
     webserver.on( ("/"+String(dtempcor)).c_str(), HTTP_GET, [](AsyncWebServerRequest * request) {
         String tempw = "\0";
-        if (millis()-dhtreadtime > (60*1000)) tempw="  Last update was "+uptimedana(dhtreadtime)+" ago";
+        if (millis()-dhtreadtime > (60*1000)) tempw="<span class='units'>  Last update was "+uptimedana(dhtreadtime)+" ago</span>";
         request->send(200, "text/plain; charset=utf-8",  String(tempcor,1)+tempw);
       }).setAuthentication("", "");
 #endif
