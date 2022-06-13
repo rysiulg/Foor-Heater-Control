@@ -337,11 +337,11 @@ void updateInfluxDB()
   for (int x=0;x<maxsensors;x++)
   {
     String identyfikator=getIdentyfikator(x);
-    if (room_temp[x].tempread!=InitTemp and room_temp[x].tempread>=roomtemplo and room_temp[x].tempread<=roomtemphi) {
+    if (room_temp[x].tempread!=InitTemp and room_temp[x].tempread>roomtemplo and room_temp[x].tempread<=roomtemphi) {
       InfluxSensor.addField(String(ROOM_TEMPERATURE)+String(kondygnacja)+identyfikator, room_temp[x].tempread);
       if (min>room_temp[x].tempread and room_temp[x].tempread != roomtemplo) min = room_temp[x].tempread;
     }
-    if (room_temp[x].tempset!=InitTemp and room_temp[x].tempset>=roomtemplo and room_temp[x].tempset<=roomtemphi) {
+    if (room_temp[x].tempset!=InitTemp and room_temp[x].tempset>roomtemplo and room_temp[x].tempset<=roomtemphi) {
       InfluxSensor.addField(String(ROOM_TEMPERATURE_SETPOINT) +String(kondygnacja)+identyfikator, room_temp[x].tempset);
       if (max<room_temp[x].tempset and room_temp[x].tempread != roomtemphi) max = room_temp[x].tempset;
     }
@@ -847,8 +847,8 @@ void GetSpecificSensorData () {
   String tmpval="\0";
   for (int x=0;x<8;x++)
   {
-    if (min>room_temp[x].tempread) min = room_temp[x].tempread;
-    if (max<room_temp[x].tempset) max = room_temp[x].tempset;
+    if (min>room_temp[x].tempread and room_temp[x].tempread!=InitTemp and room_temp[x].tempread!=DS18B20nodata and room_temp[x].tempread!=DS18B20nodata2) min = room_temp[x].tempread;
+    if (max<room_temp[x].tempset and room_temp[x].tempread!=InitTemp and room_temp[x].tempread!=DS18B20nodata and room_temp[x].tempread!=DS18B20nodata2) max = room_temp[x].tempset;
     if (max>roomtemphi) { max = roomtemphi; room_temp[x].tempset = max; }
     if (min<roomtemplo) { min = roomtemplo; room_temp[x].tempread = min; }  //get minimal value of all rooms temp
   }
