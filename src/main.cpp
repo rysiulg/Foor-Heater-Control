@@ -349,6 +349,8 @@ void updateInfluxDB()
   if (min!=InitTemp and min>=roomtemplo and min<=roomtemphi) InfluxSensor.addField(String(ROOM_TEMPERATURE)+String(kondygnacja)+getIdentyfikator(-1), min);
   if (max!=InitTemp and max>=roomtemplo and max<=roomtemphi) InfluxSensor.addField(String(ROOM_TEMPERATURE_SETPOINT) +String(kondygnacja)+getIdentyfikator(-1), max);
 
+  InfluxSensor.addField(String(ROOM_TEMPERATURE)+String(kondygnacja)+"_DHT_Temp", tempcor);
+  InfluxSensor.addField(String(ROOM_TEMPERATURE)+String(kondygnacja)+"_DHT_Humid", humiditycor);
 
 
 //   InfluxSensor.addField(String(TEMP_CUTOFF)+String(kondygnacja), cutOffTemp);

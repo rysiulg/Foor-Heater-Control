@@ -370,6 +370,10 @@ void updateMQTTData() {
   }
   if (min!=InitTemp) tmpbuilder += ",\"" + OT + ROOM_TEMPERATURE + getIdentyfikator(-1) + "\": " + payloadvalue_startend_val + String(min) + payloadvalue_startend_val;
   if (max!=InitTemp) tmpbuilder += ",\"" + OT + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1) + "\": " + payloadvalue_startend_val + String(max) + payloadvalue_startend_val;
+
+  tmpbuilder += ",\"" + OT + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1) + "_DHT_Temp\": " + payloadvalue_startend_val + String(tempcor) + payloadvalue_startend_val;
+  tmpbuilder += ",\"" + OT + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1) + "_DHT_Humid\": " + payloadvalue_startend_val + String(humiditycor) + payloadvalue_startend_val;
+
   mqttclient.publish(ROOMS_TOPIC_SENSOR.c_str(),(tmpbuilder+"}").c_str(), mqtt_Retain);
 
 
