@@ -361,7 +361,7 @@ void recvMsg(uint8_t *data, size_t len)
   } else
   if (d == F("RESET_CONFIG"))
   {
-    sprintf(log_chars, "RESET config to DEFAULT VALUES and restart... Size CONFIG: %s", sizeof(CONFIGURATION));
+    sprintf(log_chars, "RESET config to DEFAULT VALUES and restart... Size CONFIG: %s", String(sizeof(CONFIGURATION)));
     log_message(log_chars);
     CONFIGURATION.version[0] = 'R';
     CONFIGURATION.version[1] = 'E';
@@ -427,7 +427,7 @@ void updateInfluxDB()
   // Write point
   if (!InfluxClient.writePoint(InfluxSensor))
   {
-    sprintf(log_chars, "InfluxDB write failed: %s", InfluxClient.getLastErrorMessage());
+    sprintf(log_chars, "InfluxDB write failed: %s", String(InfluxClient.getLastErrorMessage()));
     log_message(log_chars);
   }
 #endif

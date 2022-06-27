@@ -236,27 +236,33 @@ void ReadTemperatures()
   sprintf(log_chars, "Reading 1wire 18B20 and DHT sensors... Count: %i", count);
   log_message(log_chars);
   if (count==0) count = maxsensors;
-
-  for (int j = 0; j < count; j++) {
-      temp1w = sensors.getTempCByIndex(j);
-      addrstr="";
-      sensors.getAddress(addr, j);
-      for (int i1 = 0; i1 < 8; i1++) if (String(addr[i1], HEX).length() == 1) addrstr += "0" + String(addr[i1], HEX); else addrstr += String(addr[i1], HEX); //konwersja HEX2StringHEX
+  String temptmp =" Collecting 18B20 ROMS and temps:\n";
+  for (int j = 0; j < count; j++)
+  {
+    temp1w = sensors.getTempCByIndex(j);
+    addrstr="";
+    sensors.getAddress(addr, j);
+    for (int i1 = 0; i1 < 8; i1++) if (String(addr[i1], HEX).length() == 1) addrstr += "0" + String(addr[i1], HEX); else addrstr += String(addr[i1], HEX); //konwersja HEX2StringHEX
       //zapisanie do zmiennej addr[8], addrstr, aktualiozacja index wskazany przez j i aktualozacja temp1w.
-      for (int z = 0; z < maxsensors; z++) {
-        if (array_cmp_8(room_temp[z].addressHEX, addr, sizeof(room_temp[z].addressHEX) / sizeof(room_temp[z].addressHEX[0]),sizeof(addr) / sizeof(addr[0])) == true) {
-          assignedsensor=true;
-          if (temp1w!=DS18B20nodata and temp1w!=DS18B20nodata2 and temp1w!=InitTemp) room_temp[z].tempread = temp1w;
-        }
+    for (int z = 0; z < maxsensors; z++)
+    {
+      if (array_cmp_8(room_temp[z].addressHEX, addr, sizeof(room_temp[z].addressHEX) / sizeof(room_temp[z].addressHEX[0]),sizeof(addr) / sizeof(addr[0])) == true)
+      {
+        assignedsensor=true;
+        if (temp1w!=DS18B20nodata and temp1w!=DS18B20nodata2 and temp1w!=InitTemp) room_temp[z].tempread = temp1w;
       }
-      if (!assignedsensor and UnassignedTempSensor.indexOf(addrstr)==-1) UnassignedTempSensor += ";"+String(addrstr)+" "+String(temp1w);
-      assignedsensor=false;
-      sprintf(log_chars, "%s: Collected 1wire ROMs=: %s, temp: %s", j, addrstr, temp1w);
-      log_message(log_chars);
     }
+    if (!assignedsensor and UnassignedTempSensor.indexOf(addrstr)==-1) UnassignedTempSensor += ";"+String(addrstr)+" "+String(temp1w);
+    assignedsensor=false;
+    temptmp += "       " + String(j) + ": 18B20 ROM= " + addrstr + ", temp: " + String(temp1w,2) + "\n";
+  }
+  log_message((char*)temptmp.c_str());
 
-  sprintf(log_chars, "Unassigned Sensors: %s", UnassignedTempSensor);
-  log_message(log_chars);
+  if (UnassignedTempSensor!= "")
+  {
+    sprintf(log_chars, "Unassigned Sensors: %s", UnassignedTempSensor);
+    log_message(log_chars);
+  }
 
   #ifdef enableDHT
   dht.read(true);
@@ -517,11 +523,11 @@ void loop()
     }
 
 
-    if ((millis() % 1500) < 100) digitalWrite(lampPin, !digitalRead(lampPin));
+    if ((millis() % 600) < 100) digitalWrite(lampPin, !digitalRead(lampPin));
 
     if (((millis() - lastUpdatemqtt) > mqttUpdateInterval_ms) or (receivedmqttdata == true) or (lastUpdatemqtt == 0) )   //recived data ronbi co 800ms -wylacze ten sttus dla odebrania news
     {
-      sprintf(log_chars, "Update mqtt+influ last was ago lastUpdatemqtt: %ds, receivedmqttdata: %d, mqttUpdateInterval_ms: %d", (millis()-lastUpdatemqtt) /1000, receivedmqttdata, mqttUpdateInterval_ms);
+      sprintf(log_chars, "Update mqtt+influ last was ago lastUpdatemqtt: %ds, receivedmqttdata: %d, mqttUpdateInterval_ms: %d", (millis()-lastUpdatemqtt) /1000, receivedmqttdata, (mqttUpdateInterval_ms/1000));
       log_message(log_chars);
       //log_message((char*)F("Lowering by 5% temp_NEWS (no communication) -after 10times execute every 30minutes lowered temp NEWS"));
       receivedmqttdata = false;
