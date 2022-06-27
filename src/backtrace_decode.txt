@@ -1,1 +1,0 @@
-C:\Users\Rysza\.platformio\packages\toolchain-xtensa32\bin\xtensa-esp32-elf-addr2line.exe -pfiaC -e "S:\EPROM\!Projekty\Foor Heater Control\.pio\build\esp32doit-devkit-v1\firmware.elf" 0x400eb88d

@@ -37,6 +37,10 @@
 #define room "Pokój"
 #define humidcorstr "Wilgotność"
 #define tempcorstr "Temperatura"
+#define sMODESTATE "Tryb pracy:"
+#define sMODESTATE_HEAT "grzanie"
+#define sMODESTATE_COOL "chłodzenie"
+#define sMODESTATE_OFF "wyłączone"
 #else
 #define Boiler_And_CO_Temperature "Boiler And CO Temperature"
 #define Set_Temperature_for_CO_heat "Set Temperature for CO heat: "
@@ -76,4 +80,8 @@
 #define room "Room"
 #define humidcorstr "Humidity"
 #define tempcorstr "Temperature"
+#define sMODESTATE "Working mode:"
+#define sMODESTATE_HEAT "heating"
+#define sMODESTATE_COOL "cooling"
+#define sMODESTATE_OFF "OFF"
 #endif

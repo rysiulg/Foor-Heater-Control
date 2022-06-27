@@ -8,19 +8,27 @@
   Works also offline.
 
 */
+//#define smallercode
+
 
 // v.2.0 Initial after move from Arduino Mega to ESP32
 
 //#define debug		//Serial Debug
-#define debug1
+//#define debug1
 //#define debug2
-#define enableWebSerial
+//#define debugweb
+
+#define enableWebSerial   //1115101 - 1033185 = 81 916
+
 
 #define ATOMIC_FS_UPDATE
 #define MFG "MARM.pl Sp. z o.o."
 #define wwwport 80
 #define PL_lang
-#define  ENABLE_INFLUX        //if defined sending to influx database is performed at time when mqtt messages is send
+#ifndef smallercode
+#define  ENABLE_INFLUX        //if defined sending to influx database is performed at time when mqtt messages is send 1313937-1115101=198836
+#endif
+
 #define enableDHT
 
 //#boiler_gas_conversion_to_m3  1

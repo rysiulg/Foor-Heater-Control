@@ -59,12 +59,12 @@ const int DALLAS_SENSOR_PIN = 15; //18b20pin 0; //for Arduino, 14 for ESP8266 (D
 //#define DHTTYPE    DHT21     // DHT 21 (AM2301)
 #endif
 
-#define tempwename "WEgora listwa"     //nazwa czujnika temp jako odniesienie ciepla grzania
-#define tempcutoff "CUTOFF-WE(z4Ddol)"  //glowne wylaczanie pompy i wykorzystany tempset do wylaczania papy zawor 4D dol zasilanie
+#define tempwename "WEgora_listwa"     //nazwa czujnika temp jako odniesienie ciepla grzania
+#define tempcutoff "CUTOFF-WE_z4Ddol"  //glowne wylaczanie pompy i wykorzystany tempset do wylaczania papy zawor 4D dol zasilanie
 //remember to give name of max namelength variable -default 15 chars
 #define dzawor1name "MAMA"                   //1 original
 #define dzawor2name "PIOTREK"                //8 original
-#define dzawor3name "LAZIENKA+WC"            //2 original
+#define dzawor3name "LAZIENKA_WC"            //2 original
 #define dzawor4name "MAJA"                   //7 original
 #define dzawor5name "KUCHNIA1"               //3 original
 #define dzawor6name "SALON"                  //6 original
@@ -73,37 +73,10 @@ const int DALLAS_SENSOR_PIN = 15; //18b20pin 0; //for Arduino, 14 for ESP8266 (D
 #define dzawor9name tempcutoff  //zawor 4d dol
 #define dzawor10name tempwename    //listwa we -temp odcinania pompy
 #define dzawor11name "unknown"
-#define dzawor12name "RETURN(zaw.4D lewo)"      //wyjscie z podlogi
+#define dzawor12name "RETURN_zaw.4D_lewo"      //wyjscie z podlogi
 #define dzawor13name "temp_komora"
 
-
-const String zawor1name = dzawor1name,
-     zawor2name = dzawor2name,
-     zawor3name = dzawor3name,
-     zawor4name = dzawor4name,
-     zawor5name = dzawor5name,
-     zawor6name = dzawor6name,
-     zawor7name = dzawor7name,
-     zawor8name = dzawor8name,
-     zawor9name = dzawor9name,
-     zawor10name = dzawor10name,
-     zawor11name = dzawor11name,
-     zawor12name = dzawor12name,
-     zawor13name = dzawor13name;
-String
-     zawor1addr,
-     zawor2addr,
-     zawor3addr,
-     zawor4addr,
-     zawor5addr,
-     zawor6addr,
-     zawor7addr,
-     zawor8addr,
-     zawor9addr,
-     zawor10addr,
-     zawor11addr,
-     zawor12addr,
-     zawor13addr;
+#define appendSet "_Set"
 
 
 const String sepkondname = ":"; //separator between kondygnacja number and sensor name
@@ -111,26 +84,9 @@ const String sepkondname = ":"; //separator between kondygnacja number and senso
 #define DS18B20nodata -127
 #define DS18B20nodata2 -255
 #define limitsetsensor 9 //limitacja wskazania na web suwaka ustawienia tempset -czujniki + prog pompy
+#define temptoheat 8
+#define temptocool 25
 
-#define part_room  "room"
-#define part_room_after "tempS"
-#define part_set "etS"
-#define roomtempS part_room part_room_after
-#define roomtempSetS roomtempS part_set
-#define roomtempset part_room"tempset"
-const char* PARAM_roomtempset0 = roomtempset"_1";
-const char* PARAM_roomtempset1 = roomtempset"_2";
-const char* PARAM_roomtempset2 = roomtempset"_3";
-const char* PARAM_roomtempset3 = roomtempset"_4";
-const char* PARAM_roomtempset4 = roomtempset"_5";
-const char* PARAM_roomtempset5 = roomtempset"_6";
-const char* PARAM_roomtempset6 = roomtempset"_7";
-const char* PARAM_roomtempset7 = roomtempset"_8";
-const char* PARAM_roomtempset8 = roomtempset"_9";
-const char* PARAM_roomtempset9 = roomtempset"_10";
-const char* PARAM_roomtempset10 = roomtempset"_11";
-const char* PARAM_roomtempset11 = roomtempset"_12";
-const char* PARAM_roomtempset12 = roomtempset"_13";
 
 #define uptimelink "uptimelink"
 #define dallThermometerS "dallThermometerS"
@@ -149,16 +105,4 @@ const char* PARAM_roomtempset12 = roomtempset"_13";
 #define do_stopkawebsiteS "do_stopkawebsiteS"
 #define dhumidcor "dhumidcor"
 #define dtempcor "dtempcor"
-//#define PARAM_MESSAGE_cutOffTempSet
 
-const char* PARAM_MESSAGE_cutOffTempSet = String(cutOffTempVAL).c_str();
-
-
-#define roomtempS4 part_room part_room_after "4"
-#define roomtempSetS4 part_room part_room_after "4"
-
-
-bool pump;
-int pompa_pin;
-float  pumpOffVal = pumpofftemp ;
-String dana;

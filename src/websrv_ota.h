@@ -100,17 +100,15 @@ void handleGetTemp() {
 //#include <Update.h>
 size_t content_len;
 void printProgress(size_t prg, size_t sz) {
-  Serial.printf("Progress: %d%%\n", (prg*100)/content_len);
-  #ifdef enableWebSerial
-  WebSerial.println("Progress: "+String((prg*100)/content_len));
-  #endif
+  sprintf(log_chars, "Progress: %d%%\n", (prg*100)/content_len);
+  log_message(log_chars);
 }
 
 void handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final) {
   //#define UPDATE_SIZE_UNKNOWN 0XFFFFFFFF
   //uint32_t free_space = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
   if (!index){
-    Serial.println(String(millis())+": "+F("Update"));
+    log_message((char*)F("Update starts"));
     AsyncWebServerResponse *response = request->beginResponse(302, "text/plain", "Please wait while the device reboots");
     response->addHeader("Refresh", "15");
     response->addHeader("Location", "/");
@@ -130,8 +128,9 @@ void handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size
   if (final) {
     if (!Update.end(true)){
       Update.printError(Serial);
+      log_message(log_chars);
     } else {
-      Serial.println(String(millis())+": "+"Update complete");
+      log_message((char*)F("Update complete"));
       Serial.flush();
       AsyncWebServerResponse *response = request->beginResponse(302, "text/plain", "Please wait while the device reboots");
       response->addHeader("Refresh", "20");
@@ -144,9 +143,6 @@ void handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size
 }
 
 void WebServers() {
-  #ifdef debug
-    Serial.println(F("subWerbServers..."));
-  #endif
   webserver.on("/update", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/html", htmlup);
     }).setAuthentication("", "");
@@ -167,9 +163,6 @@ void WebServers() {
   webserver.onNotFound([](AsyncWebServerRequest * request) {
     request->send(404);
   });
-  #ifdef debug
-  Serial.println("webserver index len: "+sizeof(index_html));
-  #endif
   webserver.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/html; charset=utf-8",  index_html, processor);
   }).setAuthentication("", "");
@@ -191,103 +184,17 @@ void WebServers() {
     request->send(200, "text/plain; charset=utf-8", do_stopkawebsite());
   }).setAuthentication("", "");
 
-
-
-//0  for (int room_no=0;room_no<8;room_no++) { for is not caputured;(
-    webserver.on( ("/"+String(roomtempS)+getIdentyfikator(0)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8",  String(room_temp[0].tempread==InitTemp ? "--.-" : String(room_temp[0].tempread,1)));
-      }).setAuthentication("", "");
-    webserver.on( ("/"+String(roomtempSetS)+getIdentyfikator(0)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8", String(room_temp[0].tempset,1));
-      }).setAuthentication("", "");
-//1  for (int room_no=0;room_no<8;room_no++) { for is not caputured;(
-    webserver.on( ("/"+String(roomtempS)+getIdentyfikator(1)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8",  String(room_temp[1].tempread==InitTemp ? "--.-" : String(room_temp[1].tempread,1)));
-      }).setAuthentication("", "");
-    webserver.on( ("/"+String(roomtempSetS)+getIdentyfikator(1)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8", String(room_temp[1].tempset,1));
-      }).setAuthentication("", "");
-//2  for (int room_no=0;room_no<8;room_no++) { for is not caputured;(
-    webserver.on( ("/"+String(roomtempS)+getIdentyfikator(2)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8",  String(room_temp[2].tempread==InitTemp ? "--.-" : String(room_temp[2].tempread,1)));
-      }).setAuthentication("", "");
-    webserver.on( ("/"+String(roomtempSetS)+getIdentyfikator(2)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8", String(room_temp[2].tempset,1));
-      }).setAuthentication("", "");
-//3  for (int room_no=0;room_no<8;room_no++) { for is not caputured;(
-    webserver.on( ("/"+String(roomtempS)+getIdentyfikator(3)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8",  String(room_temp[3].tempread==InitTemp ? "--.-" : String(room_temp[3].tempread,1)));
-      }).setAuthentication("", "");
-    webserver.on( ("/"+String(roomtempSetS)+getIdentyfikator(3)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8", String(room_temp[3].tempset,1));
-      }).setAuthentication("", "");
-//4  for (int room_no=0;room_no<8;room_no++) { for is not caputured;(
-    webserver.on( ("/"+String(roomtempS)+getIdentyfikator(4)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8",  String(room_temp[4].tempread==InitTemp ? "--.-" : String(room_temp[4].tempread,1)));
-      }).setAuthentication("", "");
-    webserver.on( ("/"+String(roomtempSetS)+getIdentyfikator(4)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8", String(room_temp[4].tempset,1));
-      }).setAuthentication("", "");
-//5  for (int room_no=0;room_no<8;room_no++) { for is not caputured;(
-    webserver.on( ("/"+String(roomtempS)+getIdentyfikator(5)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8",  String(room_temp[5].tempread==InitTemp ? "--.-" : String(room_temp[5].tempread,1)));
-      }).setAuthentication("", "");
-    webserver.on( ("/"+String(roomtempSetS)+getIdentyfikator(5)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8", String(room_temp[5].tempset,1));
-      }).setAuthentication("", "");
-//6  for (int room_no=0;room_no<8;room_no++) { for is not caputured;(
-    webserver.on( ("/"+String(roomtempS)+getIdentyfikator(6)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8",  String(room_temp[6].tempread==InitTemp ? "--.-" : String(room_temp[6].tempread,1)));
-      }).setAuthentication("", "");
-    webserver.on( ("/"+String(roomtempSetS)+getIdentyfikator(6)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8", String(room_temp[6].tempset,1));
-      }).setAuthentication("", "");
-//7  for (int room_no=0;room_no<8;room_no++) { for is not caputured;(
-    webserver.on( ("/"+String(roomtempS)+getIdentyfikator(7)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8",  String(room_temp[7].tempread==InitTemp ? "--.-" : String(room_temp[7].tempread,1)));
-      }).setAuthentication("", "");
-    webserver.on( ("/"+String(roomtempSetS)+getIdentyfikator(7)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8", String(room_temp[7].tempset,1));
-      }).setAuthentication("", "");
-    webserver.on( ("/"+String(roomtempS)+getIdentyfikator(8)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8",  String(room_temp[8].tempread==InitTemp ? "--.-" : String(room_temp[8].tempread,1)));
-      }).setAuthentication("", "");
-    webserver.on( ("/"+String(roomtempSetS)+getIdentyfikator(8)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8", String(room_temp[8].tempset,1));
-      }).setAuthentication("", "");
-    webserver.on( ("/"+String(roomtempS)+getIdentyfikator(9)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8",  String(room_temp[9].tempread==InitTemp ? "--.-" : String(room_temp[9].tempread,1)));
-      }).setAuthentication("", "");
-    webserver.on( ("/"+String(roomtempS)+getIdentyfikator(10)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8",  String(room_temp[10].tempread==InitTemp ? "--.-" : String(room_temp[10].tempread,1)));
-      }).setAuthentication("", "");
-    webserver.on( ("/"+String(roomtempS)+getIdentyfikator(11)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8",  String(room_temp[11].tempread==InitTemp ? "--.-" : String(room_temp[11].tempread,1)));
-      }).setAuthentication("", "");
-    webserver.on( ("/"+String(roomtempS)+getIdentyfikator(12)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8",  String(room_temp[12].tempread==InitTemp ? "--.-" : String(room_temp[12].tempread,1)));
-      }).setAuthentication("", "");
-    if (limitsetsensor > 9)
-    {   webserver.on( ("/"+String(roomtempSetS)+getIdentyfikator(9)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8", String(room_temp[9].tempset,1));
-      }).setAuthentication("", "");
-    }
-    if (limitsetsensor > 10)
-    {   webserver.on( ("/"+String(roomtempSetS)+getIdentyfikator(10)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8", String(room_temp[10].tempset,1));
-        }).setAuthentication("", "");
-    }
-    if (limitsetsensor > 11)
-    {   webserver.on( ("/"+String(roomtempSetS)+getIdentyfikator(11)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8", String(room_temp[11].tempset,1));
-        }).setAuthentication("", "");
-    }
-    if (limitsetsensor > 12)
-    {   webserver.on( ("/"+String(roomtempSetS)+getIdentyfikator(12)).c_str() , HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8", String(room_temp[12].tempset,1));
-     }).setAuthentication("", "");
-    }
-
+  for (u_int x=0;x<maxsensors;x++)
+  {
+    String fragment = String(room_temp[x].nameSensor);
+    fragment.replace(sepkondname,"_");
+    webserver.on( ("/" + fragment).c_str() , HTTP_GET, [x](AsyncWebServerRequest * request) { //roomtempS + getident
+    request->send(200, "text/plain; charset=utf-8", String(room_temp[x].tempread==InitTemp ? "--.-" : String(room_temp[x].tempread,1)));
+    }).setAuthentication("", "");
+    webserver.on( ("/" + fragment + appendSet).c_str() , HTTP_GET, [x](AsyncWebServerRequest * request) {
+      request->send(200, "text/plain; charset=utf-8", String(room_temp[x].tempset,1));
+    }).setAuthentication("", "");
+  }
 
 #ifdef enableDHT
     webserver.on( ("/"+String(dhumidcor)).c_str(), HTTP_GET, [](AsyncWebServerRequest * request) {
@@ -305,373 +212,27 @@ void WebServers() {
     request->send(200, "text/plain; charset=utf-8", String(uptimedana(lastNEWSSet)));
   }).setAuthentication("", "");
 
+
+
   webserver.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
     String message;
-    //0
-    if (request->hasParam(PARAM_roomtempset0)) { //tempCOset
-    message = request->getParam(PARAM_roomtempset0)->value();
-    String ident = String(millis())+": Fromweb room_temp[0].tempset ";
-    if (PayloadtoValidFloatCheck(message))
+    for (u_int x=0;x<maxsensors;x++)
     {
-      #ifdef debug
-      Serial.print(ident);
-      #endif
-      #ifdef enableWebSerial
-      WebSerial.print(ident);
-      #endif
-      room_temp[0].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
-      receivedmqttdata = true;
-      } else {
-        #ifdef debug
-        Serial.println(ident + " is not a valid number, ignoring...");
-        #endif
-        #ifdef enableWebSerial
-        WebSerial.println(ident + " is not a valid number, ignoring...");
-        #endif
-        }
-    } else {
+      String fragment = String(room_temp[x].nameSensor)+ appendSet;
+      fragment.replace(sepkondname,"_");
+      if (request->hasParam((fragment ).c_str()))
+      {
+        message = request->getParam((fragment).c_str())->value();
+        log_message((char*)message.c_str());
+        receivedmqttdata = getRemoteTempHumid(message, x, action_tempset);
+      }else {
           //message = "No message sent PARAM_roomtempset0";
-    }
-//1
-    if (request->hasParam(PARAM_roomtempset1)) { //tempCOset
-    message = request->getParam(PARAM_roomtempset1)->value();
-    String ident = String(millis())+": Fromweb room_temp[1].tempset ";
-    if (PayloadtoValidFloatCheck(message))
-    {
-      #ifdef debug
-      Serial.print(ident);
-      #endif
-      #ifdef enableWebSerial
-      WebSerial.print(ident);
-      #endif
-      room_temp[1].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
-      receivedmqttdata = true;
-      } else {
-        #ifdef debug
-        Serial.println(ident + " is not a valid number, ignoring...");
-        #endif
-        #ifdef enableWebSerial
-        WebSerial.println(ident + " is not a valid number, ignoring...");
-        #endif
-        }
-    } else {
-          //message = "No message sent PARAM_roomtempset1";
-    }
-//2
-    if (request->hasParam(PARAM_roomtempset2)) { //tempCOset
-    message = request->getParam(PARAM_roomtempset2)->value();
-    String ident = String(millis())+": Fromweb room_temp[2].tempset ";
-    if (PayloadtoValidFloatCheck(message))
-    {
-      #ifdef debug
-      Serial.print(ident);
-      #endif
-      #ifdef enableWebSerial
-      WebSerial.print(ident);
-      #endif
-      room_temp[2].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
-      receivedmqttdata = true;
-      } else {
-        #ifdef debug
-        Serial.println(ident + " is not a valid number, ignoring...");
-        #endif
-        #ifdef enableWebSerial
-        WebSerial.println(ident + " is not a valid number, ignoring...");
-        #endif
-        }
-    } else {
-          //message = "No message sent PARAM_roomtempset2";
-    }
-//3
-    if (request->hasParam(PARAM_roomtempset3)) { //tempCOset
-    message = request->getParam(PARAM_roomtempset3)->value();
-    String ident = String(millis())+": Fromweb room_temp[3].tempset ";
-    if (PayloadtoValidFloatCheck(message))
-    {
-      #ifdef debug
-      Serial.print(ident);
-      #endif
-      #ifdef enableWebSerial
-      WebSerial.print(ident);
-      #endif
-      room_temp[3].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
-      receivedmqttdata = true;
-      } else {
-        #ifdef debug
-        Serial.println(ident + " is not a valid number, ignoring...");
-        #endif
-        #ifdef enableWebSerial
-        WebSerial.println(ident + " is not a valid number, ignoring...");
-        #endif
-        }
-    } else {
-          //message = "No message sent PARAM_roomtempset3";
-    }
-//4
-    if (request->hasParam(PARAM_roomtempset4)) { //tempCOset
-    message = request->getParam(PARAM_roomtempset4)->value();
-    String ident = String(millis())+": Fromweb room_temp[4].tempset ";
-    if (PayloadtoValidFloatCheck(message))
-    {
-      #ifdef debug
-      Serial.print(ident);
-      #endif
-      #ifdef enableWebSerial
-      WebSerial.print(ident);
-      #endif
-      room_temp[4].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
-      receivedmqttdata = true;
-      } else {
-        #ifdef debug
-        Serial.println(ident + " is not a valid number, ignoring...");
-        #endif
-        #ifdef enableWebSerial
-        WebSerial.println(ident + " is not a valid number, ignoring...");
-        #endif
-        }
-    } else {
-          //message = "No message sent PARAM_roomtempset4";
-    }
-//5
-    if (request->hasParam(PARAM_roomtempset5)) { //tempCOset
-    message = request->getParam(PARAM_roomtempset5)->value();
-    String ident = String(millis())+": Fromweb room_temp[5].tempset ";
-    if (PayloadtoValidFloatCheck(message))
-    {
-      #ifdef debug
-      Serial.print(ident);
-      #endif
-      #ifdef enableWebSerial
-      WebSerial.print(ident);
-      #endif
-      room_temp[5].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
-      receivedmqttdata = true;
-      } else {
-        #ifdef debug
-        Serial.println(ident + " is not a valid number, ignoring...");
-        #endif
-        #ifdef enableWebSerial
-        WebSerial.println(ident + " is not a valid number, ignoring...");
-        #endif
-        }
-    } else {
-          //message = "No message sent PARAM_roomtempset5";
-    }
-//6
-    if (request->hasParam(PARAM_roomtempset6)) { //tempCOset
-    message = request->getParam(PARAM_roomtempset6)->value();
-    String ident = String(millis())+": Fromweb room_temp[6].tempset ";
-    if (PayloadtoValidFloatCheck(message))
-    {
-      #ifdef debug
-      Serial.print(ident);
-      #endif
-      #ifdef enableWebSerial
-      WebSerial.print(ident);
-      #endif
-      room_temp[6].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
-      receivedmqttdata = true;
-      } else {
-        #ifdef debug
-        Serial.println(ident + " is not a valid number, ignoring...");
-        #endif
-        #ifdef enableWebSerial
-        WebSerial.println(ident + " is not a valid number, ignoring...");
-        #endif
-        }
-    } else {
-          //message = "No message sent PARAM_roomtempset6";
-    }
-//7
-    if (request->hasParam(PARAM_roomtempset7)) { //tempCOset
-    message = request->getParam(PARAM_roomtempset7)->value();
-    String ident = String(millis())+": Fromweb room_temp[7].tempset ";
-    if (PayloadtoValidFloatCheck(message))
-    {
-      #ifdef debug
-      Serial.print(ident);
-      #endif
-      #ifdef enableWebSerial
-      WebSerial.print(ident);
-      #endif
-      room_temp[7].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
-      receivedmqttdata = true;
-      } else {
-        #ifdef debug
-        Serial.println(ident + " is not a valid number, ignoring...");
-        #endif
-        #ifdef enableWebSerial
-        WebSerial.println(ident + " is not a valid number, ignoring...");
-        #endif
-        }
-    } else {
-          //message = "No message sent PARAM_roomtempset7";
-    }
-//8
-    if (request->hasParam(PARAM_roomtempset8)) { //tempCOset
-    message = request->getParam(PARAM_roomtempset8)->value();
-    String ident = String(millis())+": Fromweb room_temp[8].tempset ";
-    if (PayloadtoValidFloatCheck(message))
-    {
-      #ifdef debug
-      Serial.print(ident);
-      #endif
-      #ifdef enableWebSerial
-      WebSerial.print(ident);
-      #endif
-      room_temp[8].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
-      receivedmqttdata = true;
-      } else {
-        #ifdef debug
-        Serial.println(ident + " is not a valid number, ignoring...");
-        #endif
-        #ifdef enableWebSerial
-        WebSerial.println(ident + " is not a valid number, ignoring...");
-        #endif
-        }
-    } else {
-          //message = "No message sent PARAM_roomtempset8";
-    }
-      if (request->hasParam(PARAM_MESSAGE_cutOffTempSet)) { //tempCOset 9
-          message = request->getParam(PARAM_MESSAGE_cutOffTempSet)->value();
-          String ident = String(millis())+": Fromweb cutOffTemp ";
-          if (PayloadtoValidFloatCheck(message))
-          {
-            #ifdef debug
-            Serial.print(ident);
-            #endif
-            #ifdef enableWebSerial
-            WebSerial.print(ident);
-            #endif
-            cutOffTemp = PayloadtoValidFloat(message, true, cutofflo, cutoffhi);
-            receivedmqttdata = true;
-          } else {
-            #ifdef debug
-            Serial.println(ident + " is not a valid number, ignoring...");
-            #endif
-            #ifdef enableWebSerial
-            WebSerial.println(ident + " is not a valid number, ignoring...");
-            #endif
-          }
-      } else {
-        //message = "No message sent PARAM_MESSAGE_cutOffTempSet";
       }
-
-
-    #if (limitsetsensor > 9)
-
-      if (request->hasParam(PARAM_roomtempset9)) { //tempCOset
-      message = request->getParam(PARAM_roomtempset9)->value();
-      String ident = String(millis())+": Fromweb room_temp[9].tempset ";
-      if (PayloadtoValidFloatCheck(message))
-      {
-        #ifdef debug
-        Serial.print(ident);
-        #endif
-        #ifdef enableWebSerial
-        WebSerial.print(ident);
-        #endif
-        room_temp[9].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
-        receivedmqttdata = true;
-        } else {
-          #ifdef debug
-          Serial.println(ident + " is not a valid number, ignoring...");
-          #endif
-          #ifdef enableWebSerial
-          WebSerial.println(ident + " is not a valid number, ignoring...");
-          #endif
-          }
-      } else {
-            //message = "No message sent PARAM_roomtempset8";
-      }
-    #endif
-    #if (limitsetsensor > 10)
-
-      if (request->hasParam(PARAM_roomtempset10)) { //tempCOset
-      message = request->getParam(PARAM_roomtempset10)->value();
-      String ident = String(millis())+": Fromweb room_temp[10].tempset ";
-      if (PayloadtoValidFloatCheck(message))
-      {
-        #ifdef debug
-        Serial.print(ident);
-        #endif
-        #ifdef enableWebSerial
-        WebSerial.print(ident);
-        #endif
-        room_temp[10].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
-        receivedmqttdata = true;
-        } else {
-          #ifdef debug
-          Serial.println(ident + " is not a valid number, ignoring...");
-          #endif
-          #ifdef enableWebSerial
-          WebSerial.println(ident + " is not a valid number, ignoring...");
-          #endif
-          }
-      } else {
-            //message = "No message sent PARAM_roomtempset8";
-      }
-    #endif
-    #if (limitsetsensor > 11)
-
-      if (request->hasParam(PARAM_roomtempset11)) { //tempCOset
-      message = request->getParam(PARAM_roomtempset11)->value();
-      String ident = String(millis())+": Fromweb room_temp[11].tempset ";
-      if (PayloadtoValidFloatCheck(message))
-      {
-        #ifdef debug
-        Serial.print(ident);
-        #endif
-        #ifdef enableWebSerial
-        WebSerial.print(ident);
-        #endif
-        room_temp[11].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
-        receivedmqttdata = true;
-        } else {
-          #ifdef debug
-          Serial.println(ident + " is not a valid number, ignoring...");
-          #endif
-          #ifdef enableWebSerial
-          WebSerial.println(ident + " is not a valid number, ignoring...");
-          #endif
-          }
-      } else {
-            //message = "No message sent PARAM_roomtempset8";
-      }
-    #endif
-    #if (limitsetsensor > 12)
-
-      if (request->hasParam(PARAM_roomtempset12)) { //tempCOset
-      message = request->getParam(PARAM_roomtempset12)->value();
-      String ident = String(millis())+": Fromweb room_temp[12].tempset ";
-      if (PayloadtoValidFloatCheck(message))
-      {
-        #ifdef debug
-        Serial.print(ident);
-        #endif
-        #ifdef enableWebSerial
-        WebSerial.print(ident);
-        #endif
-        room_temp[12].tempset = PayloadtoValidFloat(message, true, roomtemplo, roomtemphi);
-        receivedmqttdata = true;
-        } else {
-          #ifdef debug
-          Serial.println(ident + " is not a valid number, ignoring...");
-          #endif
-          #ifdef enableWebSerial
-          WebSerial.println(ident + " is not a valid number, ignoring...");
-          #endif
-          }
-      } else {
-            //message = "No message sent PARAM_roomtempset8";
-      }
-    #endif
+    }
     AsyncWebServerResponse *response = request->beginResponse(302, "text/plain", "Update value");
     response->addHeader("Refresh", "1");
     response->addHeader("Location", "/");
     request->send(response);
-//      request->send(200, "text/plain", "<HEAD> <meta http-equiv=\"refresh\" content=\"0;url=/\"> </head>");
-//    saveConfig();
   });
     // Send a POST request to <IP>/post with a form field message set to <message>
 /*     webserver.on("/post", HTTP_POST, [](AsyncWebServerRequest *request){
@@ -689,11 +250,8 @@ void WebServers() {
   DefaultHeaders::Instance().addHeader("Title",me_lokalizacja);
 
 	webserver.begin();
-  #ifdef debug
-	Serial.println("HTTP server started");
-  #endif
+  log_message((char*)F("HTTP server started"));
 }
-
 
 String processor(const String var) {
 
@@ -809,35 +367,40 @@ String processor(const String var) {
     ptr+="</tr>";
 
 
-
     for (int x=0;x<maxsensors;x++) {
       if ((x % 2) == 0) {ptr+=F("<tr>");}//else ptr+="<td>";
       ptr+=F("<td>");
       ptr+=tempicon+"<span class=\"dht-labels\">"+String(room_temp[x].nameSensor)+F(" id")+getIdentyfikator(x)+F("</span>");
       ptr+=F("<br><B>");
-      if (room_temp[x].tempread<room_temp[x].tempset and x<8)  ptr += F("<font color=\"Red\">");
+      if (modestate == MODEHEAT and x<8 and room_temp[x].switch_state==startrun)  ptr += F("<font color=\"Red\">"); //room_temp[x].tempread < room_temp[x].tempset
+      if (modestate == MODECOOL and x<8 and room_temp[x].switch_state==startrun)  ptr += F("<font color=\"Green\">"); //room_temp[x].tempread > (room_temp[x].tempset + histereza)
+      String fragment = String(room_temp[x].nameSensor);
+      fragment.replace(sepkondname,"_");
       if (room_temp[x].tempread>room_temp[x].tempset and x>=8) ptr += F("<font color=\"Blue\">");
       if (room_temp[x].switch_state) ptr += F("<p id=\"blink\">"); else ptr+=F("<p>");
-      ptr+="<span class=\"dht-labels-temp\" id=\"" + String(roomtempS) + getIdentyfikator(x) + F("\">")+String(room_temp[x].tempread==InitTemp ? "--.-" : String(room_temp[x].tempread,1))+F("</span><sup class=\"units\">&deg;C</sup></B>");
+      ptr+="<span class=\"dht-labels-temp\" id=\"" + fragment + F("\">")+String(room_temp[x].tempread==InitTemp ? "--.-" : String(room_temp[x].tempread,1))+F("</span><sup class=\"units\">&deg;C</sup></B>");
       if (room_temp[x].switch_state) ptr += F("</p>"); else ptr += F("</p>"); //end blink
       ptr += F("</font>");
       ptr+=F("<br>");//</td><td>";
+      if (room_temp[x].humidityread >0) ptr +="<B>Humid: "+String(room_temp[x].humidityread,1)+"%</B<br>";
       //ptr+=tempicon+"<span class=\"dht-labels\">"+String(room4tempset)+"</span>";
       if ( x < limitsetsensor) //room_temp[x].idpinout!=-1 and room_temp[x].tempset != 0 and room_temp[x].tempread != InitTemp and
       {
         ptr+=F("<br>");
-        ptr+="<font size=\"4\" color=\"blue\"><input type=\"number\" id=\"T"+String(roomtempSetS)+getIdentyfikator(x)+F("\" min=\"")+String(roomtemplo,1)+F("\" max=\"")+String(roomtemphi,1)+F("\" step=\"")+String(tempstep,1)+F("\" value=\"")+String(room_temp[x].tempset,1)+F("\" style=\"width:auto\" onchange=\"uTI(this.value, '")+String(roomtempSetS)+getIdentyfikator(x)+F("');\"><sup class=\"units\">&deg;C</sup></B><input id=\"")+String(roomtempSetS)+getIdentyfikator(x)+F("\" type=\"range\" min=\"")+String(roomtemplo,1)+F("\" max=\"")+String(roomtemphi,1)+F("\" step=\"")+String(tempstep,1)+F("\" name=\"")+String(roomtempset)+getIdentyfikator(x)+F("\" value=\"")+String(room_temp[x].tempset,1)+F("\" style=\"width:50px\" onchange=\"uTI(this.value, 'T")+String(roomtempSetS)+getIdentyfikator(x)+F("');\">");
+        ptr+="<font size=\"4\" color=\"blue\"><input type=\"number\" id=\"T" + fragment + appendSet+F("\" min=\"")+String(roomtemplo,1)+F("\" max=\"")+String(roomtemphi,1)+F("\" step=\"")+String(tempstep,1)+F("\" value=\"")+String(room_temp[x].tempset,1)+F("\" style=\"width:auto\" onchange=\"uTI(this.value, '")+fragment +appendSet+F("');\"><sup class=\"units\">&deg;C</sup></B><input id=\"")+fragment+appendSet+F("\" type=\"range\" min=\"")+String(roomtemplo,1)+F("\" max=\"")+String(roomtemphi,1)+F("\" step=\"")+String(tempstep,1)+F("\" name=\"")+ fragment +appendSet+F("\" value=\"")+String(room_temp[x].tempset,1)+F("\" style=\"width:50px\" onchange=\"uTI(this.value, 'T")+fragment+appendSet+F("');\">");
         ptr+=F("<input type=\"submit\" style=\"width:45px\"></font>");
         ptr+=F("</td>");
       }
       if ((x % 2) == 1) {ptr+="</tr>"; }//else ptr+="</td>";
     }
+
+
     #ifdef enableDHT
     ptr+=F("<tr><td>");
-    ptr+="<p>"+humidicon+F("<span class=\"dht-labels\">")+String(humidcorstr)+F("</span><BR><B><span class=\"dht-labels-temp\" id=\"")+String(dhumidcor)+F("\">&nbsp;<font color=\"Blue\">")+String(humiditycor,1)+F("</font></span><sup class=\"units\">&deg;C</sup></B></p>");
+    ptr+="<p>"+humidicon+F("<span class=\"dht-labels\">")+String(humidcorstr)+F("</span><BR><B><span class=\"dht-labels-temp\" id=\"")+String(dhumidcor)+F("\">&nbsp;<font color=\"Blue\">")+String(humiditycor,1)+F("</font></span><sup class=\"units\">&#37;</sup></B></p>");
     ptr+=F("<td></td");
     ptr+="<p>"+tempicon+F("<span class=\"dht-labels\">")+String(tempcorstr)+F("</span><BR><B><span class=\"dht-labels-temp\" id=\"")+String(dtempcor)+F("\">&nbsp;<font color=\"blue\">")+String(tempcor,1)+F("</font></span><sup class=\"units\">&deg;C</sup></B></p>");
-    if (millis()-dhtreadtime > (60*1000)) ptr+="Last update was "+uptimedana(dhtreadtime)+" ago";
+    if (millis()-dhtreadtime > (60*1000)) ptr+="<span class='units'>  Last update was "+uptimedana(dhtreadtime)+" ago</span>";
     ptr+=F("</td></tr>");
     #endif
 
@@ -873,11 +436,13 @@ String processor(const String var) {
     ptr = F("function uTI(e,n){document.getElementById(n).value=e};\n");
     tmp = String(uptimelink);  //spanid
     refreshtime += step; ptr += autoref0 + tmp + autoref1 + tmp + autoref1a + String(refreshtime/2) + autoref2;
-    for (int x=0; x<13; x++) {  ///was 8
+    for (int x=0; x<maxsensors; x++) {  ///was 8
       // if (room_temp[x].idpinout != -1 and room_temp[x].tempset!=0)
       // {
-        tmp = String(roomtempS) + getIdentyfikator(x); refreshtime+=step; ptr+=autoref0 + tmp + autoref1 + tmp + autoref1a + String(refreshtime) + autoref2;
-        if (x < limitsetsensor) {tmp = String(roomtempSetS) + getIdentyfikator(x); refreshtime+=step; ptr+=autoref0 + tmp + autoref1 + tmp + autoref1a + String(refreshtime) + autoref2;}
+        String fragment = String(room_temp[x].nameSensor);
+        fragment.replace(sepkondname,"_");
+        tmp = fragment; refreshtime+=step; ptr+=autoref0 + tmp + autoref1 + tmp + autoref1a + String(refreshtime) + autoref2;
+        if (x < limitsetsensor) {tmp = fragment+appendSet; refreshtime+=step; ptr+=autoref0 + tmp + autoref1 + tmp + autoref1a + String(refreshtime) + autoref2;}
       // }
     }
 
@@ -906,13 +471,14 @@ String processor(const String var) {
 String do_stopkawebsite() {
       String ptr;
       ptr = "&nbsp;";
-      if (!room_temp[8].switch_state) {
+      if (pump==startrun) {
         ptr += F("<i class='fas fa-fire' style='color: red'></i>"); ptr += "<span class='dht-labels'>"+String(FloorPumpActive)+F("</span><B>")+F("<sup class=\"units\"> </sup></B>");
         ptr += F("<br>");
       }
       if (CO_BoilerPumpWorking) {ptr += F("<font color=\"red\"><span class='dht-labels'><B>"); ptr += String(BOILER_IS_HEATING); ptr += F("<br></B></span></font>");}
       if (CO_PumpWorking) {ptr += F("<font color=\"blue\"><span class='dht-labels'><B>"); ptr += String(Second_Engine_Heating_PompActive); ptr += F("<br></B><br></span></font>");}
 
+      ptr += F("<font color=\"blue\"><span class='dht-labels'><B>"); ptr += String(sMODESTATE)+" "+String(modestate==MODEHEAT?sMODESTATE_HEAT:modestate==MODECOOL?sMODESTATE_COOL:modestate==MODEOFF?sMODESTATE_OFF:String(modestate)); ptr += F("<br></B><br></span></font>");
 
       // if (status_Fault) ptr += "<span class='dht-labels'><B>!!!!!!!!!!!!!!!!! status_Fault !!!!!!!<br></B></span>";
 
@@ -925,202 +491,14 @@ String do_stopkawebsite() {
 //      if (flame_time>0) ptr+= "<font color=\"green\"><span class='dht-labels'>"+String(Flame_time)+"<B>"+uptimedana(millis()-flame_time)+"<br></B><br></span></font>";
 //      ptr += "<br>"+String(Flame_total)+"<B>"+String(flame_used_power_kwh,4)+"kWh</B>";
       ptr += F("<span class='dht-labels'>Temperatura progu włączenia/wyłączenia pompy: <B>"); ptr += String(pumpOffVal); ptr += F("</B></span><br>");
+
+          ptr += F("<br><br> ## Free memory: ");
+    ptr += getFreeMemory();
+    ptr += F("% ");
+    ptr += ESP.getFreeHeap();
+    ptr += F(" bytes ## Wifi: ");
+    ptr += getWifiQuality();
+    ptr += F("% ## Mqtt reconnects: ");
+    ptr += mqttReconnects;
     return String(ptr);
-}
-//******************************************************************************************
-String uptimedana(unsigned long started_local) {
-  String wynik = " ";
-  unsigned long  partia = millis() - started_local;
-  if (partia<1000) return "< 1 "+String(t_sek)+" ";
-  #ifdef debug
-    Serial.print(F("Uptimedana: "));
-  #endif
-  if (partia >= 24 * 60 * 60 * 1000 ) {
-    unsigned long  podsuma = partia / (24 * 60 * 60 * 1000);
-    partia -= podsuma * 24 * 60 * 60 * 1000;
-    wynik += (String)podsuma + " "+String(t_day)+" ";
-
-  }
-  if (partia >= 60 * 60 * 1000 ) {
-    unsigned long  podsuma = partia / (60 * 60 * 1000);
-    partia -= podsuma * 60 * 60 * 1000;
-    wynik += (String)podsuma + " "+String(t_hour)+" ";
-  }
-  if (partia >= 60 * 1000 ) {
-    unsigned long  podsuma = partia / (60 * 1000);
-    partia -= podsuma * 60 * 1000;
-    wynik += (String)podsuma + " "+String(t_min)+" ";
-    //Serial.println(podsuma);
-  }
-  if (partia >= 1 * 1000 ) {
-    unsigned long  podsuma = partia / 1000;
-    partia -= podsuma * 1000;
-    wynik += (String)podsuma + " "+String(t_sek)+" ";
-    //Serial.println(podsuma);
-  }
-  #ifdef debug
-    Serial.println(wynik);
-  #endif
-  //wynik += (String)partia + "/1000";  //pomijam to wartosci <1sek
-  return wynik;
-}
-
-#include <EEPROM.h>
-
-
-
-// load whats in EEPROM in to the local CONFIGURATION if it is a valid setting
-bool loadConfig() {
-  #include "configmqtttopics.h"
-  // is it correct?
-  if (sizeof(CONFIGURATION)<1024) EEPROM.begin(1024); else EEPROM.begin(sizeof(CONFIGURATION)+128); //Size can be anywhere between 4 and 4096 bytes.
-  EEPROM.get(1,runNumber);
-  if (isnan(runNumber)) runNumber=0;
-  runNumber++;
-  //EEPROM.get(1+sizeof(runNumber),flame_used_power_kwh);
-  if (EEPROM.read(CONFIG_START + 0) == CONFIG_VERSION[0] &&
-      EEPROM.read(CONFIG_START + 1) == CONFIG_VERSION[1] &&
-      EEPROM.read(CONFIG_START + 2) == CONFIG_VERSION[2] &&
-      EEPROM.read(CONFIG_START + 3) == CONFIG_VERSION[3] &&
-      EEPROM.read(CONFIG_START + 4) == CONFIG_VERSION[4]){
-
-  // load (overwrite) the local configuration struct
-    for (unsigned int i=0; i<sizeof(configuration_type); i++){
-      *((char*)&CONFIGURATION + i) = EEPROM.read(CONFIG_START + i);
-    }
-    room_temp[0].tempset = CONFIGURATION.roomtempset1;
-    room_temp[1].tempset = CONFIGURATION.roomtempset2;
-    room_temp[2].tempset = CONFIGURATION.roomtempset3;
-    room_temp[3].tempset = CONFIGURATION.roomtempset4;
-    room_temp[4].tempset = CONFIGURATION.roomtempset5;
-    room_temp[5].tempset = CONFIGURATION.roomtempset6;
-    room_temp[6].tempset = CONFIGURATION.roomtempset7;
-    room_temp[7].tempset = CONFIGURATION.roomtempset8;
-    room_temp[8].tempset = CONFIGURATION.roomtempset9;
-    room_temp[9].tempset = CONFIGURATION.roomtempset10;
-
-    //roomtemp = CONFIGURATION.roomtemp;
-    temp_NEWS = CONFIGURATION.temp_NEWS;
-    strcpy(ssid, CONFIGURATION.ssid);
-    strcpy(pass, CONFIGURATION.pass);
-    strcpy(mqtt_server, CONFIGURATION.mqtt_server);
-    strcpy(mqtt_user, CONFIGURATION.mqtt_user);
-    strcpy(mqtt_password, CONFIGURATION.mqtt_password);
-    mqtt_port = CONFIGURATION.mqtt_port;
-    COPUMP_GET_TOPIC=(CONFIGURATION.COPUMP_GET_TOPIC);
-    NEWS_GET_TOPIC=(CONFIGURATION.NEWS_GET_TOPIC);
-    BOILER_FLAME_STATUS_TOPIC=(CONFIGURATION.BOILER_FLAME_STATUS_TOPIC);
-    BOILER_FLAME_STATUS_ATTRIBUTE=(CONFIGURATION.BOILER_FLAME_STATUS_ATTRIBUTE);
-    BOILER_COPUMP_STATUS_ATTRIBUTE=(CONFIGURATION.BOILER_COPUMP_STATUS_ATTRIBUTE);
-    for (int i=0;i<maxsensors;i++)
-    {
-      if (String(room_temp[i].nameSensor) == String(tempcutoff).substring(0,namelength)) pumpOffVal = room_temp[i].tempset;      //assign pump to sensor
-    }
-    return true; // return 1 if config loaded
-  }
-  //try get only my important values
-
-  return false; // return 0 if config NOT loaded
-}
-
-// save the CONFIGURATION in to EEPROM
-void saveConfig() {
-  #include "configmqtttopics.h"
-  #ifdef debug1
-    Serial.println("Saving config...........................prepare ");
-    #endif
-    #ifdef enableWebSerial
-    if (!starting) {WebSerial.println("Saving config...........................prepare ");}
-    #endif
-  unsigned int temp =0;
-  //firs read content of eeprom
-  EEPROM.get(1,temp);
-  if (EEPROM.read(CONFIG_START + 0) == CONFIG_VERSION[0] &&
-      EEPROM.read(CONFIG_START + 1) == CONFIG_VERSION[1] &&
-      EEPROM.read(CONFIG_START + 2) == CONFIG_VERSION[2] &&
-      EEPROM.read(CONFIG_START + 3) == CONFIG_VERSION[3] &&
-      EEPROM.read(CONFIG_START + 4) == CONFIG_VERSION[4]){
-
-  // load (overwrite) the local configuration struct
-    for (unsigned int i=0; i<sizeof(configuration_type); i++){
-      *((char*)&CONFTMP + i) = EEPROM.read(CONFIG_START + i);
-    }
-  }
-//now compare and if changed than save
-  if (temp != runNumber ||
-      CONFTMP.roomtempset1 != room_temp[0].tempset ||
-      CONFTMP.roomtempset2 != room_temp[1].tempset ||
-      CONFTMP.roomtempset3 != room_temp[2].tempset ||
-      CONFTMP.roomtempset4 != room_temp[3].tempset ||
-      CONFTMP.roomtempset5 != room_temp[4].tempset ||
-      CONFTMP.roomtempset6 != room_temp[5].tempset ||
-      CONFTMP.roomtempset7 != room_temp[6].tempset ||
-      CONFTMP.roomtempset8 != room_temp[7].tempset ||
-      CONFTMP.roomtempset9 != room_temp[8].tempset ||
-      CONFTMP.roomtempset10 != room_temp[9].tempset ||
-      strcmp(CONFTMP.ssid, ssid) != 0 ||
-      strcmp(CONFTMP.pass, pass) != 0 ||
-      strcmp(CONFTMP.mqtt_server, mqtt_server) != 0 ||
-      strcmp(CONFTMP.mqtt_user, mqtt_user) != 0 ||
-      strcmp(CONFTMP.mqtt_password, mqtt_password) != 0 ||
-      CONFTMP.mqtt_port != mqtt_port ||
-      strcmp(CONFTMP.COPUMP_GET_TOPIC,String(COPUMP_GET_TOPIC).c_str()) != 0 ||
-      strcmp(CONFTMP.NEWS_GET_TOPIC, String(NEWS_GET_TOPIC).c_str()) != 0 ||
-      strcmp(CONFTMP.BOILER_FLAME_STATUS_TOPIC, String(BOILER_FLAME_STATUS_TOPIC).c_str()) != 0 ||
-      strcmp(CONFTMP.BOILER_FLAME_STATUS_ATTRIBUTE, String(BOILER_FLAME_STATUS_ATTRIBUTE).c_str()) != 0 ||
-      strcmp(CONFTMP.BOILER_COPUMP_STATUS_ATTRIBUTE, String(BOILER_COPUMP_STATUS_ATTRIBUTE).c_str()) != 0 ) {  //skip save if runnumber = saved runnumber to avoid too much memory save and wear eeprom
-    EEPROM.put(1, runNumber);
-    //EEPROM.put(1+sizeof(runNumber), flame_used_power_kwh);
-    #ifdef debug1
-    Serial.println(String(millis())+": Saving config........................... to EEPROM some data changed");
-    #endif
-    #ifdef enableWebSerial
-    if (!starting) {WebSerial.println(String(millis())+": Saving config........................... to EEPROM some data changed");}
-    #endif
-
-
-
-    strcpy(CONFIGURATION.version,CONFIG_VERSION);
-    CONFIGURATION.roomtempset1 = room_temp[0].tempset;
-    CONFIGURATION.roomtempset2 = room_temp[1].tempset;
-    CONFIGURATION.roomtempset3 = room_temp[2].tempset;
-    CONFIGURATION.roomtempset4 = room_temp[3].tempset;
-    CONFIGURATION.roomtempset5 = room_temp[4].tempset;
-    CONFIGURATION.roomtempset6 = room_temp[5].tempset;
-    CONFIGURATION.roomtempset7 = room_temp[6].tempset;
-    CONFIGURATION.roomtempset8 = room_temp[7].tempset;
-    CONFIGURATION.roomtempset9 = room_temp[8].tempset;
-    CONFIGURATION.roomtempset10 = room_temp[9].tempset;
-
-    CONFIGURATION.temp_NEWS = temp_NEWS;
-    strcpy(CONFIGURATION.ssid,ssid);
-    strcpy(CONFIGURATION.pass,pass);
-    strcpy(CONFIGURATION.mqtt_server,mqtt_server);
-    strcpy(CONFIGURATION.mqtt_user,mqtt_user);
-    strcpy(CONFIGURATION.mqtt_password,mqtt_password);
-    CONFIGURATION.mqtt_port = mqtt_port;
-    strcpy(CONFIGURATION.COPUMP_GET_TOPIC,COPUMP_GET_TOPIC.c_str());
-    strcpy(CONFIGURATION.NEWS_GET_TOPIC,NEWS_GET_TOPIC.c_str());
-    strcpy(CONFIGURATION.BOILER_FLAME_STATUS_TOPIC,BOILER_FLAME_STATUS_TOPIC.c_str());
-    strcpy(CONFIGURATION.BOILER_FLAME_STATUS_ATTRIBUTE,BOILER_FLAME_STATUS_ATTRIBUTE.c_str());
-    strcpy(CONFIGURATION.BOILER_COPUMP_STATUS_ATTRIBUTE,BOILER_COPUMP_STATUS_ATTRIBUTE.c_str());
-
-    for (unsigned int i=0; i<sizeof(configuration_type); i++)
-      EEPROM.write(CONFIG_START + i, *((char*)&CONFIGURATION + i));
-    EEPROM.commit();
-  }
-}
-
-void restart()
-{
-  delay(1500);
-//  WiFi.forceSleepBegin();
-  webserver.end();
-  WiFi.disconnect();
-//      wifi.disconnect();
-  delay(5000);
-//  WiFi.forceSleepBegin(); wdt_reset();
-ESP.restart(); while (1)ESP.restart();
-//wdt_reset();
-ESP.restart();
 }

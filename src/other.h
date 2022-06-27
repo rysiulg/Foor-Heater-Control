@@ -2,71 +2,146 @@
 
 #include <Arduino.h>
 
-const unsigned long extTempTimeout_ms = 180 * 1000,
-                    statusUpdateInterval_ms = 60 * 1 * 1000,    //update pumps i dallas  -i check mqtt for active boiler ch pump and co pump and if active one or both change time to next value
-                    statusUpdateShortenInterval_s = 60,          //update pumps i dallas  -i check mqtt for active boiler ch pump and co pump and if active one or both change time to this value
-                    spOverrideTimeout_ms = 180 * 1000,
-                    mqttUpdateInterval_ms = 1 * 60 * 1000,      //send data to mqtt and influxdb
-                    temp_NEWS_interval_reduction_time_ms = 30 * 60 * 1000, // time to laps between temp_NEWS reduction by 5%
-                    mqtt_offline_reconnect_after_ms = 15 * 60 * 1000,      // time when mqtt is offline to wait for next reconnect (15minutes)
-                    save_config_every = 5 * 60 * 1000,                    // time saveing config values in eeprom (15minutes) -changed to shorter time -implemented save only if value are changed
-                    WiFiinterval = 30 * 1000;
+#include <EEPROM.h>
 
-// upper and lower bounds on heater level
-const float cutoffhi = 20,           // upper max cut-off temp above is heating CO disabled -range +-20
-            cutofflo = -cutoffhi,    // lower min cut-off temp above is heating CO disabled
-            roomtemphi = 30,         // upper max to set of room temperature
-            roomtemplo = 15,         // lower min to set of room temperature
-            noCommandSpOverride = 32; //heating water temperature for fail mode (no external temp provided) for co
 
-unsigned int runNumber = 0, // count of restarts
-             publishhomeassistantconfig = 4,                               // licznik wykonan petli -strat od 0
-             publishhomeassistantconfigdivider = 5;                        // publishhomeassistantconfig % publishhomeassistantconfigdivider -publikacja gdy reszta z dzielenia =0 czyli co te ilosc wykonan petli opoznionej update jest wysylany config
 
-float roomtemp_last = 0, // prior temperature
-      ierr = 25,         // integral error
-      dt = 0,            // time between measurements
-      //       op = 0, //PID controller output
-      retTemp = 0,                         // return temperature
-      temp_NEWS = 0,                       // avg temperatura outside -getting this from mqtt topic as averange from 4 sensors North West East South
-      cutOffTemp = 2,                      // outside temp setpoint to cutoff heating co. CO heating is disabled if outside temp (temp_NEWS) is above this value
-      op_override = noCommandSpOverride, // boiler tempset on heat mode
-      room_temp_default = 20.5,     //domyslna temp pokoju
-      pressure = 0,
-      humiditycor = 0,              //DHT humidity
-      tempcor = 0,                  //DHT temp and mayby dual with 18b20 onboard
-      tempwe = 0;                   //temp. wejscia co
-String LastboilerResponseError,
-       kondygnacja = "0";          //ident pietra
+// load whats in EEPROM in to the local CONFIGURATION if it is a valid setting
+bool loadConfig() {
+  #include "configmqtttopics.h"
+  // is it correct?
+  if (sizeof(CONFIGURATION)<1024) EEPROM.begin(1024); else EEPROM.begin(sizeof(CONFIGURATION)+128); //Size can be anywhere between 4 and 4096 bytes.
+  EEPROM.get(1,runNumber);
+  if (isnan(runNumber)) runNumber=0;  //or runNumber>80
+  runNumber++;
+  //EEPROM.get(1+sizeof(runNumber),flame_used_power_kwh);
+  if (EEPROM.read(CONFIG_START + 0) == CONFIG_VERSION[0] &&
+      EEPROM.read(CONFIG_START + 1) == CONFIG_VERSION[1] &&
+      EEPROM.read(CONFIG_START + 2) == CONFIG_VERSION[2] &&
+      EEPROM.read(CONFIG_START + 3) == CONFIG_VERSION[3] &&
+      EEPROM.read(CONFIG_START + 4) == CONFIG_VERSION[4]){
 
-int temp_NEWS_count = 0,
-    mqtt_offline_retrycount = 0,
-    mqtt_offline_retries = 15; // retries to mqttconnect before timewait
+  // load (overwrite) the local configuration struct
+    for (unsigned int i=0; i<sizeof(configuration_type); i++){
+      *((char*)&CONFIGURATION + i) = EEPROM.read(CONFIG_START + i);
+    }
+    room_temp[0].tempset = CONFIGURATION.roomtempset1;
+    room_temp[1].tempset = CONFIGURATION.roomtempset2;
+    room_temp[2].tempset = CONFIGURATION.roomtempset3;
+    room_temp[3].tempset = CONFIGURATION.roomtempset4;
+    room_temp[4].tempset = CONFIGURATION.roomtempset5;
+    room_temp[5].tempset = CONFIGURATION.roomtempset6;
+    room_temp[6].tempset = CONFIGURATION.roomtempset7;
+    room_temp[7].tempset = CONFIGURATION.roomtempset8;
+    room_temp[8].tempset = CONFIGURATION.roomtempset9;
+    room_temp[9].tempset = CONFIGURATION.roomtempset10;
 
-unsigned long ts = 0, new_ts = 0, // timestamp
-              lastUpdateTempPump = 0,
-              lastUpdatemqtt = 0,
-              lastTempSet = 0,
-              lastcutOffTempSet = 0,
-              lastNEWSSet = 0,
-              lastmqtt_reconnect = 0,
-              lastSaveConfig = 0,
-              lastSpSet = 0,
-              WiFipreviousMillis = 0,
-              dhtreadtime = 0;
+    //roomtemp = CONFIGURATION.roomtemp;
+    temp_NEWS = CONFIGURATION.temp_NEWS;
+    strcpy(ssid, CONFIGURATION.ssid);
+    strcpy(pass, CONFIGURATION.pass);
+    strcpy(mqtt_server, CONFIGURATION.mqtt_server);
+    strcpy(mqtt_user, CONFIGURATION.mqtt_user);
+    strcpy(mqtt_password, CONFIGURATION.mqtt_password);
+    mqtt_port = CONFIGURATION.mqtt_port;
+    COPUMP_GET_TOPIC=(CONFIGURATION.COPUMP_GET_TOPIC);
+    NEWS_GET_TOPIC=(CONFIGURATION.NEWS_GET_TOPIC);
+    BOILER_FLAME_STATUS_TOPIC=(CONFIGURATION.BOILER_FLAME_STATUS_TOPIC);
+    BOILER_FLAME_STATUS_ATTRIBUTE=(CONFIGURATION.BOILER_FLAME_STATUS_ATTRIBUTE);
+    BOILER_COPUMP_STATUS_ATTRIBUTE=(CONFIGURATION.BOILER_COPUMP_STATUS_ATTRIBUTE);
+    for (int i=0;i<maxsensors;i++)
+    {
+      if (String(room_temp[i].nameSensor) == String(tempcutoff).substring(0,namelength)) pumpOffVal = room_temp[i].tempset;      //assign pump to sensor
+    }
+    return true; // return 1 if config loaded
+  }
+  //try get only my important values
 
-bool receivedmqttdata = false,
-     CO_PumpWorking = false,
-     CO_BoilerPumpWorking = false,
-     tmanual = false,
-     starting = true;
+  return false; // return 0 if config NOT loaded
+}
 
-const int lampPin = LED_BUILTIN;
+// save the CONFIGURATION in to EEPROM
+void saveConfig() {
+  #include "configmqtttopics.h"
+  log_message((char*)F("Saving config...........................prepare"));
+  unsigned int temp =0;
+  //firs read content of eeprom
+  EEPROM.get(1,temp);
+  if (EEPROM.read(CONFIG_START + 0) == CONFIG_VERSION[0] &&
+      EEPROM.read(CONFIG_START + 1) == CONFIG_VERSION[1] &&
+      EEPROM.read(CONFIG_START + 2) == CONFIG_VERSION[2] &&
+      EEPROM.read(CONFIG_START + 3) == CONFIG_VERSION[3] &&
+      EEPROM.read(CONFIG_START + 4) == CONFIG_VERSION[4]){
+
+  // load (overwrite) the local configuration struct
+    for (unsigned int i=0; i<sizeof(configuration_type); i++){
+      *((char*)&CONFTMP + i) = EEPROM.read(CONFIG_START + i);
+    }
+  }
+//now compare and if changed than save
+  if (temp != runNumber ||
+      CONFTMP.roomtempset1 != room_temp[0].tempset ||
+      CONFTMP.roomtempset2 != room_temp[1].tempset ||
+      CONFTMP.roomtempset3 != room_temp[2].tempset ||
+      CONFTMP.roomtempset4 != room_temp[3].tempset ||
+      CONFTMP.roomtempset5 != room_temp[4].tempset ||
+      CONFTMP.roomtempset6 != room_temp[5].tempset ||
+      CONFTMP.roomtempset7 != room_temp[6].tempset ||
+      CONFTMP.roomtempset8 != room_temp[7].tempset ||
+      CONFTMP.roomtempset9 != room_temp[8].tempset ||
+      CONFTMP.roomtempset10 != room_temp[9].tempset ||
+      strcmp(CONFTMP.ssid, ssid) != 0 ||
+      strcmp(CONFTMP.pass, pass) != 0 ||
+      strcmp(CONFTMP.mqtt_server, mqtt_server) != 0 ||
+      strcmp(CONFTMP.mqtt_user, mqtt_user) != 0 ||
+      strcmp(CONFTMP.mqtt_password, mqtt_password) != 0 ||
+      CONFTMP.mqtt_port != mqtt_port ||
+      strcmp(CONFTMP.COPUMP_GET_TOPIC,String(COPUMP_GET_TOPIC).c_str()) != 0 ||
+      strcmp(CONFTMP.NEWS_GET_TOPIC, String(NEWS_GET_TOPIC).c_str()) != 0 ||
+      strcmp(CONFTMP.BOILER_FLAME_STATUS_TOPIC, String(BOILER_FLAME_STATUS_TOPIC).c_str()) != 0 ||
+      strcmp(CONFTMP.BOILER_FLAME_STATUS_ATTRIBUTE, String(BOILER_FLAME_STATUS_ATTRIBUTE).c_str()) != 0 ||
+      strcmp(CONFTMP.BOILER_COPUMP_STATUS_ATTRIBUTE, String(BOILER_COPUMP_STATUS_ATTRIBUTE).c_str()) != 0 ) {  //skip save if runnumber = saved runnumber to avoid too much memory save and wear eeprom
+    EEPROM.put(1, runNumber);
+    //EEPROM.put(1+sizeof(runNumber), flame_used_power_kwh);
+    log_message((char*)F("Saving config........................... to EEPROM some data changed"));
+
+
+    strcpy(CONFIGURATION.version,CONFIG_VERSION);
+    CONFIGURATION.roomtempset1 = room_temp[0].tempset;
+    CONFIGURATION.roomtempset2 = room_temp[1].tempset;
+    CONFIGURATION.roomtempset3 = room_temp[2].tempset;
+    CONFIGURATION.roomtempset4 = room_temp[3].tempset;
+    CONFIGURATION.roomtempset5 = room_temp[4].tempset;
+    CONFIGURATION.roomtempset6 = room_temp[5].tempset;
+    CONFIGURATION.roomtempset7 = room_temp[6].tempset;
+    CONFIGURATION.roomtempset8 = room_temp[7].tempset;
+    CONFIGURATION.roomtempset9 = room_temp[8].tempset;
+    CONFIGURATION.roomtempset10 = room_temp[9].tempset;
+
+    CONFIGURATION.temp_NEWS = temp_NEWS;
+    strcpy(CONFIGURATION.ssid,ssid);
+    strcpy(CONFIGURATION.pass,pass);
+    strcpy(CONFIGURATION.mqtt_server,mqtt_server);
+    strcpy(CONFIGURATION.mqtt_user,mqtt_user);
+    strcpy(CONFIGURATION.mqtt_password,mqtt_password);
+    CONFIGURATION.mqtt_port = mqtt_port;
+    strcpy(CONFIGURATION.COPUMP_GET_TOPIC,COPUMP_GET_TOPIC.c_str());
+    strcpy(CONFIGURATION.NEWS_GET_TOPIC,NEWS_GET_TOPIC.c_str());
+    strcpy(CONFIGURATION.BOILER_FLAME_STATUS_TOPIC,BOILER_FLAME_STATUS_TOPIC.c_str());
+    strcpy(CONFIGURATION.BOILER_FLAME_STATUS_ATTRIBUTE,BOILER_FLAME_STATUS_ATTRIBUTE.c_str());
+    strcpy(CONFIGURATION.BOILER_COPUMP_STATUS_ATTRIBUTE,BOILER_COPUMP_STATUS_ATTRIBUTE.c_str());
+
+    for (unsigned int i=0; i<sizeof(configuration_type); i++)
+      EEPROM.write(CONFIG_START + i, *((char*)&CONFIGURATION + i));
+    EEPROM.commit();
+  }
+}
 
 
 
 
 void Assign_Name_Addr_Pinout(int i, String name, String address, int outpin) {
+  #include "configmqtttopics.h"
   //Konwersja adres String to array uint
   uint8_t  adres[address.length() + 1];
   address.toCharArray((char*)adres, address.length() + 1);
@@ -79,8 +154,27 @@ void Assign_Name_Addr_Pinout(int i, String name, String address, int outpin) {
     digitalWrite (outpin, start_digital);    //set active high
     if (room_temp[i].tempset==InitTemp or room_temp[i].tempset==0) room_temp[i].tempset = room_temp_default;
   }
-  room_temp[i].switch_state=start;
-  if (name == String(tempcutoff).substring(0,namelength) and (room_temp[i].tempset==InitTemp)) room_temp[i].tempset=pumpOffVal;      //assign pump to sensor
+  room_temp[i].humidityread = 0;
+  room_temp[i].switch_state=stoprun;
+  if (name == String(tempcutoff).substring(0,namelength) and (room_temp[i].tempset==InitTemp))
+  {
+    room_temp[i].tempset=pumpOffVal;      //assign pump to sensor
+    room_temp[i].switch_state=startrun;      //turn on pump for a while
+  }
+  room_temp[i].mqtt_tempset_floor_topic = ROOM_TEMPERATURE_SETPOINT_SET_TOPIC + getIdentyfikator(i) + SET_LAST;
+  if (kondygnacja == "1")
+  {
+    room_temp[i].mqtt_temp_floor_topic = FLOOR1_ROOM_TOPICS[i][0];
+    room_temp[i].mqtt_humid_json = FLOOR1_ROOM_TOPICS[i][2];
+    room_temp[i].mqtt_temp_json = FLOOR1_ROOM_TOPICS[i][1];
+  }
+  if (kondygnacja == "2")
+  {
+    room_temp[i].mqtt_temp_floor_topic = FLOOR2_ROOM_TOPICS[i][0];
+    room_temp[i].mqtt_humid_json = FLOOR2_ROOM_TOPICS[i][2];
+    room_temp[i].mqtt_temp_json = FLOOR2_ROOM_TOPICS[i][1];
+  }
+  //room_temp[i].
   #ifdef debug
   Serial.println(String(i)+": "+String(room_temp[i].nameSensor)+" "+String(address)+" "+String(outpin)+" "+String(name.length()));
   #endif
@@ -173,22 +267,22 @@ void AssignSensors()
   for (int i = 0; i < maxsensors; i++) { //jest 8 elektrozaworow termicznych
     room_temp[i].tempread = InitTemp;
     switch (i) {
-      case 0: Assign_Name_Addr_Pinout(i, String(zawor1name), String(zawor1addr), zawor1); break;
-      case 1: Assign_Name_Addr_Pinout(i, String(zawor2name), String(zawor2addr), zawor2); break;
+      case 0: Assign_Name_Addr_Pinout(i, String(dzawor1name), String((kondygnacja == "1")?(dzawor1addr1):(kondygnacja == "2")?(dzawor1addr2):"\0"), zawor1); break;
+      case 1: Assign_Name_Addr_Pinout(i, String(dzawor2name), String((kondygnacja == "1")?(dzawor2addr1):(kondygnacja == "2")?(dzawor2addr2):"\0"), zawor2); break;
 //        (String(kondygnacja) + String(zawor2name)).toCharArray(room_temp[i].nameSensor, namelength);
 //        temps[i].idpinout = zawor2;
 //        break;
-      case 2: Assign_Name_Addr_Pinout(i, String(zawor3name), String(zawor3addr), zawor3); break;
-      case 3: Assign_Name_Addr_Pinout(i, String(zawor4name), String(zawor4addr), zawor4); break;
-      case 4: Assign_Name_Addr_Pinout(i, String(zawor5name), String(zawor5addr), zawor5); break;
-      case 5: Assign_Name_Addr_Pinout(i, String(zawor6name), String(zawor6addr), zawor6); break;
-      case 6: Assign_Name_Addr_Pinout(i, String(zawor7name), String(zawor7addr), zawor7); break;
-      case 7: Assign_Name_Addr_Pinout(i, String(zawor8name), String(zawor8addr), zawor8); break;
-      case 8: Assign_Name_Addr_Pinout(i, String(zawor9name), String(zawor9addr), zawor9); break;
-      case 9: Assign_Name_Addr_Pinout(i, String(zawor10name), String(zawor10addr), zawor10); break;
-      case 10: Assign_Name_Addr_Pinout(i, String(zawor11name), String(zawor11addr), zawor11); break;
-      case 11: Assign_Name_Addr_Pinout(i, String(zawor12name), String(zawor12addr), zawor12); break;
-      case 12: Assign_Name_Addr_Pinout(i, String(zawor13name), String(zawor13addr), zawor13); break;
+      case 2: Assign_Name_Addr_Pinout(i, String(dzawor3name), String((kondygnacja == "1")?(dzawor3addr1):(kondygnacja == "2")?(dzawor3addr2):"\0"), zawor3); break;
+      case 3: Assign_Name_Addr_Pinout(i, String(dzawor4name), String((kondygnacja == "1")?(dzawor4addr1):(kondygnacja == "2")?(dzawor4addr2):"\0"), zawor4); break;
+      case 4: Assign_Name_Addr_Pinout(i, String(dzawor5name), String((kondygnacja == "1")?(dzawor5addr1):(kondygnacja == "2")?(dzawor5addr2):"\0"), zawor5); break;
+      case 5: Assign_Name_Addr_Pinout(i, String(dzawor6name), String((kondygnacja == "1")?(dzawor6addr1):(kondygnacja == "2")?(dzawor6addr2):"\0"), zawor6); break;
+      case 6: Assign_Name_Addr_Pinout(i, String(dzawor7name), String((kondygnacja == "1")?(dzawor7addr1):(kondygnacja == "2")?(dzawor7addr2):"\0"), zawor7); break;
+      case 7: Assign_Name_Addr_Pinout(i, String(dzawor8name), String((kondygnacja == "1")?(dzawor8addr1):(kondygnacja == "2")?(dzawor8addr2):"\0"), zawor8); break;
+      case 8: Assign_Name_Addr_Pinout(i, String(dzawor9name), String((kondygnacja == "1")?(dzawor9addr1):(kondygnacja == "2")?(dzawor9addr2):"\0"), zawor9); break;
+      case 9: Assign_Name_Addr_Pinout(i, String(dzawor10name), String((kondygnacja == "1")?(dzawor10addr1):(kondygnacja == "2")?(dzawor10addr2):"\0"), zawor10); break;
+      case 10: Assign_Name_Addr_Pinout(i, String(dzawor11name), String((kondygnacja == "1")?(dzawor11addr1):(kondygnacja == "2")?(dzawor11addr2):"\0"), zawor11); break;
+      case 11: Assign_Name_Addr_Pinout(i, String(dzawor12name), String((kondygnacja == "1")?(dzawor12addr1):(kondygnacja == "2")?(dzawor12addr2):"\0"), zawor12); break;
+      case 12: Assign_Name_Addr_Pinout(i, String(dzawor13name), String((kondygnacja == "1")?(dzawor13addr1):(kondygnacja == "2")?(dzawor13addr2):"\0"), zawor13); break;
     }
   }
 }
@@ -218,7 +312,7 @@ void recvMsg(uint8_t *data, size_t len)
   } else
   if (d == "RECONNECT")
   {
-    reconnect();
+    mqtt_reconnect();
   } else
   if (d == "SAVE")
   {
@@ -267,8 +361,8 @@ void recvMsg(uint8_t *data, size_t len)
   } else
   if (d == F("RESET_CONFIG"))
   {
-    WebSerial.println(F("RESET config to DEFAULT VALUES and restart..."));
-    WebSerial.println("Size CONFIG: " + String(sizeof(CONFIGURATION)));
+    sprintf(log_chars, "RESET config to DEFAULT VALUES and restart... Size CONFIG: %s", sizeof(CONFIGURATION));
+    log_message(log_chars);
     CONFIGURATION.version[0] = 'R';
     CONFIGURATION.version[1] = 'E';
     CONFIGURATION.version[2] = 'S';
@@ -279,7 +373,7 @@ void recvMsg(uint8_t *data, size_t len)
   } else
    if (d == "HELP")
   {
-    WebSerial.println(F("KOMENDY:\n \
+    log_message((char*)F("KOMENDY:\n \
       TOGGLEPUMP n=0/1 -Zmiana statusu pompy n (numer od 0 do 10) na stan (0 wyłącza, 1 włącza),\n \
       TEMPCUTOFF val   -zmiana temperatury odłączenia pompy poniżej temp val.\n \
 	    RESTART          -Uruchamia ponownie układ,\n \
@@ -293,57 +387,54 @@ void recvMsg(uint8_t *data, size_t len)
 
 
 
-bool PayloadStatus(String payloadStr, bool state)
+void updateInfluxDB()
 {
-  payloadStr.toUpperCase();
-  payloadStr.trim();
-  payloadStr.replace(",", ".");      //for localization correction
-  if (state and (payloadStr == "ON" or payloadStr == "TRUE" or payloadStr == "START" or payloadStr == "1"  or payloadStr == "ENABLE" or payloadStr == "HEAT")) return true;
-  else
-  if (!state and (payloadStr == "OFF" or payloadStr == "FALSE" or payloadStr == "STOP" or payloadStr == "0" or payloadStr == "DISABLE")) return true;
-  else return false;
-}
+  #ifdef ENABLE_INFLUX
+  #include "configmqtttopics.h"
 
-
-bool PayloadtoValidFloatCheck(String payloadStr)
-{
-  if (PayloadtoValidFloat(payloadStr)==InitTemp) return false; else return true;
-}
-float PayloadtoValidFloat(String payloadStr, bool withtemps_minmax, float mintemp, float maxtemp)  //bool withtemps_minmax=false, float mintemp=InitTemp,float
-{
-  payloadStr.trim();
-  payloadStr.replace(",", ".");
-  float valuefromStr = payloadStr.toFloat();
-  if (isnan(valuefromStr) || !isValidNumber(payloadStr))
+  InfluxSensor.clearFields();
+  // Report RSSI of currently connected network
+  InfluxSensor.addField("rssi"+String(kondygnacja), (WiFi.RSSI()));
+  InfluxSensor.addField("HallSensorFH"+kondygnacja, (hallRead()));
+  InfluxSensor.addField("CRT_F"+String(kondygnacja),  (runNumber));
+  for (int x=0;x<maxsensors;x++)
   {
-    #ifdef debug
-    Serial.println(F("Value is not a valid number, ignoring..."));
-    #endif
-    WebSerial.print(String(millis())+": ");
-    WebSerial.println(F("Value is not a valid number, ignoring..."));
-    return InitTemp;
-  } else
-  {
-    if (!withtemps_minmax)
-    {
-      return valuefromStr;
-    } else {
-      #ifdef debug
-      Serial.println("Value is valid number: "+String(valuefromStr,2));
-      #endif
-	WebSerial.print(String(millis())+": ");
-      WebSerial.println("Value is valid number: "+String(valuefromStr,2));
-      if (valuefromStr>maxtemp and maxtemp!=InitTemp) valuefromStr = maxtemp;
-      if (valuefromStr<mintemp and mintemp!=InitTemp) valuefromStr = mintemp;
-      return valuefromStr;
+    String identyfikator=getIdentyfikator(x);
+    if (room_temp[x].tempread!=InitTemp and room_temp[x].tempread>roomtemplo and room_temp[x].tempread<=roomtemphi) {
+      InfluxSensor.addField(String(ROOM_TEMPERATURE)+String(kondygnacja)+identyfikator, room_temp[x].tempread);
+    }
+    if (room_temp[x].tempset!=InitTemp and room_temp[x].tempset>roomtemplo and room_temp[x].tempset<=roomtemphi) {
+      InfluxSensor.addField(String(ROOM_TEMPERATURE_SETPOINT) +String(kondygnacja)+identyfikator, room_temp[x].tempset);
     }
   }
+  if (min_temp!=InitTemp and min_temp>=roomtemplo and min_temp<=roomtemphi) InfluxSensor.addField(String(ROOM_TEMPERATURE)+String(kondygnacja)+getIdentyfikator(-1), min_temp);
+  if (max_temp!=InitTemp and max_temp>=roomtemplo and max_temp<=roomtemphi) InfluxSensor.addField(String(ROOM_TEMPERATURE_SETPOINT) +String(kondygnacja)+getIdentyfikator(-1), max_temp);
+
+  InfluxSensor.addField(String(ROOM_TEMPERATURE)+String(kondygnacja)+"_DHT_Temp", tempcor);
+  InfluxSensor.addField(String(ROOM_HUMIDITY)+String(kondygnacja)+"_DHT_Humid", humiditycor);
+  InfluxSensor.addField(String(ROOM_PUMPSTATE)+"_Floor_"+String(kondygnacja), !pump?1:0);
+
+
+//   InfluxSensor.addField(String(TEMP_CUTOFF)+String(kondygnacja), cutOffTemp);
+// //  InfluxSensor.addField(String(DIAGS_OTHERS_FAULT), status_Fault ? "1" : "0");
+// //  InfluxSensor.addField(String(DIAGS_OTHERS_DIAG), status_Diagnostic ? "1" : "0");
+//   InfluxSensor.addField(String(INTEGRAL_ERROR_GET_TOPIC)+String(kondygnacja), ierr);
+//   InfluxSensor.addField(String(LOG_GET_TOPIC)+String(kondygnacja), LastboilerResponseError);
+
+  // Print what are we exactly writing
+  sprintf(log_chars, "Writing to InfluxDB: %s", "\0"); //InfluxClient.pointToLineProtocol(InfluxSensor));
+  log_message(log_chars);
+  // Write point
+  if (!InfluxClient.writePoint(InfluxSensor))
+  {
+    sprintf(log_chars, "InfluxDB write failed: %s", InfluxClient.getLastErrorMessage());
+    log_message(log_chars);
+  }
+#endif
 }
 
-String getIdentyfikator(int x)
-{
-  return "_"+String(x+1);
-}
+
+
 
 void updateMQTTData() {
   const String payloadvalue_startend_val = ""; // value added before and after value send to mqtt queue
@@ -355,24 +446,26 @@ void updateMQTTData() {
   tmpbuilder += "\"rssi\":"+ String(WiFi.RSSI());
   tmpbuilder += ",\"HallSensor"+kondygnacja+"\":"+String(hallRead());
   tmpbuilder += ",\"CRT\":"+ String(runNumber);
-  float min = room_temp[0].tempread, max = room_temp[0].tempset;
+
   for (int x=0;x<createhasensors;x++)
   {
     String identyfikator = getIdentyfikator(x);
     if (room_temp[x].tempread!=InitTemp and room_temp[x].tempread > roomtemplo) {
       tmpbuilder += ",\"" + OT + ROOM_TEMPERATURE + identyfikator + "\": " + payloadvalue_startend_val + String(room_temp[x].tempread) + payloadvalue_startend_val;
-      if (min>room_temp[x].tempread and x<8 and room_temp[x].tempread != roomtemplo) min = room_temp[x].tempread;
+
     }
     if (room_temp[x].tempread!=InitTemp and room_temp[x].idpinout>0 and room_temp[x].tempread > roomtemplo) {
       tmpbuilder += ",\"" + OT + ROOM_TEMPERATURE_SETPOINT + identyfikator + "\": " + payloadvalue_startend_val + String(room_temp[x].tempset) + payloadvalue_startend_val;
-      if (max<room_temp[x].tempset and x<8 and room_temp[x].tempread != roomtemphi) max = room_temp[x].tempset;
+
     }
   }
-  if (min!=InitTemp) tmpbuilder += ",\"" + OT + ROOM_TEMPERATURE + getIdentyfikator(-1) + "\": " + payloadvalue_startend_val + String(min) + payloadvalue_startend_val;
-  if (max!=InitTemp) tmpbuilder += ",\"" + OT + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1) + "\": " + payloadvalue_startend_val + String(max) + payloadvalue_startend_val;
+  if (min_temp!=InitTemp) tmpbuilder += ",\"" + OT + ROOM_TEMPERATURE + getIdentyfikator(-1) + "\": " + payloadvalue_startend_val + String(min_temp) + payloadvalue_startend_val;
+  if (max_temp!=InitTemp) tmpbuilder += ",\"" + OT + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1) + "\": " + payloadvalue_startend_val + String(max_temp) + payloadvalue_startend_val;
 
-  tmpbuilder += ",\"" + OT + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1) + "_DHT_Temp\": " + payloadvalue_startend_val + String(tempcor) + payloadvalue_startend_val;
-  tmpbuilder += ",\"" + OT + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1) + "_DHT_Humid\": " + payloadvalue_startend_val + String(humiditycor) + payloadvalue_startend_val;
+  tmpbuilder += ",\"" + OT + ROOM_TEMPERATURE + getIdentyfikator(-1) + "_DHT_Temp\": " + payloadvalue_startend_val + String(tempcor) + payloadvalue_startend_val;
+  tmpbuilder += ",\"" + OT + ROOM_HUMIDITY + getIdentyfikator(-1) + "_DHT_Humid\": " + payloadvalue_startend_val + String(humiditycor) + payloadvalue_startend_val;
+
+  tmpbuilder += ",\"" + OT + ROOM_PUMPSTATE + getIdentyfikator(-1) + "_pumpstate\": " + payloadvalue_startend_val + String(!pump?1:0) + payloadvalue_startend_val;
 
   mqttclient.publish(ROOMS_TOPIC_SENSOR.c_str(),(tmpbuilder+"}").c_str(), mqtt_Retain);
 
@@ -411,7 +504,7 @@ void updateMQTTData() {
       //mqttclient.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE + identyfikator + "/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMPERATURE + identyfikator+"\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE + identyfikator+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE + identyfikator+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer\",\"qos\":" + QOS + "," + mqttdeviceid + "}").c_str(), mqtt_Retain);
       if (room_temp[x].idpinout>0 and room_temp[x].tempread!=InitTemp) mqttclient.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE_SETPOINT + identyfikator+"/config").c_str(), ("{\"name\":\"" +  OT + String(room_temp[x].nameSensor) + identyfikator +"SP\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE_SETPOINT + identyfikator+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE_SETPOINT + identyfikator+"}}\","+temperature_class_lines+",\"qos\":" + QOS + "," + mqttdeviceid + "}").c_str(), mqtt_Retain);
       if (room_temp[x].idpinout>0 and room_temp[x].tempread!=InitTemp) mqttclient.publish((ROOMS_HACLI_TOPIC + identyfikator + "_climate/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMP + String(room_temp[x].nameSensor) + identyfikator + "\",\"uniq_id\": \"" + OT + ROOM_TEMP + identyfikator + "\", \
-\"modes\":[\"heat\"], \
+\"modes\":[\"off\",\"cool\",\"heat\"], \
 \"mode_state_topic\": \"" + ROOMS_TOPIC_SENSOR + "\", \
 \"mode_state_template\": \"{{'heat' if now() > today_at('0:00') else 'heat'}}\", \
 \"icon\": \"mdi:radiator\", \
@@ -432,6 +525,10 @@ void updateMQTTData() {
     mqttclient.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE + getIdentyfikator(-1) + "/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMPERATURE + getIdentyfikator(-1)+"_min\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE + getIdentyfikator(-1)+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE + getIdentyfikator(-1)+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer\",\"qos\":" + QOS + "," + mqttdeviceid + "}").c_str(), mqtt_Retain);
     mqttclient.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1)+"/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1)+"_max\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1)+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE_SETPOINT + getIdentyfikator(-1)+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer-lines\",\"qos\":" + QOS + "," + mqttdeviceid + "}").c_str(), mqtt_Retain);
 
+mqttclient.publish((ROOMS_HA_TOPIC + "_" + ROOM_HUMIDITY + getIdentyfikator(-1) + "_DHT_Humid/config").c_str(), ("{\"name\":\"" + OT + ROOM_HUMIDITY + getIdentyfikator(-1)+"_DHT_Humid\",\"uniq_id\": \"" + OT + ROOM_HUMIDITY + getIdentyfikator(-1)+"_DHT_Humid\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_HUMIDITY + getIdentyfikator(-1) + "_DHT_Humid" +"}}\",\"dev_cla\":\"humidity\",\"unit_of_meas\": \"%\",\"ic\": \"mdi:thermometer\",\"qos\":" + QOS + "," + mqttdeviceid + "}").c_str(), mqtt_Retain);
+mqttclient.publish((ROOMS_HA_TOPIC + "_" + ROOM_TEMPERATURE + getIdentyfikator(-1) + "_DHT_Temp/config").c_str(), ("{\"name\":\"" + OT + ROOM_TEMPERATURE + getIdentyfikator(-1)+"_DHT_Temp\",\"uniq_id\": \"" + OT + ROOM_TEMPERATURE + getIdentyfikator(-1)+"_DHT_Temp\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_TEMPERATURE + getIdentyfikator(-1) + "_DHT_Temp" +"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer\",\"qos\":" + QOS + "," + mqttdeviceid + "}").c_str(), mqtt_Retain);
+mqttclient.publish((ROOMS_HA_TOPIC_SWITCH + "_" + ROOM_PUMPSTATE + getIdentyfikator(-1) + "_pumpstate/config").c_str(), ("{\"name\":\"" + OT + ROOM_PUMPSTATE + getIdentyfikator(-1)+"_pumpstate\",\"uniq_id\": \"" + OT + ROOM_PUMPSTATE + getIdentyfikator(-1)+"_pumpstate\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + OT + ROOM_PUMPSTATE + getIdentyfikator(-1) + "_pumpstate" +"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer\",\"qos\":" + QOS + "," + mqttdeviceid + "}").c_str(), mqtt_Retain);
+
 /*
 https://www.home-assistant.io/integrations/climate.mqtt/
 \"modes\":[\"off\",\"heat\"], \
@@ -444,79 +541,46 @@ https://www.home-assistant.io/integrations/climate.mqtt/
 */
 
   }
-  #ifdef debug
-  Serial.println(String(millis())+": MQTT Data Sended...");
-  #endif
-  #ifdef enableWebSerial
-  WebSerial.println(String(millis())+": MQTT Data Sended...");
-  #endif
+  log_message((char*)F("MQTT Data Sended..."));
 
 }
-String getJsonVal(String json, String tofind)
-{ //function to get value from json payload
-  json.trim();
-  tofind.trim();
-  #ifdef debugweb
-  WebSerial.println("json0: "+json);
-  #endif
-  if (!json.isEmpty() and !tofind.isEmpty() and json.startsWith("{") and json.endsWith("}"))  //check is starts and ends as json data and nmqttident null
+
+
+bool getRemoteTempHumid(String payloadStr, u_int roomnotmp, u_int action, String json_temp = F("\0"), String json_humid = F("\0"))
+{
+  #include "configmqtttopics.h"
+  String messagestr = "\0";
+  if (json_temp == "\0") {messagestr = payloadStr;} else {messagestr = getJsonVal(payloadStr, json_temp);}
+  log_message((char*)messagestr.c_str());
+  String logtempval = String(F("Floor_")) + kondygnacja + String(F("_Room_")) + String(roomnotmp + 1) + String(F("_")) + room_temp[roomnotmp].nameSensor;
+  if (PayloadtoValidFloatCheck(messagestr))           //invalid val is displayed in funct
   {
-    json=json.substring(1,json.length()-1);                             //cut start and end brackets json
-    #ifdef debugweb
-    WebSerial.println("json1: "+json);
-    #endif
-    int tee=0; //for safety ;)
-    #define maxtee 500
-    while (tee!=maxtee)
-    {         //parse all nodes
-      int pos = json.indexOf(",",1);                //position to end of node:value
-      if (pos==-1) {tee=maxtee;}
-      String part;
-      if (pos>-1) {part = json.substring(0,pos);} else {part=json; }       //extract parameter node:value
-      part.replace("\"","");                      //clean from text indent
-      part.replace("'","");
-      json=json.substring(pos+1);                      //cut input for extracted node:value
-      if (part.indexOf(":",1)==-1) {
-        #ifdef debugweb
-        WebSerial.println("Return no : data");
-        #endif
-        break;
-      }
-      String node=part.substring(0,part.indexOf(":",1));    //get node name
-      node.trim();
-      String nvalue=part.substring(part.indexOf(":",1)+1); //get node value
-      nvalue.trim();
-      #ifdef debugweb
-      WebSerial.println("jsonx: "+json);
-      WebSerial.println("tee: "+String(tee)+" tofind: "+tofind+" part: "+part+" node: "+node +" nvalue: "+nvalue + " indexof , :"+String(json.indexOf(",",1)));
-      #endif
-      if (tofind==node)
-      {
-         #ifdef debugweb
-         WebSerial.println("Found node return val");
-         #endif
-        return nvalue;
-        break;
-      }
-      tee++;
-      #ifdef debugweb
-      delay(1000);
-      #endif
-      if (tee>maxtee) {
-        #ifdef debugweb
-         WebSerial.println("tee exit: "+String(tee));
-        #endif
-        break;  //safety bufor
-      }
+    float tmp = 0;
+
+    tmp = PayloadtoValidFloat(messagestr, true, roomtemplo, roomtemphi);     //true to get output to serial and webserial
+    logtempval += (action == action_temp)?" -Temperature":(action == action_tempset)?" -Setpoint Temperature":" -Unknown Action";
+    logtempval += F(" updated from MQTT to ");
+    logtempval += String(tmp);//+" Payl: "+payloadStr);
+    if (action == action_temp) room_temp[roomnotmp].tempread = tmp;
+    if (action == action_tempset)
+    {
+      room_temp[roomnotmp].tempset = tmp;
+      if (String(room_temp[roomnotmp].nameSensor) == String(cutOffTempVAL).substring(0,namelength)) {cutOffTemp = room_temp[roomnotmp].tempset;}
+
     }
-    #ifdef enableWebSerial
-    WebSerial.println(String(millis())+": Json "+json+"  No mqttident contain searched value of "+tofind);
-    #endif
+
+    if (json_humid != "\0") if (PayloadtoValidFloatCheck(getJsonVal(payloadStr, json_humid)))           //invalid val is displayed in funct
+    {
+      room_temp[roomnotmp].humidityread = PayloadtoValidFloat(getJsonVal(payloadStr, json_humid),true);     //true to get output to serial and webserial
+      logtempval += F(" and humidity to ");
+      logtempval += String(room_temp[roomnotmp].humidityread);//+" Payl: "+payloadStr);
+      log_message((char*)logtempval.c_str());
+      return true;
+    }
   } else
   {
-    #ifdef enableWebSerial
-    WebSerial.println(String(millis())+": Inproper Json format or null: "+json+" to find: "+tofind);
-    #endif
+    logtempval += F(" - wrong data.");
+    log_message((char*)logtempval.c_str());
   }
-  return "\0";
-}
+  return false;
+}  //48385: Inproper Json format or null: 26 to find: emptyjhumid
