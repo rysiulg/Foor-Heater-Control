@@ -5,12 +5,12 @@
 #include "main.h"
 #include <ESPmDNS.h>
 
+#include "common_functions.h"
 #include "other.h"
-
 #include "websrv_ota.h"
 
 
-#include "common_functions.h"
+
 
 //to read bus voltage in stats
 //ADC_MODE(ADC_VCC);
@@ -104,101 +104,29 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length)
   //     {
   //       log_message((char*)F("Wrong payload on setpoint temp"));
   //     }
-  //   }
+  //   }mqttclient
   }
 
 }
 
 
 
-/*
- *  check_wifi will process wifi reconnecting managing
- */
-void check_wifi()
-{
-  if ((WiFi.status() != WL_CONNECTED) || (!WiFi.localIP()))  {
-    /*
-     *  if we are not connected to an AP
-     *  we must be in softAP so respond to DNS
-     */
-    dnsServer.processNextRequest();
-
-    /* we need to stop reconnecting to a configured wifi network if there is a hotspot user connected
-     *  also, do not disconnect if wifi network scan is active
-     */
-    if ((ssid[0] != '\0') && (WiFi.status() != WL_DISCONNECTED) && (WiFi.scanComplete() != -1) && (WiFi.softAPgetStationNum() > 0))  {
-      log_message((char *)"WiFi lost, but softAP station connecting, so stop trying to connect to configured ssid...");
-      WiFi.disconnect(true);
-    }
-
-    /*  only start this routine if timeout on
-     *  reconnecting to AP and SSID is set
-     */
-    if ((ssid[0] != '\0') && ((unsigned long)(millis() - lastWifiRetryTimer) > WIFIRETRYTIMER ) )  {
-      lastWifiRetryTimer = millis();
-      if (WiFi.softAPSSID() == "") {
-        log_message((char *)"WiFi lost, starting setup hotspot...");
-        WiFi.softAPConfig(IPAddress(192,168,4,1), IPAddress(192,168,4,1), IPAddress(255, 255, 255, 0));
-        WiFi.softAP(me_lokalizacja.c_str());
-      }
-      if ((WiFi.status() == WL_DISCONNECTED)  && (WiFi.softAPgetStationNum() == 0 )) {
-        log_message((char *)"Retrying configured WiFi, ...");
-        if (pass[0] == '\0') {
-          WiFi.begin(ssid);
-        } else {
-          WiFi.begin(ssid, pass);
-        }
-      } else {
-        log_message((char *)"Reconnecting to WiFi failed. Waiting a few seconds before trying again.");
-        WiFi.disconnect(true);
-      }
-    }
-  } else { //WiFi connected
-    if (WiFi.softAPSSID() != "") {
-//      log_message((char *)"WiFi (re)connected, shutting down hotspot...");
-//      WiFi.softAPdisconnect(true);
-//      MDNS.notifyAPChange();
-      #ifndef ESP32
-      experimental::ESP8266WiFiGratuitous::stationKeepAliveSetIntervalMs(5000); //necessary for some users with bad wifi routers
-      #endif
-    }
-
-    if (firstConnectSinceBoot) { // this should start only when softap is down or else it will not work properly so run after the routine to disable softap
-      firstConnectSinceBoot = false;
-      lastmqtt_reconnect = 0; //initiate mqtt connection asap
-//      setupOTA();
-      MDNS.begin(me_lokalizacja.c_str());
-      MDNS.addService("http", "tcp", 80);
-
-      if (ssid[0] == '\0') {
-        log_message((char *)"WiFi connected without SSID and password in settings. Must come from persistent memory. Storing in settings.");
-        WiFi.SSID().toCharArray(ssid, 40);
-        WiFi.psk().toCharArray(pass, 40);
-        saveConfig(); //save to config file
-      }
-    }
-
-    /*
-       always update if wifi is working so next time on ssid failure
-       it only starts the routine above after this timeout
-    */
-    lastWifiRetryTimer = millis();
-
-    // Allow MDNS processing
-//    MDNS.update();
-  }
-}
 
 void mqtt_reconnect()
 {
   #include "configmqtttopics.h"
 
+  if (me_lokalizacja.lastIndexOf(kondygnacja) != me_lokalizacja.length()-1) me_lokalizacja += kondygnacja;//+"_mqqt_MARM";
+
   unsigned long now = millis();
   if ((unsigned long)(now - lastmqtt_reconnect) > MQTTRECONNECTTIMER) { //only try reconnect each MQTTRECONNECTTIMER seconds or on boot when lastMqttReconnectAttempt is still 0
     lastmqtt_reconnect = now;
     log_message((char*)"Reconnecting to mqtt server ...");
+    sprintf(log_chars,"me_lokalizacja: %s, kondygnacja: %s, len: %s, lastindexof: %s",me_lokalizacja, kondygnacja, String(me_lokalizacja.length()), String(me_lokalizacja.lastIndexOf(kondygnacja)));
+    log_message(log_chars);
     char topic[256];
     sprintf(topic, "%s", WILL_TOPIC);
+    mqttclient.disconnect();
     if (mqttclient.connect(me_lokalizacja.c_str(), mqtt_user, mqtt_password, topic, 1, true, "Offline"))
     {
       mqttReconnects++;
@@ -284,14 +212,6 @@ void ReadTemperatures()
   #endif
 }
 
-void setupMqtt() {
-  mqttclient.setBufferSize(2048);
-  mqttclient.setSocketTimeout(10); mqttclient.setKeepAlive(5); //fast timeout, any slower will block the main loop too long
-  mqttclient.setServer(mqtt_server, mqtt_port);
-  mqttclient.setCallback(mqtt_callback);
-}
-
-
 
 void setup()
 {
@@ -314,13 +234,11 @@ void setup()
   }
   AssignSensors();  //po tym ginie mi me_lokalizacja
   me_lokalizacja += kondygnacja;//+"_mqqt_MARM";
-  mqttident += kondygnacja + "_";
-  mqttdeviceid.replace("me_lokalizacja",me_lokalizacja);
   Serial.println(String(millis())+": "+"choosePin: "+String(choosepin)+" status: "+String(digitalRead(choosepin))+" czyli: "+(digitalRead(choosepin)? "Kondygnacja 2":"Kondygnacja 1")+" - "+String(kondygnacja)+" : "+String(me_lokalizacja));
  // pinMode(choosepin, DISABLED );
 
 
-  if (loadConfig())
+  if (LoadConfig())
   {
     Serial.println(F("Config loaded:"));
     Serial.println(CONFIGURATION.version);
@@ -333,107 +251,23 @@ void setup()
   else
   {
     Serial.println(F("Config not loaded!"));
+    SaveConfig();
   }
-  saveConfig(); // overwrite with the default settings or save CRT
+   // overwrite with the default settings or save CRT
 //  #include "configmqtttopics.h"
 // Serial.println ("compare:     ");
 // Serial.println(strcmp(CONFIGURATION.BOILER_COPUMP_STATUS_ATTRIBUTE, String(BOILER_FLAME_STATUS_ATTRIBUTE).c_str()) );
   Serial.println(("Connecting to " + String(ssid) +" from: "+String(me_lokalizacja)));
 
-  #ifndef ESP32
-  WiFi.hostname(String(me_lokalizacja).c_str());      //works for esp8266
-  #else
-  btStop();   //disable bluetooth
-//  setCpuFrequencyMhz(80);   //STANDARD 240mHz
+  MainCommonSetup();
 
 
-  WiFi.disconnect(true);
-  WiFi.config(((u32_t)0x0UL),((u32_t)0x0UL),((u32_t)0x0UL));//IPADDR_NONE, INADDR_NONE, INADDR_NONE); //none gives 255.255.255.255 error in libraries
-  WiFi.setHostname((me_lokalizacja).c_str());  //for esp32
-  #endif
-  WiFi.mode(WIFI_AP_STA);
-  WiFi.softAP(String(me_lokalizacja).c_str());
 
-  WiFi.begin(ssid, pass);
-
-  int deadCounter = 20;
-  while (WiFi.status() != WL_CONNECTED && deadCounter-- > 0)
-  {
-    delay(500);
-    Serial.print(".");
-  }
-
-  if (WiFi.status() != WL_CONNECTED)
-  {
-    Serial.println(("Failed to connect to " + String(ssid)));
-    while (true);
-  }
-  else
-  {
-    Serial.print(F("ok "));
-    Serial.println(String(me_lokalizacja));
-  }
-  WiFi.enableSTA(true);
-
-  #ifndef ESP32
-  experimental::ESP8266WiFiGratuitous::stationKeepAliveSetIntervalMs(5000); //necessary for some users with bad wifi routers
-  #endif
-
-  WiFi.setAutoConnect(true);
-  WiFi.setAutoReconnect(true);
-  WiFi.persistent(true);
-
-    // Set up mDNS responder:
-    // - first argument is the domain name, in this example
-    //   the fully-qualified domain name is "esp32.local"
-    // - second argument is the IP address to advertise
-    //   we send our IP address on the WiFi network
-
-    // if (!MDNS.begin(me_lokalizacja.c_str())) {
-    //     Serial.println("Error setting up MDNS responder!");
-    //     while(1) {
-    //         delay(1000);
-    //     }
-    // }
-    // Serial.println("mDNS responder started");
-    // // Add service to MDNS-SD
-    // MDNS.addService("http", "tcp", 80);
-
-  Serial.println(WiFi.localIP());
 
   ts = millis();
   lastTempSet = -extTempTimeout_ms;
-Serial.println("webserwer webserial");
-  #ifdef enableWebSerial
-  WebSerial.begin(&webserver);
-  WebSerial.msgCallback(recvMsg);
-  #endif
-  starting = false;
-  setupMqtt();
-  WebServers();
 
-Serial.println("Influx");
-  #ifdef ENABLE_INFLUX
-  //InfluxDB
-  InfluxClient.setConnectionParamsV1(INFLUXDB_URL, INFLUXDB_DB_NAME, INFLUXDB_USER, INFLUXDB_PASSWORD);
-  // Alternatively, set insecure connection to skip server certificate validation
-  InfluxClient.setInsecure();
-  // Add tags
-  sprintf(log_chars, "me-lokalizacja: %s", me_lokalizacja);
-  log_message(log_chars);
-  InfluxSensor.addTag("device", me_lokalizacja);
-    // Check server connection
-    #ifdef enableWebSerial
-    if (InfluxClient.validateConnection()) {
-      sprintf(log_chars, "Connected to InfluxDB: %s", ""); //InfluxClient.getServerUrl());
-      log_message(log_chars);
-    } else {
-      sprintf(log_chars, "InfluxDB connection failed: %s", InfluxClient.getLastErrorMessage());
-      log_message(log_chars);
-    }
-    #endif
-  #endif
-Serial.println("18B20 begin");
+  Serial.println("18B20 begin");
    // Init DS18B20 sensor
   sensors.begin();
   #ifdef enableDHT
@@ -445,111 +279,20 @@ Serial.println("18B20 begin");
 
   started = millis();
 
-
-  dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-  dnsServer.start(53, "*", WiFi.localIP());
-
 }
 
   #define abs(x) ((x)>0?(x):-(x))
 
 void loop()
 {
-  #ifdef doubleResDet
-  drd->loop();
-  #endif
-  // check wifi
-  check_wifi();
-  // Handle OTA first.
-  //ArduinoOTA.handle();
-  // then handle HTTP
-  //httpServer.handleClient();
-  // handle Websockets
-  //webSocket.loop();
-  mqttclient.loop();
-//  read_panasonic_data();
-
-
-  // run the data query only each WAITTIME
-  if ((unsigned long)(millis() - lastloopRunTime) > (LOOP_WAITTIME)) {
-    lastloopRunTime = millis();
-    //check mqtt
-    if ( (WiFi.isConnected()) && (!mqttclient.connected()) )
-    {
-      log_message((char *)"Lost MQTT connection!");
-      mqtt_reconnect();
-    }
-
-    //log stats
-    #include "configmqtttopics.h"
-    String message = F("stats: Uptime: ");
-    message += uptimedana();
-    message += F(" ## Free memory: ");
-    message += getFreeMemory();
-    message += F("% ");
-    message += ESP.getFreeHeap();
-    message += F(" bytes ## Wifi: ");
-    message += getWifiQuality();
-    message += F("% ## Mqtt reconnects: ");
-    message += mqttReconnects;
-    message += F("%");
-    log_message((char*)message.c_str());
-
-    String stats = F("{\"uptime\":");
-    stats += String(millis());
-    stats += F(",\"voltage\":");
-    stats += 0;
-    stats += F(",\"free memory\":");
-    stats += getFreeMemory();
-    stats += F(",\"ESP cyclecount\":");
-    stats += ESP.getCycleCount();
-    stats += F(",\"wifi\":");
-    stats += getWifiQuality();
-    stats += F(",\"mqtt reconnects\":");
-    stats += mqttReconnects;
-    stats += F("}");
-    sprintf(log_chars, "%s", STATS_TOPIC);
-    mqttclient.publish(log_chars, stats.c_str(), mqtt_Retain);
-
-    //get new data
-  //  if (!heishamonSettings.listenonly) send_panasonic_query();
-
-    //Make sure the LWT is set to Online, even if the broker have marked it dead.
-    mqttclient.publish(WILL_TOPIC.c_str(), "Online");
-
-
-    if (WiFi.isConnected()) {
-//      MDNS.announce();
-    }
-
-
-    if ((millis() % 600) < 100) digitalWrite(lampPin, !digitalRead(lampPin));
-
-    if (((millis() - lastUpdatemqtt) > mqttUpdateInterval_ms) or (receivedmqttdata == true) or (lastUpdatemqtt == 0) )   //recived data ronbi co 800ms -wylacze ten sttus dla odebrania news
-    {
-      sprintf(log_chars, "Update mqtt+influ last was ago lastUpdatemqtt: %ds, receivedmqttdata: %d, mqttUpdateInterval_ms: %d", (millis()-lastUpdatemqtt) /1000, receivedmqttdata, (mqttUpdateInterval_ms/1000));
-      log_message(log_chars);
-      //log_message((char*)F("Lowering by 5% temp_NEWS (no communication) -after 10times execute every 30minutes lowered temp NEWS"));
-      receivedmqttdata = false;
-      lastUpdatemqtt = millis();
-
-      if (mqttclient.connected()) {
-        updateMQTTData();
-        updateInfluxDB(); //i have on same server mqtt and influx so when mqtt is down influx probably also ;(  This   if (Influxclient.isConnected())  doesn't work forme 202205      digitalWrite(lampPin, !digitalRead(lampPin));
-      } else {
-        log_message((char*)F("Disconnected -Unable send data to MQTT and InfluxDB"));
-      }
-    }
+  MainCommonLoop();
 
     if ((millis() - lastSaveConfig) > save_config_every)
     {
       lastSaveConfig = millis();
       log_message((char*)F("Saving config to EEPROM memory..."));
-      saveConfig(); // According OpenTherm Specification from Ihnor Melryk Master requires max 1s interval communication -przy okazji wg czasu update mqtt zrobie odczyt dallas
+      SaveConfig(); // According OpenTherm Specification from Ihnor Melryk Master requires max 1s interval communication -przy okazji wg czasu update mqtt zrobie odczyt dallas
     }
-  }
-
-
   if (((millis() - lastUpdateTempPump) > statusUpdateInterval_ms) or lastUpdateTempPump==0 ) //or (((millis() < statusUpdateInterval_ms) or CO_PumpWorking or CO_BoilerPumpWorking) and (int(millis()/1000)%statusUpdateShortenInterval_s==0)) )   //after start for first defauylt 600s every 60s refresh
   {
     sprintf(log_chars, "temps+pumps lastUpdate: %d, statusUpdateInterval_ms: %d", lastUpdateTempPump, statusUpdateInterval_ms);
@@ -559,49 +302,6 @@ void loop()
     Pump_Activate_Control();
 //    opentherm_update_data(lastUpdatemqtt); // According OpenTherm Specification from Ihnor Melryk Master requires max 1s interval communication -przy okazji wg czasu update mqtt zrobie odczyt dallas
   }
-
-
-
-
-
-
-
-
-  // //#define abs(x) ((x)>0?(x):-(x))
-  // if ((millis() - lastNEWSSet) > temp_NEWS_interval_reduction_time_ms)
-  // { // at every 0,5hour lower temp NEWS when no communication why -2>1800000 is true ???
-  //   sprintf(log_chars, "lastNEWSSet: %d, temp_NEWS_interval_reduction_time_ms: %d", lastNEWSSet, temp_NEWS_interval_reduction_time_ms);
-  //   log_message(log_chars);
-  //   temp_NEWS_count++;
-  //   if (temp_NEWS > cutOffTemp)
-  //   {
-  //     temp_NEWS = temp_NEWS - temp_NEWS * 0.05;
-  //     log_message((char*)F("Lowering by 5% temp_NEWS (no communication) -after 10times execute every 30minutes lowered temp NEWS"));
-  //   }
-  //   else
-  //   {
-  //     temp_NEWS = cutOffTemp;
-  //   }
-  //   if (temp_NEWS_count > 10)
-  //   {
-  //     CO_PumpWorking = false; // assume that we loose mqtt connection to other system where is co pump controlled -so after 10 times lowered NEWS temp by 5% we also disable CO_Pump_Working to allow heat by this heater -default it counts 5hours no communication
-  //     log_message((char*)F("Force disable CO_PumpWorking flag -after 10times execute every 30minutes lowered temp NEWS"));
-  //     //temp_NEWS_count = 0;
-  //   }
-  //   // dobre miejsce do try get data by http api
-  //   log_message((char*)F("Korekta temperatury NEWS z braku połaczenia -pomniejszona o 5%"));
-  // } else { temp_NEWS_count =0; }
-
-  // // if WiFi is down, try reconnecting
-  // if ((WiFi.status() != WL_CONNECTED) && (millis() - WiFipreviousMillis >= WiFiinterval))
-  // {
-  //   Serial.print(millis());
-  //   Serial.println(": Reconnecting to WiFi...");
-  //   WiFi.disconnect();
-  //   WiFi.begin(ssid, pass);
-  //   WiFipreviousMillis = millis();
-  // }
-
 
 
 }

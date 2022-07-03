@@ -7,7 +7,7 @@
 
 
 // load whats in EEPROM in to the local CONFIGURATION if it is a valid setting
-bool loadConfig() {
+bool LoadConfig() {
   #include "configmqtttopics.h"
   // is it correct?
   if (sizeof(CONFIGURATION)<1024) EEPROM.begin(1024); else EEPROM.begin(sizeof(CONFIGURATION)+128); //Size can be anywhere between 4 and 4096 bytes.
@@ -61,7 +61,7 @@ bool loadConfig() {
 }
 
 // save the CONFIGURATION in to EEPROM
-void saveConfig() {
+void SaveConfig() {
   #include "configmqtttopics.h"
   log_message((char*)F("Saving config...........................prepare"));
   unsigned int temp =0;
@@ -162,13 +162,13 @@ void Assign_Name_Addr_Pinout(int i, String name, String address, int outpin) {
     room_temp[i].switch_state=startrun;      //turn on pump for a while
   }
   room_temp[i].mqtt_tempset_floor_topic = ROOM_TEMPERATURE_SETPOINT_SET_TOPIC + getIdentyfikator(i) + SET_LAST;
-  if (kondygnacja == "1")
+  if (kondygnacja == "1" and i<8)
   {
     room_temp[i].mqtt_temp_floor_topic = FLOOR1_ROOM_TOPICS[i][0];
     room_temp[i].mqtt_humid_json = FLOOR1_ROOM_TOPICS[i][2];
     room_temp[i].mqtt_temp_json = FLOOR1_ROOM_TOPICS[i][1];
   }
-  if (kondygnacja == "2")
+  if (kondygnacja == "2"  and i<8)
   {
     room_temp[i].mqtt_temp_floor_topic = FLOOR2_ROOM_TOPICS[i][0];
     room_temp[i].mqtt_humid_json = FLOOR2_ROOM_TOPICS[i][2];
@@ -318,7 +318,7 @@ void recvMsg(uint8_t *data, size_t len)
   {
     WebSerial.println(F("Saving config to EEPROM memory by command..."));
     WebSerial.println("Size CONFIG: " + String(sizeof(CONFIGURATION)));
-    saveConfig();
+    SaveConfig();
   } else
   if (d.indexOf("TOGGLEPUMP") !=- 1)
   {
@@ -368,7 +368,7 @@ void recvMsg(uint8_t *data, size_t len)
     CONFIGURATION.version[2] = 'S';
     CONFIGURATION.version[3] = 'E';
     CONFIGURATION.version[4] = 'T';
-    saveConfig();
+    SaveConfig();
     restart();
   } else
    if (d == "HELP")
@@ -440,7 +440,6 @@ void updateMQTTData() {
   const String payloadvalue_startend_val = ""; // value added before and after value send to mqtt queue
   int createhasensors = maxsensors;  //jest tylko 1 temp wejscia !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   #include "configmqtttopics.h"
-  mqttclient.setBufferSize(2048);
 
   String tmpbuilder="{";
   tmpbuilder += "\"rssi\":"+ String(WiFi.RSSI());

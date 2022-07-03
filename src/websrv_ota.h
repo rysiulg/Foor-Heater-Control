@@ -142,7 +142,7 @@ void handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size
   }
 }
 
-void WebServers() {
+void starthttpserver() {
   webserver.on("/update", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/html", htmlup);
     }).setAuthentication("", "");

@@ -19,7 +19,7 @@
 //#define debugweb
 
 #define enableWebSerial   //1115101 - 1033185 = 81 916
-
+#define enableArduinoOTA
 
 #define ATOMIC_FS_UPDATE
 #define MFG "MARM.pl Sp. z o.o."
@@ -54,6 +54,7 @@
 #define MQTT_servername "MQTT_servername"     //default mqtt port
 #endif
 
+
 #ifdef ENABLE_INFLUX
 #ifndef INFLUXDB_URL
 #define INFLUXDB_URL "http://localhost:8086"
@@ -87,6 +88,10 @@ char mqtt_server[sensitive_size*2] = MQTT_servername;
 char mqtt_user[sensitive_size] = MQTT_username;
 char mqtt_password[sensitive_size] = MQTT_Password_data;
 int mqtt_port = MQTT_port_No;
+String kondygnacja = "0";          //ident pietrac -initial -replaced in setup
+String me_lokalizacja = "FLOORH";//pozniej dopisywane +String(kondygnacja);//+"_mqqt_MARM";
+ //jest niepelna -brakuje kondygnacji
+const int mqtt_Retain = 1;
 
 // Master OpenTherm Shield pins configuration
 //const int OT_IN_PIN = 26;  // for Arduino, 4 for ESP8266 (D2), 21 for ESP32

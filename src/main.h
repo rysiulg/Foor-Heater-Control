@@ -63,6 +63,9 @@
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 #endif
+#ifdef enableArduinoOTA
+#include <ArduinoOTA.h>
+#endif
 
 const char version[12+1] =
 {
@@ -95,8 +98,7 @@ const char version[12+1] =
 };
 const String me_version = String(version);
 const String  stopka = String(MFG)+" "+version[4]+version[5]+"-"+version[2]+version[3]+"-20"+version[0]+version[1]+" "+version[6]+version[7]+":"+version[8]+version[9];
-String me_lokalizacja = "FLOORH";//pozniej dopisywane +String(kondygnacja);//+"_mqqt_MARM";
-String mqttident = "CO_"; //dopisane w setup + String(kondygnacja) + "_";
+String mqttident = me_lokalizacja; //dopisane w setup + String(kondygnacja) + "_";
 //to testowo tutaj -zobacze czy to zmieni w trakcie me_lokalizacja z dopisaniem kondygnacji -jak nie to trzeba bedzie to przeniesc
 String mqttdeviceid = "\"dev\":{\"ids\":\""+String("me_lokalizacja")+"\",\"name\":\""+String("me_lokalizacja")+"\",\"sw\":\"" + String(me_version) + "\",\"mdl\": \""+String("me_lokalizacja")+"\",\"mf\":\"" + String(MFG) + "\"}";
 
@@ -114,17 +116,15 @@ String mqttdeviceid = "\"dev\":{\"ids\":\""+String("me_lokalizacja")+"\",\"name\
 #define MODECOOL 2
 #define MODEAUTO 3
 
-char log_chars[256];
+
 u_int modestate = MODEOFF;            //tryb pracy
 const unsigned long extTempTimeout_ms = 180 * 1000,
                     statusUpdateInterval_ms = 60 * 1 * 1000,    //update pumps i dallas  -i check mqtt for active boiler ch pump and co pump and if active one or both change time to next value
                     statusUpdateShortenInterval_s = 60,          //update pumps i dallas  -i check mqtt for active boiler ch pump and co pump and if active one or both change time to this value
                     spOverrideTimeout_ms = 180 * 1000,
-                    mqttUpdateInterval_ms = 1 * 60 * 1000,      //send data to mqtt and influxdb
                     temp_NEWS_interval_reduction_time_ms = 30 * 60 * 1000, // time to laps between temp_NEWS reduction by 5%
                     MQTTRECONNECTTIMER = 30 * 1000,      //it takes 30 secs for each mqtt server reconnect attempt usxes lastMqttReconnectAttempt
-                    WIFIRETRYTIMER = 10*1000,           // switch between hotspot and configured SSID each 10 secs if SSID is lost uses lastWifiRetryTimer
-                    LOOP_WAITTIME = 30*1000,
+                    WIFIRETRYTIMER = 25*1000,           // switch between hotspot and configured SSID each 10 secs if SSID is lost uses lastWifiRetryTimer
                     save_config_every = 5 * 60 * 1000,                    // time saveing config values in eeprom (15minutes) -changed to shorter time -implemented save only if value are changed
                     start_pump_delay = 120 * 1000,        //delay to start pump
                     WiFiinterval = 30 * 1000;
@@ -162,17 +162,15 @@ float roomtemp_last = 0, // prior temperature
 
 String LastboilerResponseError,
        dana,
-       UnassignedTempSensor,
-       kondygnacja = "0";          //ident pietra
+       UnassignedTempSensor;
+
 
 int temp_NEWS_count = 0,
-    mqttReconnects = 0,
     mqtt_offline_retries = 15, // retries to mqttconnect before timewait
     pompa_pin;
 
 unsigned long ts = 0, new_ts = 0, // timestamp
               lastUpdateTempPump = 0,
-              lastUpdatemqtt = 0,
               lastTempSet = 0,
               lastcutOffTempSet = 0,
               lastNEWSSet = 0,
@@ -182,14 +180,11 @@ unsigned long ts = 0, new_ts = 0, // timestamp
               WiFipreviousMillis = 0,
               lastWifiRetryTimer =0,
               dhtreadtime = 0,
-              start_pump =0,
-              lastloopRunTime = 0;
+              start_pump =0;
 
-bool receivedmqttdata = false,
-     CO_PumpWorking = false,
+bool CO_PumpWorking = false,
      CO_BoilerPumpWorking = false,
      tmanual = false,
-     starting = true,
      firstConnectSinceBoot = true, //if this is true there is no first connection made yet
      pump = startrun,        //stan pompy
      min_max_state = stoprun;  //stan otwarcia zamkniecia przeplywu podlogi
@@ -252,7 +247,7 @@ DNSServer dnsServer;
 
 
 //common_functions.h
-void log_message(char* string);
+void log_message(char* string, u_int specialforce = 0);
 String uptimedana(unsigned long started_local);
 String getJsonVal(String json, String tofind);
 bool isValidNumber(String str);
@@ -265,7 +260,18 @@ bool PayloadtoValidFloatCheck(String payloadStr);
 float PayloadtoValidFloat(String payloadStr,bool withtemps_minmax=false, float mintemp=InitTemp, float maxtemp=InitTemp);
 void restart();
 String getIdentyfikator(int x);
-
+#ifdef enableArduinoOTA
+void setupOTA();
+#endif
+char* dtoa(double dN, char *cMJA, int iP);
+#ifdef enableMESHNETWORK
+void MeshWiFi_sendMessage();
+void MeshWiFi_Setup();
+#endif
+void MainCommonSetup();
+void MainCommonLoop();
+void setupMqtt();
+void check_wifi();
 
 
 String processor(const String var);
@@ -288,8 +294,8 @@ void Pump_Activate_Control ();
 void GetSpecificSensorData ();
 
 //other
-bool loadConfig();
-void saveConfig();
+bool LoadConfig();
+void SaveConfig();
 void Assign_Name_Addr_Pinout(int i, String name, String addresss, int outpin);
 int convertCharToHex(char ch);
 void AssignSensors();
@@ -301,7 +307,8 @@ void updateMQTTData();
 void getRemoteTempHumid(String payloadStr, u_int roomnotmp, String json_temp, String json_humid);
 
 
-
+//websrv_ota
+void starthttpserver();
 
 
 //#define debugweb   //to debug getJsonVal but it clips if too much data ;(

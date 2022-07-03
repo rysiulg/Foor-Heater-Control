@@ -1,10 +1,11 @@
 
-String BASE_TOPIC = me_lokalizacja; //jest niepelna -brakuje kondygnacji
 
+String BASE_TOPIC = me_lokalizacja;
 const String LOG_TOPIC = BASE_TOPIC + "/log";
 const String WILL_TOPIC = BASE_TOPIC + "/Will";
 const String IP_TOPIC = BASE_TOPIC + "/IP";
 const String STATS_TOPIC = BASE_TOPIC + "/stats";
+
 
 
 const String BASE_HA_TOPIC = F("homeassistant");
