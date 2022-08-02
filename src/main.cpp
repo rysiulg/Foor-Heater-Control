@@ -3,149 +3,9 @@
 
 
 #include "main.h"
-#include <ESPmDNS.h>
-
-#include "common_functions.h"
-#include "other.h"
-#include "websrv_ota.h"
-
-
-
 
 //to read bus voltage in stats
 //ADC_MODE(ADC_VCC);
-
-
-
-
-
-void mqtt_callback(char *topic, byte *payload, unsigned int length)
-{
-  #include "configmqtttopics.h"
-
-  const String topicStr(topic);
-
-  String payloadStr = convertPayloadToStr(payload, length);
-
-//NEWS temperature
-  if (topicStr == NEWS_GET_TOPIC)               //NEWS averange temp -outside temp
-  {
-    String ident = F(" NEWS temp ");
-    if (PayloadtoValidFloatCheck(getJsonVal(payloadStr,NEWStemp_json)))           //invalid val is displayed in funct
-    {
-      temp_NEWS = PayloadtoValidFloat(getJsonVal(payloadStr,NEWStemp_json),true);     //true to get output to serial and webserial
-      if (temp_NEWS < temptoheat) modestate = MODEHEAT;
-      if (temp_NEWS > temptocool) modestate = MODECOOL;
-      lastNEWSSet = millis();
-      temp_NEWS_count = 0;
-//      receivedmqttdata = true;    //makes every second run mqtt send and influx
-      ident += " updated from MQTT to " + String(temp_NEWS);//+" Payl: "+payloadStr);
-    } else
-    {
-      ident += " Not updated...";
-    }
-    log_message((char*)ident.c_str());
-   } else
-  if (topicStr == COPUMP_GET_TOPIC)                                                                   //external CO Pump Status
-  {
-    String ident = F(" Wood/coax CO Pump Status ");
-    receivedmqttdata = true;
-    bool tmp = false;
-    if (PayloadStatus(getJsonVal(payloadStr,COPumpStatus_json),true) && PayloadStatus(getJsonVal(payloadStr,COPumpStatus_json),true)) tmp = true;
-    if (CO_BoilerPumpWorking!=tmp) receivedmqttdata = true;
-    if (PayloadStatus(getJsonVal(payloadStr,COPumpStatus_json), true)) {CO_PumpWorking = true;}
-    else if (PayloadStatus(getJsonVal(payloadStr,COPumpStatus_json), false)) {CO_PumpWorking = false;}
-    else
-    {
-      receivedmqttdata = false;
-      ident += ("Unknown: "+String(payloadStr));
-    }
-    if (receivedmqttdata) {
-      ident += (CO_PumpWorking ? "Active" : "Disabled" );
-    }
-    log_message((char*)ident.c_str());
-  } else
-//BOILER OPENTHERM CO Status with flame
-  if (topicStr == BOILER_FLAME_STATUS_TOPIC)
-  {
-    String ident = F(" Status Boiler flame and co pump ");
-    bool tmp = false;
-    if (PayloadStatus(getJsonVal(payloadStr,BOILER_FLAME_STATUS_ATTRIBUTE),true) && PayloadStatus(getJsonVal(payloadStr,BOILER_COPUMP_STATUS_ATTRIBUTE),true)) tmp = true;
-    else if (PayloadStatus(getJsonVal(payloadStr,BOILER_FLAME_STATUS_ATTRIBUTE),false) && PayloadStatus(getJsonVal(payloadStr,BOILER_COPUMP_STATUS_ATTRIBUTE),false)) tmp = false;
-    else
-    {
-      receivedmqttdata = false;
-      ident += "Unknown: "+String(payloadStr);
-    }
-    if (CO_BoilerPumpWorking!=tmp) receivedmqttdata = true;
-    CO_BoilerPumpWorking = tmp;
-    if (receivedmqttdata) {
-      ident += CO_BoilerPumpWorking ? "Active Heating" : "Disabled Heating";
-      }
-    log_message((char*)ident.c_str());
-  } else
-
-//sensors for setpoint temperature
-  for (int x=0;x<maxsensors;x++)
-  {
-    if (topicStr == room_temp[x].mqtt_temp_floor_topic) receivedmqttdata = getRemoteTempHumid(payloadStr, x, action_temp, room_temp[x].mqtt_temp_json, room_temp[x].mqtt_humid_json);
-    if (topicStr == room_temp[x].mqtt_tempset_floor_topic) receivedmqttdata = getRemoteTempHumid(payloadStr, x, action_tempset, room_temp[x].mqtt_temp_json);
-
-  // if ((topicStr == ROOM_TEMPERATURE_SETPOINT_SET_TOPIC + getIdentyfikator(x) + SET_LAST) and (room_temp[x].idpinout>0))
-  //   {
-  //     if (PayloadtoValidFloatCheck(payloadStr))  //wrong value are displayed in function
-  //     {
-  //       float tmp = PayloadtoValidFloat(payloadStr, true, roomtemplo, roomtemphi);
-  //       if (tmp!=room_temp[x].tempset) {receivedmqttdata = true;}
-  //       room_temp[x].tempset = tmp;
-  //       sprintf(log_chars, " Setpoint temperature for ROOM %s: %f", String(getIdentyfikator(x)), room_temp[x].tempset);
-  //       log_message(log_chars);
-  //     } else
-  //     {
-  //       log_message((char*)F("Wrong payload on setpoint temp"));
-  //     }
-  //   }mqttclient
-  }
-
-}
-
-
-
-
-void mqtt_reconnect()
-{
-  #include "configmqtttopics.h"
-
-  if (me_lokalizacja.lastIndexOf(kondygnacja) != me_lokalizacja.length()-1) me_lokalizacja += kondygnacja;//+"_mqqt_MARM";
-
-  unsigned long now = millis();
-  if ((unsigned long)(now - lastmqtt_reconnect) > MQTTRECONNECTTIMER) { //only try reconnect each MQTTRECONNECTTIMER seconds or on boot when lastMqttReconnectAttempt is still 0
-    lastmqtt_reconnect = now;
-    log_message((char*)"Reconnecting to mqtt server ...");
-    sprintf(log_chars,"me_lokalizacja: %s, kondygnacja: %s, len: %s, lastindexof: %s",me_lokalizacja, kondygnacja, String(me_lokalizacja.length()), String(me_lokalizacja.lastIndexOf(kondygnacja)));
-    log_message(log_chars);
-    char topic[256];
-    sprintf(topic, "%s", WILL_TOPIC);
-    mqttclient.disconnect();
-    if (mqttclient.connect(me_lokalizacja.c_str(), mqtt_user, mqtt_password, topic, 1, true, "Offline"))
-    {
-      mqttReconnects++;
-      sprintf(topic, "%s", WILL_TOPIC);
-      mqttclient.publish(topic, "Online");
-      sprintf(topic, "%s", IP_TOPIC);
-      mqttclient.publish(topic, WiFi.localIP().toString().c_str(), true);
-      for (int x=0;x<maxsensors;x++){
-        //String identyfikator=getIdentyfikator(x);
-        if (room_temp[x].idpinout!=0) mqttclient.subscribe((room_temp[x].mqtt_tempset_floor_topic).c_str());  //register tempset   ROOM_TEMPERATURE_SETPOINT_SET_TOPIC + getIdentyfikator(x) + SET_LAST
-        if (room_temp[x].mqtt_temp_floor_topic != "\0") mqttclient.subscribe((room_temp[x].mqtt_temp_floor_topic).c_str()); //register remote temp sensors
-      }
-      mqttclient.subscribe(NEWS_GET_TOPIC.c_str());
-      mqttclient.subscribe(COPUMP_GET_TOPIC.c_str());
-      mqttclient.subscribe(BOILER_FLAME_STATUS_TOPIC.c_str());
-    }
-
-  }
-}
 
 
 void ReadTemperatures()
@@ -177,7 +37,7 @@ void ReadTemperatures()
       if (array_cmp_8(room_temp[z].addressHEX, addr, sizeof(room_temp[z].addressHEX) / sizeof(room_temp[z].addressHEX[0]),sizeof(addr) / sizeof(addr[0])) == true)
       {
         assignedsensor=true;
-        if (temp1w!=DS18B20nodata and temp1w!=DS18B20nodata2 and temp1w!=InitTemp) room_temp[z].tempread = temp1w;
+        if (check_isValidTemp(temp1w)) room_temp[z].tempread = temp1w;
       }
     }
     if (!assignedsensor and UnassignedTempSensor.indexOf(addrstr)==-1) UnassignedTempSensor += ";"+String(addrstr)+" "+String(temp1w);
@@ -215,18 +75,7 @@ void ReadTemperatures()
 
 void setup()
 {
-  Serial.begin(74880);
-    //first get total memory before we do anything
-  getFreeMemory();
-  #ifdef doubleResDet
-    //double reset detect from start
-  doubleResetDetect();
-  #endif
-  pinMode(lampPin, OUTPUT );
-  pinMode(choosepin,INPUT_PULLUP);    // sets the digital pin 13 as output
-  Serial.println(F("Starting... Delay3000..."));
-
-  //get Configuration floor 1 or 2 -if set is 2
+  pinMode(choosepin, INPUT_PULLUP);
   if (digitalRead(choosepin)==1) {
     kondygnacja = "2";
   } else {
@@ -234,34 +83,15 @@ void setup()
   }
   AssignSensors();  //po tym ginie mi me_lokalizacja
   me_lokalizacja += kondygnacja;//+"_mqqt_MARM";
-  Serial.println(String(millis())+": "+"choosePin: "+String(choosepin)+" status: "+String(digitalRead(choosepin))+" czyli: "+(digitalRead(choosepin)? "Kondygnacja 2":"Kondygnacja 1")+" - "+String(kondygnacja)+" : "+String(me_lokalizacja));
- // pinMode(choosepin, DISABLED );
-
-
-  if (LoadConfig())
-  {
-    Serial.println(F("Config loaded:"));
-    Serial.println(CONFIGURATION.version);
-    Serial.println(CONFIGURATION.ssid);
-    Serial.println(CONFIGURATION.pass);
-    Serial.println(CONFIGURATION.mqtt_server);
-    Serial.println(CONFIGURATION.COPUMP_GET_TOPIC);
-    Serial.println(CONFIGURATION.NEWS_GET_TOPIC);
-  }
-  else
-  {
-    Serial.println(F("Config not loaded!"));
-    SaveConfig();
-  }
-   // overwrite with the default settings or save CRT
-//  #include "configmqtttopics.h"
-// Serial.println ("compare:     ");
-// Serial.println(strcmp(CONFIGURATION.BOILER_COPUMP_STATUS_ATTRIBUTE, String(BOILER_FLAME_STATUS_ATTRIBUTE).c_str()) );
-  Serial.println(("Connecting to " + String(ssid) +" from: "+String(me_lokalizacja)));
-
+  updateMQTT_Topics();
   MainCommonSetup();
 
-
+  // pinMode(lampPin, OUTPUT );
+  // pinMode(choosepin,INPUT_PULLUP);    // sets the digital pin 13 as output
+  //get Configuration floor 1 or 2 -if set is 2
+  sprintf(log_chars,"choosePin: %s,  status: %s,  czyli: %s,  - %s  : %s",String(choosepin).c_str(), String(digitalRead(choosepin)).c_str(), String(digitalRead(choosepin)? "Kondygnacja 2":"Kondygnacja 1").c_str(), String(kondygnacja).c_str(), String(me_lokalizacja).c_str());
+  log_message(log_chars);
+ // pinMode(choosepin, DISABLED );
 
 
   ts = millis();
@@ -276,8 +106,6 @@ void setup()
   sensors.setWaitForConversion(true); //
     //sensors.setWaitForConversion(true); //
   sensors.requestTemperatures();
-
-  started = millis();
 
 }
 
@@ -351,11 +179,14 @@ void GetSpecificSensorData () {
   min_temp = room_temp[0].tempread, max_temp = room_temp[0].tempset;
   String tmpval="\0";
   for (int o = 0; o < maxsensors; o++) {
-    if (room_temp[o].tempread == InitTemp or room_temp[o].tempread == DS18B20nodata or room_temp[o].tempread == DS18B20nodata2 or room_temp[o].tempread == roomtemplo) room_temp[o].tempread = InitTemp;
+    if (!check_isValidTemp(room_temp[o].tempread)) room_temp[o].tempread = InitTemp;
     if (o<8) {
-      if (min_temp>room_temp[o].tempread and room_temp[o].tempread!=InitTemp and room_temp[o].tempread != roomtemplo) min_temp = room_temp[o].tempread;
-      if (max_temp<room_temp[o].tempset and room_temp[o].tempread!=InitTemp and room_temp[o].tempread != roomtemphi) max_temp = room_temp[o].tempset;
+      if (check_isValidTemp(room_temp[o].tempread)) min_temp = room_temp[o].tempread;
+      if (check_isValidTemp(room_temp[o].tempread)) max_temp = room_temp[o].tempset;
+      if (min_temp < roomtemplo) min_temp = roomtemplo;
+      if (max_temp > roomtemphi) max_temp = roomtemphi;
       if (room_temp[o].switch_state == startrun) min_max_state = startrun;
+
     }
     if (String(room_temp[o].nameSensor) == (String(kondygnacja)+sepkondname+String(tempcutoff)).substring(0,namelength) and room_temp[o].tempread != InitTemp) {
       if (modestate == MODEHEAT or modestate == MODEOFF) pumpOffVal = room_temp[o].tempset;

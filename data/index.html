@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<!-- Complete project details: https://randomnerdtutorials.com/esp8266-nodemcu-web-server-websocket-sliders/ -->
+<html>
+
+<head>
+    <title>%ME_TITLE%</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="3600">
+    <link rel="icon" type="image/png" href="favicon.ico">
+    <link rel="stylesheet" type="text/css" href="index-mini.css" title="base" />
+    <link rel="alternate stylesheet" type="text/css" href="index.css" title="base" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+
+</head>
+
+<body>
+    <div class="topnav">
+        <h1>%ME_TITLE%</h1>
+    </div>
+    <button class="tablink" onclick="openPage('Home', this, 'red')" id="defaultOpen"><i class="fas fa-solid fa-home" id="whicon"></i>H</button>
+    <button class="tablink" onclick="openPage('WebSerial', this, 'green')"><i class="fas fa-solid fa-terminal" id="whicon"></i>T</button>
+    <button class="tablink" onclick="openPage('FSEditor', this, 'blue')"><i class="fas fa-solid fa-folder-open" id="whicon"></i>F</button>
+    <button class="tablink" onclick="openPage('Config', this, 'orange')"><i class="fas fa-solid fa-check" id="whicon"></i>C</button>
+
+    <h2>Uptime: <span id="uptimedana">%uptimedana%</span></h2>
+
+    <div id="Home" class="tabcontent">
+
+
+        <div class="card-grid">
+            <div class="card">
+                <div class="tooltip">
+                    <span class="tooltiptext">Temperatura na zewnątrz</span>
+                    <p class="card-title">NEWS Temp</p>
+                    <i class="fas fa-thermometer-half"></i>
+                    <div class="temperatureVal" id="temp_NEWS">%temp_NEWS%</div>
+                    <sup class="unitsmain">&deg;C</sup>
+                    <p></p>
+                </div>
+                <div class="tooltip">
+                    <span class="tooltiptext">Czas ostatniej aktualizacji temperatury Średniej na zewnątrz</span>
+                    <div class="units_update" style="margin-top: 20px;">Aktualizacja: </div>
+                    <div class="units_update" id="lastNEWSSet">%lastNEWSSet%</div>
+                    <div class="units_update"> temu</div>
+                </div>
+            </div>
+
+            <div class="card" id="status_Error">
+                <p class="card-title" id="status_Flame">Statusy</p>
+                <p class="Statusy" id="Statusy">%Statusy%</p>
+            </div>
+
+
+            <div class="card" id="Room_card1">
+                <p class="card-title" id="Room_title1">Temperatura MAMA</p>
+                <div class="twoCard">
+                    <div class="cardPart cardPart1">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room1...</span>
+                            <i class="fas fa-thermometer-half"></i>
+                            <div class="temperatureVal" id="Roomtemp1">%Roomtemp1%</div>
+                            <sup class="unitsmain">&deg;C</sup>
+                        </div>
+                    </div>
+                    <div class="cardPart cardPart2">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room1...</span>
+                            <i class="fas fa-humidity"></i>
+                            <div class="humidityVal" id="RoomHumid1">%RoomHumid1%</div>
+                            <sup class="unitsmain">&#37;</sup>
+                        </div>
+                    </div>
+                </div>
+                <div class="rangewrap">
+                    <span class="rangevalue" id="RangeV1">%sliderValue1%</span>
+                    <input type="range" class="range" id="slider1" onchange="updateSliderPWM(this)" min=%roomtemplo% max=%roomtemphi% step="0.5" value=%sliderValue1%>
+                </div>
+                <hr><p class="state">Docelowa: <span id="sliderValue1">%sliderValue1%</span> <sup class="units">&deg;C</sup></p>
+            </div>
+
+
+            <div class="card" id="Room_card2">
+                <p class="card-title" id="Room_title2">Temperatura Piotrek</p>
+                <div class="twoCard">
+                    <div class="cardPart cardPart1">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room2...</span>
+                            <i class="fas fa-thermometer-half"></i>
+                            <div class="temperatureVal" id="Roomtemp2">%Roomtemp2%</div>
+                            <sup class="unitsmain">&deg;C</sup>
+                        </div>
+                    </div>
+                    <div class="cardPart cardPart2">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room2...</span>
+                            <i class="fas fa-humidity"></i>
+                            <div class="humidityVal" id="RoomHumid2">%RoomHumid2%</div>
+                            <sup class="unitsmain">&#37;</sup>
+                        </div>
+                    </div>
+                </div>
+                <div class="rangewrap">
+                    <span class="rangevalue" id="RangeV2">%sliderValue2%</span>
+                    <input type="range" class="range" id="slider2" onchange="updateSliderPWM(this)" min=%roomtemplo% max=%roomtemphi% step="0.5" value=%sliderValue2%>
+                </div>
+                <hr><p class="state">Docelowa: <span id="sliderValue2">%sliderValue2%</span> <sup class="units">&deg;C</sup></p>
+            </div>
+
+            <div class="card" id="Room_card3">
+                <p class="card-title" id="Room_title3">Temperatura Łazienka</p>
+                <div class="twoCard">
+                    <div class="cardPart cardPart3">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room3...</span>
+                            <i class="fas fa-thermometer-half"></i>
+                            <div class="temperatureVal" id="Roomtemp3">%Roomtemp3%</div>
+                            <sup class="unitsmain">&deg;C</sup>
+                        </div>
+                    </div>
+                    <div class="cardPart cardPart2">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room3...</span>
+                            <i class="fas fa-humidity"></i>
+                            <div class="humidityVal" id="RoomHumid3">%RoomHumid3%</div>
+                            <sup class="unitsmain">&#37;</sup>
+                        </div>
+                    </div>
+                </div>
+                <div class="rangewrap">
+                    <span class="rangevalue" id="RangeV3">%sliderValue3%</span>
+                    <input type="range" class="range" id="slider3" onchange="updateSliderPWM(this)" min=%roomtemplo% max=%roomtemphi% step="0.5" value=%sliderValue3%>
+                </div>
+                <hr><p class="state">Docelowa: <span id="sliderValue3">%sliderValue3%</span> <sup class="units">&deg;C</sup></p>
+            </div>
+
+            <div class="card" id="Room_card4">
+                <p class="card-title" id="Room_title4">Temperatura Maja</p>
+                <div class="twoCard">
+                    <div class="cardPart cardPart1">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room4...</span>
+                            <i class="fas fa-thermometer-half"></i>
+                            <div class="temperatureVal" id="Roomtemp4">%Roomtemp4%</div>
+                            <sup class="unitsmain">&deg;C</sup>
+                        </div>
+                    </div>
+                    <div class="cardPart cardPart2">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room4...</span>
+                            <i class="fas fa-humidity"></i>
+                            <div class="humidityVal" id="RoomHumid4">%RoomHumid4%</div>
+                            <sup class="unitsmain">&#37;</sup>
+                        </div>
+                    </div>
+                </div>
+                <div class="rangewrap">
+                    <span class="rangevalue" id="RangeV4">%sliderValue4%</span>
+                    <input type="range" class="range" id="slider4" onchange="updateSliderPWM(this)" min=%roomtemplo% max=%roomtemphi% step="0.5" value=%sliderValue4%>
+                </div>
+                <hr><p class="state">Docelowa: <span id="sliderValue4">%sliderValue4%</span> <sup class="units">&deg;C</sup></p>
+            </div>
+
+            <div class="card" id="Room_card5">
+                <p class="card-title" id="Room_title5">Temperatura Kuchnia1</p>
+                <div class="twoCard">
+                    <div class="cardPart cardPart1">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room5...</span>
+                            <i class="fas fa-thermometer-half"></i>
+                            <div class="temperatureVal" id="Roomtemp5">%Roomtemp5%</div>
+                            <sup class="unitsmain">&deg;C</sup>
+                        </div>
+                    </div>
+                    <div class="cardPart cardPart2">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room5...</span>
+                            <i class="fas fa-humidity"></i>
+                            <div class="humidityVal" id="RoomHumid5">%RoomHumid5%</div>
+                            <sup class="unitsmain">&#37;</sup>
+                        </div>
+                    </div>
+                </div>                <div class="rangewrap">
+                    <span class="rangevalue" id="RangeV5">%sliderValue5%</span>
+                    <input type="range" class="range" id="slider5" onchange="updateSliderPWM(this)" min=%roomtemplo% max=%roomtemphi% step="0.5" value=%sliderValue5%>
+                </div>
+                <hr><p class="state">Docelowa: <span id="sliderValue5">%sliderValue5%</span> <sup class="units">&deg;C</sup></p>
+            </div>
+
+            <div class="card" id="Room_card6">
+                <p class="card-title" id="Room_title6">Temperatura Salon</p>
+                <div class="twoCard">
+                    <div class="cardPart cardPart1">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room6...</span>
+                            <i class="fas fa-thermometer-half"></i>
+                            <div class="temperatureVal" id="Roomtemp6">%Roomtemp6%</div>
+                            <sup class="unitsmain">&deg;C</sup>
+                        </div>
+                    </div>
+                    <div class="cardPart cardPart2">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room6...</span>
+                            <i class="fas fa-humidity"></i>
+                            <div class="humidityVal" id="RoomHumid6">%RoomHumid6%</div>
+                            <sup class="unitsmain">&#37;</sup>
+                        </div>
+                    </div>
+                </div>
+                <div class="rangewrap">
+                    <span class="rangevalue" id="RangeV6">%sliderValue6%</span>
+                    <input type="range" class="range" id="slider6" onchange="updateSliderPWM(this)" min=%roomtemplo% max=%roomtemphi% step="0.5" value=%sliderValue6%>
+                </div>
+                <hr><p class="state">Docelowa: <span id="sliderValue6">%sliderValue6%</span> <sup class="units">&deg;C</sup></p>
+            </div>
+
+
+            <div class="card" id="Room_card7">
+                <p class="card-title" id="Room_title7">Temperatura Kuchnia2</p>
+                <div class="twoCard">
+                    <div class="cardPart cardPart1">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room7...</span>
+                            <i class="fas fa-thermometer-half"></i>
+                            <div class="temperatureVal" id="Roomtemp7">%Roomtemp7%</div>
+                            <sup class="unitsmain">&deg;C</sup>
+                        </div>
+                    </div>
+                    <div class="cardPart cardPart2">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room7...</span>
+                            <i class="fas fa-humidity"></i>
+                            <div class="humidityVal" id="RoomHumid7">%RoomHumid7%</div>
+                            <sup class="unitsmain">&#37;</sup>
+                        </div>
+                    </div>
+                </div>
+                <div class="rangewrap">
+                    <span class="rangevalue" id="RangeV7">%sliderValue7%</span>
+                    <input type="range" class="range" id="slider7" onchange="updateSliderPWM(this)" min=%roomtemplo% max=%roomtemphi% step="0.5" value=%sliderValue7%>
+                </div>
+                <hr><p class="state">Docelowa: <span id="sliderValue7">%sliderValue7%</span> <sup class="units">&deg;C</sup></p>
+            </div>
+
+            <div class="card" id="Room_card8">
+                <p class="card-title" id="Room_title8">Temperatura Salon/Korytarz</p>
+                <div class="twoCard">
+                    <div class="cardPart cardPart1">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room8...</span>
+                            <i class="fas fa-thermometer-half"></i>
+                            <div class="temperatureVal" id="Roomtemp8">%Roomtemp8%</div>
+                            <sup class="unitsmain">&deg;C</sup>
+                        </div>
+                    </div>
+                    <div class="cardPart cardPart2">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room8...</span>
+                            <i class="fas fa-humidity"></i>
+                            <div class="humidityVal" id="RoomHumid8">%RoomHumid8%</div>
+                            <sup class="unitsmain">&#37;</sup>
+                        </div>
+                    </div>
+                </div>                <div class="rangewrap">
+                    <span class="rangevalue" id="RangeV8">%sliderValue8%</span>
+                    <input type="range" class="range" id="slider8" onchange="updateSliderPWM(this)" min=%roomtemplo% max=%roomtemphi% step="0.5" value=%sliderValue8%>
+                </div>
+                <hr><p class="state">Docelowa: <span id="sliderValue8">%sliderValue8%</span> <sup class="units">&deg;C</sup></p>
+            </div>
+
+
+
+            <div class="card" id="Room_card9">
+                <p class="card-title" id="Room_title9">Pompa</p>
+                <div class="twoCard">
+                    <div class="cardPart cardPart1">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room9 cutoff...</span>
+                            <i class="fas fa-thermometer-half"></i>
+                            <div class="temperatureVal" id="Roomtemp9">%Roomtemp9%</div>
+                            <sup class="unitsmain">&deg;C</sup>
+                        </div>
+                    </div>
+                    <div class="cardPart cardPart2">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Stan Room9...</span>
+                            <i class="fas fa-humidity"></i>
+                            <div class="stateVal" id="Roomstate9">%Roomstate9%</div>
+                            <sup class="unitsmain"></sup>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="card" id="Room_card10">
+                <p class="card-title" id="Room_title10">Pompa</p>
+                <div class="twoCard">
+                    <div class="cardPart cardPart1">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room10 tempwename...</span>
+                            <i class="fas fa-thermometer-half"></i>
+                            <div class="temperatureVal" id="Roomtemp10">%Roomtemp10%</div>
+                            <sup class="unitsmain">&deg;C</sup>
+                        </div>
+                    </div>
+                    <div class="cardPart cardPart2">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Stan Room10...</span>
+                            <i class="fas fa-humidity"></i>
+                            <div class="stateVal" id="Roomstate10">%Roomstate10%</div>
+                            <sup class="unitsmain"></sup>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="card" id="Room_card11">
+                <p class="card-title" id="Room_title11">Pompa</p>
+                <div class="twoCard">
+                    <div class="cardPart cardPart1">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room11 tempwename...</span>
+                            <i class="fas fa-thermometer-half"></i>
+                            <div class="temperatureVal" id="Roomtemp11">%Roomtemp11%</div>
+                            <sup class="unitsmain">&deg;C</sup>
+                        </div>
+                    </div>
+                    <div class="cardPart cardPart2">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Stan Room11...</span>
+                            <i class="fas fa-humidity"></i>
+                            <div class="stateVal" id="Roomstate11">%Roomstate11%</div>
+                            <sup class="unitsmain"></sup>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="Room_card13">
+                <div class="tooltip">
+                    <span class="tooltiptext">Temperatura Room13 ...</span>
+                    <p class="card-title" id="Room_title13">Temperatura </p>
+                    <i class="fas fa-thermometer-half"></i>
+                    <div class="temperatureVal" id="Roomtemp13">%Roomtemp13%</div>
+                    <sup class="unitsmain">&deg;C</sup>
+                </div>
+            </div>
+            <div class="card" id="Room_card12">
+                <div class="tooltip">
+                    <span class="tooltiptext">Temperatura Room12...</span>
+                    <p class="card-title" id="Room_title12">Temperatura return4ddol</p>
+                    <i class="fas fa-thermometer-half"></i>
+                    <div class="temperatureVal" id="Roomtemp12">%Roomtemp12%</div>
+                    <sup class="unitsmain">&deg;C</sup>
+                </div>
+            </div>
+
+
+
+
+
+
+            <div class="card">
+                <div class="tooltip">
+                    <p class="card-title" onchange="setOneNumberDecimal">Temperatura odłączenia cutoff</p>
+                    <span class="tooltiptext">Próg Aktywacji grzania powyżej której nastąpi uruchomienia pieca do ogrzeania CO. Poniżej tej Wartości grzanie CO się nie włączy.</span>
+                </div>
+                <div class="rangewrap">
+                    <span class="rangevalue" id="RangeV9">%sliderValue9%</span>
+                    <input type="range" class="range" id="slider9" onchange="updateSliderPWM(this)" min=%cutofflo% max=%cutoffhi% step="0.5" value=%sliderValue9%>
+                </div>
+                <hr><p class="state">Docelowa: <span id="sliderValue9">%sliderValue9%</span> <sup class="units">&deg;C</sup></p>
+
+            </div>
+
+            <div class="card">
+                <div class="tooltip">
+                    <p class="card-title">Temperatura Powrotu</p>
+                    <span class="tooltiptext">Wartość temperatury powrotu cieczy do boilera -zarówno CO i CWU zależnie co jest aktualnie aktywne</span>
+                    <i class="fas fa-thermometer-half"></i>
+                    <div class="temperatureVal" id="retTemp">%retTemp%</div>
+                    <sup class="unitsmain">&deg;C</sup>
+                </div>
+            </div>
+
+
+            <div class="card" id="Comora_card">
+                <p class="card-title" id="Room_title_Comora">Temperatura Comora</p>
+                <div class="twoCard">
+                    <div class="cardPart cardPart_Comora">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura RoomDHTtemp...</span>
+                            <i class="fas fa-thermometer-half"></i>
+                            <div class="temperatureVal" id="RoomDHTtemp">%RoomDHTtemp%</div>
+                            <sup class="unitsmain">&deg;C</sup>
+                        </div>
+                    </div>
+                    <div class="cardPart cardPart2">
+                        <div class="tooltip">
+                            <span class="tooltiptext">Temperatura Room_Comora...</span>
+                            <i class="fas fa-humidity"></i>
+                            <div class="humidityVal" id="RoomDHTHumid">%RoomDHTHumid%</div>
+                            <sup class="unitsmain">&#37;</sup>
+                        </div>
+                    </div>
+                </div>                <div class="rangewrap">
+                    <span class="rangevalue" id="RangeV6">%sliderValue6%</span>
+                    <input type="range" class="range" id="slider6" onchange="updateSliderPWM(this)" min=%roomtemplo% max=%roomtemphi% step="0.5" value=%sliderValue6%>
+                </div>
+                <hr><p class="state">Docelowa: <span id="sliderValue6">%sliderValue6%</span> <sup class="units">&deg;C</sup></p>
+            </div>
+
+
+            <div class="card">
+                <div class="tooltip">
+                    <span class="tooltiptext">Statystyki</span>
+                    <p class="card-title"><i class="fas fa-info-circle"></i>Statystyki</p>
+                </div>
+                <div class="Statusy" id="UsedMedia">%UsedMedia%</div>
+            </div>
+
+            <div class="card">
+                <div class="tooltip">
+                    <p class="card-title">Memory/WiFi</p>
+                    <span class="tooltiptext">Memory i Status WiFi</span>
+                </div>
+                <div class="StatusBlackNormalSmall" id="MemStats">%MemStats%</div>
+            </div>
+
+            </div>
+        </div>
+    </div> <!-- end of home content -->
+
+
+    <div id="WebSerial" class="tabcontent">
+        <div class="container">
+            <div class="row">
+                <div class="command2send">
+                    <input type="text" id="RemoteCommand" value="" placeholder="Wpisz HELP by poznać listę komend. Autoscroll jest automatyczny gdy suwak wysokosci na dole" onchange="updateSliderPWM(this)">
+                </div>
+                <br>
+                <div class="content">
+                    <textarea class="contentTextArea" id="log" name="webSerialLog" placeholder="Please wait to receive webserial log data" readonly="true"></textarea>
+                </div>
+            </div>
+        </div>
+        <span id="StatusBlackNormal">%linkiac%<br><br></span>
+        <div class="StatusBlackNormalSmall" id="MemStats1">%MemStats%</div>
+    </div>
+
+
+    <div id="FSEditor" class="tabcontent">
+        <span id="StatusBlackNormal">
+            <h2>Uploader</h2>
+            <div>
+                <p style="text-align: center">Use this page to upload new files to the ESP.<br/>You can use compressed (deflated) files (files with a .gz extension) to save space and bandwidth.<br/>Existing files will be replaced.</p>
+                <form method="post" enctype="multipart/form-data" style="margin: 0px auto 8px auto" >
+                    <input type="file" name="Choose file" accept=".gz,.html,.ico,.js,.css">
+                    <input class="button" type="submit" value="Upload" name="submit">
+                </form>
+            </div>
+            <p style="color: blue" onclick="openPage('Home', this, 'lightyellow')">Back to Home</p>
+            <br><br>
+            <span id="StatusBlackNormal">
+                <table><tr><td>%DIR_LIST%</td><td>%BuildOptions%</td></tr></table>
+            </span>
+        </span>
+        <div class="StatusBlackNormalSmall" id="MemStats2">%MemStats%</div>
+    </div>
+
+    <div id="Config" class="tabcontent">
+
+
+
+
+<form action="/post" method="post" target="hidden-form">
+
+        <div class="rendered-form">
+            <div class="">
+                <h3 class="form_header" access="false" id="control-2455592">Formularz konfiguracyjny:</h3></div>
+            <div class="formbuilder-select form-group field-form-control">
+                <label for="LogOutput" class="formbuilder-select-label">Dodatkowe wyjścia logów<span class="tooltip" tooltip="Dodatkowe wyjścia logu pracy">:</span></label>
+                <select class="form-control" name="LogOutput" multiple="true" id="form-control">
+                    <option value="debugSerial" selected="%debugSerial%" id="debugSerial">Wysyłanie logu do Serial1</option>
+                    <option value="sendlogtomqtt" selected="%sendlogtomqtt%" id="sendlogtomqtt">Wysyłanie logu do MQTT</option>
+                    <option value="WebSocketlog" selected="%WebSocketlog%" id="WebSocketlog">Wysyłanie logu do websocket na stronę</option>
+                </select>
+            </div>
+            <div class="formbuilder-text form-group field-SSID_Name">
+                <label for="SSID_Name" class="formbuilder-text-label">SSID_Name<span class="tooltip" tooltip="SSID_Name">:</span></label>
+                <input type="text" placeholder="%SSID_Name%" class="form-control" name="SSID_Name" access="true" value="%SSID_Name%" maxlength="16" role="1" id="SSID_Name" title="SSID_Name">
+            </div>
+            <div class="formbuilder-text form-group field-SSID_PAssword">
+                <label for="SSID_PAssword" class="formbuilder-text-label">SSID_PAssword<span class="tooltip" tooltip="SSID_PAssword">:</span></label>
+                <input type="password" placeholder="SSID_PAssword" class="form-control" name="SSID_PAssword" access="false" value="%SSID_PAssword%" maxlength="30" id="SSID_PAssword" title="SSID_PAssword">
+            </div>
+            <div class="">
+                <p class="form_delimiters" access="false" id="control-2254082">Konfiguracja dla MQTT (jeśli skompilowana):</p>
+            </div>
+            <div class="formbuilder-text form-group field-MQTT_servername">
+                <label for="MQTT_servername" class="formbuilder-text-label">MQTT_servername<span class="tooltip" tooltip="MQTT_servername">:</span></label>
+                <input type="text" placeholder="%MQTT_servername%" class="form-control" name="MQTT_servername" access="false" value="%MQTT_servername%" maxlength="20" id="MQTT_servername" title="MQTT_servername">
+            </div>
+            <div class="formbuilder-number form-group field-MQTT_port_No">
+                <label for="MQTT_port_No" class="formbuilder-number-label">MQTT_port_No<span class="tooltip" tooltip="MQTT_port_No">:</span></label>
+                <input type="number" placeholder="%MQTT_port_No%" class="form-control" name="MQTT_port_No" access="false" value="%MQTT_port_No%" min="1" max="65530" step="1" id="MQTT_port_No" title="MQTT_port_No">
+            </div>
+            <div class="formbuilder-text form-group field-MQTT_username">
+                <label for="MQTT_username" class="formbuilder-text-label">MQTT_username<span class="tooltip" tooltip="MQTT_username">:</span></label>
+                <input type="text" placeholder="%MQTT_username%" class="form-control" name="MQTT_username" access="false" value="%MQTT_username%" maxlength="20" id="MQTT_username" title="MQTT_username">
+            </div>
+            <div class="formbuilder-text form-group field-MQTT_Password_data">
+                <label for="MQTT_Password_data" class="formbuilder-text-label">MQTT_Password_data<span class="tooltip" tooltip="MQTT_Password_data">:</span></label>
+                <input type="password" placeholder="%MQTT_Password_data%" class="form-control" name="MQTT_Password_data" access="false" value="%MQTT_Password_data%" maxlength="20" id="MQTT_Password_data" title="MQTT_Password_data">
+            </div>
+            <div class="">
+                <p class="form_delimiters" access="false" id="control-1224137">Konfiguracja do bazy InfluxDB (jeśli skompilowana):</p>
+            </div>
+            <div class="formbuilder-text form-group field-INFLUXDB_URL">
+                <label for="INFLUXDB_URL" class="formbuilder-text-label">INFLUXDB_URL<span class="tooltip" tooltip="INFLUXDB_URL">:</span></label>
+                <input type="text" placeholder="%INFLUXDB_URL%" class="form-control" name="INFLUXDB_URL" access="false" value="%INFLUXDB_URL%" maxlength="20" id="INFLUXDB_URL" title="INFLUXDB_URL">
+            </div>
+            <div class="formbuilder-text form-group field-INFLUXDB_DB_NAME">
+                <label for="INFLUXDB_DB_NAME" class="formbuilder-text-label">INFLUXDB_DB_NAME<span class="tooltip" tooltip="INFLUXDB_DB_NAME">:</span></label>
+                <input type="text" placeholder="%INFLUXDB_DB_NAME%" class="form-control" name="INFLUXDB_DB_NAME" access="false" value="%INFLUXDB_DB_NAME%" maxlength="32" id="INFLUXDB_DB_NAME" title="INFLUXDB_DB_NAME">
+            </div>
+            <div class="formbuilder-text form-group field-influx_measurments">
+                <label for="influx_measurments" class="formbuilder-text-label">Influx Measurments Name<span class="tooltip" tooltip="influx_measurments">:</span></label>
+                <input type="text" placeholder="%influx_measurments%" class="form-control" name="influx_measurments" access="false" value="%influx_measurments%" maxlength="32" id="influx_measurments" title="influx_measurments">
+            </div>
+            <div class="formbuilder-text form-group field-INFLUXDB_USER">
+                <label for="INFLUXDB_USER" class="formbuilder-text-label">INFLUXDB_USER<span class="tooltip" tooltip="INFLUXDB_USER">:</span></label>
+                <input type="text" placeholder="%INFLUXDB_USER%" class="form-control" name="INFLUXDB_USER" access="false" value="%INFLUXDB_USER%" maxlength="20" id="INFLUXDB_USER" title="INFLUXDB_USER">
+            </div>
+            <div class="formbuilder-text form-group field-INFLUXDB_PASSWORD">
+                <label for="INFLUXDB_PASSWORD" class="formbuilder-text-label">INFLUXDB_PASSWORD<span class="tooltip" tooltip="INFLUXDB_PASSWORD">:</span></label>
+                <input type="password" placeholder="%INFLUXDB_PASSWORD%" class="form-control" name="INFLUXDB_PASSWORD" access="false" value="%INFLUXDB_PASSWORD%" maxlength="32" id="INFLUXDB_PASSWORD" title="INFLUXDB_PASSWORD">
+            </div>
+            <div class="">
+                <p class="form_delimiters" access="false" id="control-6790748">Konfiguracja odczytu temperatury zewnętrznej NEWS:</p>
+            </div>
+            <div class="formbuilder-text form-group field-NEWS_GET_TOPIC">
+                <label for="NEWS_GET_TOPIC" class="formbuilder-text-label">MQTT Topic Temp NEWS<span class="tooltip" tooltip="MQTT Topic dla temperatury zewnętrznej NEWS (średnia północ,południe,zachód, wschód)">:</span></label>
+                <input type="text" placeholder="%NEWS_GET_TOPIC%" class="form-control" name="NEWS_GET_TOPIC" access="false" value="%NEWS_GET_TOPIC%" maxlength="64" id="NEWS_GET_TOPIC" title="MQTT Topic dla temperatury zewnętrznej NEWS (średnia północ,południe,zachód, wschód)">
+            </div>
+            <div class="formbuilder-text form-group field-NEWStemp_json">
+                <label for="NEWStemp_json" class="formbuilder-text-label">MQTT json attribute for NEWS<span class="tooltip" tooltip="MQTT Atrybut json dla temperatury zewnętrznej NEWS (średnia północ,południe,zachód, wschód)">:</span></label>
+                <input type="text" placeholder="%NEWStemp_json%" class="form-control" name="NEWStemp_json" access="false" value="%NEWStemp_json%" maxlength="64" id="NEWStemp_json" title="MQTT Atrybut json dla temperatury zewnętrznej NEWS (średnia północ,południe,zachód, wschód)">
+            </div>
+            <div class="">
+                <p class="form_delimiters" access="false" id="control-8029990">Kotłownia -drugi piec statusy:</p>
+            </div>
+            <div class="formbuilder-text form-group field-COPUMP_GET_TOPIC">
+                <label for="COPUMP_GET_TOPIC" class="formbuilder-text-label">MQTT Topic dla statusu Pomp CO i Wody pieca węglowego<span class="tooltip" tooltip="MQTT Topic dla sprawdzenia czy pompy wody/CO drugiego pieca pracują -gdy tak nie włącza się CO grzanie">:</span></label>
+                <input type="text" placeholder="%COPUMP_GET_TOPIC%" class="form-control" name="COPUMP_GET_TOPIC" access="false" value="%COPUMP_GET_TOPIC%" maxlength="64" id="COPUMP_GET_TOPIC" title="MQTT Topic dla sprawdzenia czy pompy wody/CO drugiego pieca pracują -gdy tak nie włącza się CO grzanie">
+            </div>
+            <div class="formbuilder-text form-group field-COPumpStatus_json">
+                <label for="COPumpStatus_json" class="formbuilder-text-label">MQTT json attribute dla statusu Pompy CO pieca węglowego<span class="tooltip" tooltip="MQTT Atrybut Json dla sprawdzenia czy pompy CO drugiego pieca pracują -gdy tak nie włącza się CO grzanie">:</span></label>
+                <input type="text" placeholder="%COPumpStatus_json%" class="form-control" name="COPumpStatus_json" access="false" value="%COPumpStatus_json%" maxlength="64" id="COPumpStatus_json" title="MQTT Atrybut Json dla sprawdzenia czy pompy CO drugiego pieca pracują -gdy tak nie włącza się CO grzanie">
+            </div>
+            <div class="formbuilder-text form-group field-WaterPumpStatus_json">
+                <label for="WaterPumpStatus_json" class="formbuilder-text-label">MQTT json attribute dla statusu Pompy Wody pieca węglowego<span class="tooltip" tooltip="MQTT Atrybut Json dla sprawdzenia czy pompy Wody drugiego pieca pracują -gdy tak nie włącza się CO grzanie">:</span></label>
+                <input type="text" placeholder="%WaterPumpStatus_json%" class="form-control" name="WaterPumpStatus_json" access="false" value="%WaterPumpStatus_json%" maxlength="64" id="WaterPumpStatus_json" title="MQTT Atrybut Json dla sprawdzenia czy pompy Wody drugiego pieca pracują -gdy tak nie włącza się CO grzanie">
+            </div>
+            <div class="">
+                <p class="form_delimiters" access="false" id="control-5382407">Sensory CO PARTER podłogówki:</p>
+            </div>
+            <div class="formbuilder-text form-group field-ROOMS_F1_GET_TOPIC">
+                <label for="ROOMS_F1_GET_TOPIC" class="formbuilder-text-label">MQTT Topic dla czujników CO z parteru<span class="tooltip" tooltip="MQTT Topic dla pobrania średniej temperatury z kondygnacji i maksymalnej temperatury nastawionej jako docelowej">:</span></label>
+                <input type="text" placeholder="%ROOMS_F1_GET_TOPIC%" class="form-control" name="ROOMS_F1_GET_TOPIC" access="false" value="%ROOMS_F1_GET_TOPIC%" maxlength="64" id="ROOMS_F1_GET_TOPIC" title="MQTT Topic dla pobrania średniej temperatury z kondygnacji i maksymalnej temperatury nastawionej jako docelowej">
+            </div>
+            <div class="formbuilder-text form-group field-roomF1temp_json">
+                <label for="roomF1temp_json" class="formbuilder-text-label">MQTT json attribute dla średniej temp. PARTER
+                    <br><span class="tooltip" tooltip="MQTT Topic dla pobrania średniej temperatury z kondygnacji">:</span></label>
+                <input type="text" placeholder="%roomF1temp_json%" class="form-control" name="roomF1temp_json" access="false" value="%roomF1temp_json%" maxlength="64" id="roomF1temp_json" title="MQTT Topic dla pobrania średniej temperatury z kondygnacji">
+            </div>
+            <div class="formbuilder-text form-group field-roomF1tempset_json">
+                <label for="roomF1tempset_json" class="formbuilder-text-label">MQTT json atrybut Temperatury nastawionej PARTER<span class="tooltip" tooltip="MQTT Topic dla pobrania maksymalnej temperatury nastawionej jako docelowej">:</span></label>
+                <input type="text" placeholder="%roomF1tempset_json%" class="form-control" name="roomF1tempset_json" access="false" value="%roomF1tempset_json%" maxlength="64" id="roomF1tempset_json" title="MQTT Topic dla pobrania maksymalnej temperatury nastawionej jako docelowej">
+            </div>
+            <div class="">
+                <p class="form_delimiters" access="false" id="control-9701930">Sensory CO PIĘTRO podłogówki:</p>
+            </div>
+            <div class="formbuilder-text form-group field-ROOMS_F2_GET_TOPIC">
+                <label for="ROOMS_F2_GET_TOPIC" class="formbuilder-text-label">MQTT Topic dla czujników CO z piętra<span class="tooltip" tooltip="MQTT Topic dla pobrania średniej temperatury z kondygnacji i maksymalnej temperatury nastawionej jako docelowej">:</span></label>
+                <input type="text" placeholder="%ROOMS_F2_GET_TOPIC%" class="form-control" name="ROOMS_F2_GET_TOPIC" access="false" value="%ROOMS_F2_GET_TOPIC%" maxlength="64" id="ROOMS_F2_GET_TOPIC" title="MQTT Topic dla pobrania średniej temperatury z kondygnacji i maksymalnej temperatury nastawionej jako docelowej">
+            </div>
+            <div class="formbuilder-text form-group field-roomF2temp_json">
+                <label for="roomF2temp_json" class="formbuilder-text-label">MQTT json attribute dla średniej temp. PIĘTRO
+                    <br><span class="tooltip" tooltip="MQTT Topic dla pobrania średniej temperatury z kondygnacji">:</span></label>
+                <input type="text" placeholder="%roomF2temp_json%" class="form-control" name="roomF2temp_json" access="false" value="%roomF2temp_json%" maxlength="64" id="roomF2temp_json" title="MQTT Topic dla pobrania średniej temperatury z kondygnacji">
+            </div>
+            <div class="formbuilder-text form-group field-roomF2tempset_json">
+                <label for="roomF2tempset_json" class="formbuilder-text-label">MQTT json atrybut Temperatury nastawionej PIĘTRO<span class="tooltip" tooltip="MQTT Topic dla pobrania maksymalnej temperatury nastawionej jako docelowej">:</span></label>
+                <input type="text" placeholder="%roomF2tempset_json%" class="form-control" name="roomF2tempset_json" access="false" value="%roomF2tempset_json%" maxlength="64" id="roomF2tempset_json" title="MQTT Topic dla pobrania maksymalnej temperatury nastawionej jako docelowej">
+            </div>
+            <div class="">
+                <p class="form_delimiters" access="false" id="control-5994013"></p>
+            </div>
+            <input type="submit" value="ZAPISZ" class="btn btn-primary" />
+
+
+        </div>
+    </form>
+
+
+
+
+
+
+
+
+
+
+    </div>
+
+
+    <span class="stopkawebsite" id="stopkawebsite">%stopkawebsite%</span>
+    <!-- <script src=""jquery-3.6.0.slim.js"/>
+    <script src="jquery-ui-slider-pips.js"/> -->
+    <script src="index.js"></script>
+<div class="hidden" id="statusWaterActive">.</div>
+<div class="hidden" id="statusCHActive">.</div>
+<div class="hidden" id="statusFlameOn">.</div>
+<div class="hidden" id="statusFault">.</div>
+<div class="hidden" id="opcohi">.</div>
+</body>
+
+</html>

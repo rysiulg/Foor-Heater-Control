@@ -8,20 +8,23 @@
   Works also offline.
 
 */
+#include <Arduino.h>
 //#define smallercode
 
 
 // v.2.0 Initial after move from Arduino Mega to ESP32
+
+
+//#define loctmp "_TMP"     //appender for temporary name in influx and mqtt to not make trash in testing
+
 
 //#define debug		//Serial Debug
 //#define debug1
 //#define debug2
 //#define debugweb
 
-#define enableWebSerial   //1115101 - 1033185 = 81 916
-#define enableArduinoOTA
 
-#define ATOMIC_FS_UPDATE
+
 #define MFG "MARM.pl Sp. z o.o."
 #define wwwport 80
 #define PL_lang
@@ -29,7 +32,27 @@
 #define  ENABLE_INFLUX        //if defined sending to influx database is performed at time when mqtt messages is send 1313937-1115101=198836
 #endif
 
+#define enableDebug2Serial    //send log_message to websocket
+#define enableWebSocketlog  //send log to websocket AND enableWebSocket MUST BE ENABLED -this replaces me webserial -files on web to build ... to get it
+#define enableArduinoOTA
+#define enableWebSocket      //ESPAsyncWebServer
+#define doubleResDet        //  khoih-prog/ESP_DoubleResetDetector @ ^1.3.1)  check if double reset occurs -if yes stay on OTA ready
+#define ENABLE_INFLUX        // tobiasschuerg/ESP8266 Influxdb @ ^3.12.0   if defined sending to influx database is performed at time when mqtt messages is send  -about 130kB of code
+#define enableInfluxClient     // works as client -uses include InfluxdbClient.h not Influxdb.h
+#define enableMQTTAsync     //Async MQTT   ottowinter/AsyncMqttClient-esphome @ ^0.8.6  -implements also reconnects based by wifi
+//#define enableMQTT        //knolleary/PubSubClient@^2.8  --problem with connected status ---
+//#define enableWebUpdate   //not implemented -not working well
+//#define enableMESHNETWORK
+//#define enableWebSerial     //not fully implemented and abandoned  1115101 - 1033185 = 81 916
 #define enableDHT
+
+
+
+#if defined enableWebSocketlog && not defined enableWebSocket
+#undef enableWebSocketlog
+#endif
+
+
 
 //#boiler_gas_conversion_to_m3  1
 
@@ -72,7 +95,7 @@
 #define InfluxMeasurments "MARMpl_Measurments"
 #endif
 
-#define InitTemp -127.00
+
 #define maxsensors 13            //maksymalna liczba czujnikow w tabeli
 #define namelength 15 //ilosc znakow z nazwy czunika
 #define update_path "/update"
@@ -80,22 +103,11 @@
 // Set password to "" for open networks.
 #define sensitive_size 32
 #define sensitive_sizeS "32"
-char ssid[sensitive_size] = SSID_Name;
-char pass[sensitive_size] = SSID_PAssword;
 
-// Your MQTT broker address and credentials
-char mqtt_server[sensitive_size*2] = MQTT_servername;
-char mqtt_user[sensitive_size] = MQTT_username;
-char mqtt_password[sensitive_size] = MQTT_Password_data;
-int mqtt_port = MQTT_port_No;
-String kondygnacja = "0";          //ident pietrac -initial -replaced in setup
-String me_lokalizacja = "FLOORH";//pozniej dopisywane +String(kondygnacja);//+"_mqqt_MARM";
- //jest niepelna -brakuje kondygnacji
-const int mqtt_Retain = 1;
+#ifndef loctmp
+#define loctmp "\0"
+#endif
 
-// Master OpenTherm Shield pins configuration
-//const int OT_IN_PIN = 26;  // for Arduino, 4 for ESP8266 (D2), 21 for ESP32
-//const int OT_OUT_PIN = 26; // for Arduino, 5 for ESP8266 (D1), 22 for ESP32
 
 
 
@@ -175,52 +187,3 @@ const int mqtt_Retain = 1;
 // const String SETPOINT_OVERRIDE = "setpoint-override";
 // const String SETPOINT_OVERRIDE_SET_TOPIC = BASE_TOPIC + "/" + SETPOINT_OVERRIDE + "/set";     // op_override
 // const String SETPOINT_OVERRIDE_RESET_TOPIC = BASE_TOPIC + "/" + SETPOINT_OVERRIDE + "/reset"; //
-
-
-
-
-
-#define CONFIG_VERSION "V02" sensitive_sizeS
-
-// Where in EEPROM?
-#define CONFIG_START 32
-
-typedef struct
-{
-  char version[6]; // place to detect if settings actually are written
-  char ssid[sensitive_size];
-  char pass[sensitive_size];
-  char mqtt_server[sensitive_size*2];
-  char mqtt_user[sensitive_size];
-  char mqtt_password[sensitive_size];
-  int mqtt_port;
-  float roomtempset1=0,
-        roomtempset2=0,
-        roomtempset3=0,
-        roomtempset4=0,
-        roomtempset5=0,
-        roomtempset6=0,
-        roomtempset7=0,
-        roomtempset8=0,
-        roomtempset9=0,
-        roomtempset10=0,
-  //float roomtemp;        //now is static sensor so for while save last value
-        temp_NEWS =0;
-  char COPUMP_GET_TOPIC[255],  //temperatura outside avg NEWS
-       NEWS_GET_TOPIC[255],   //pompa CO status
-       BOILER_FLAME_STATUS_TOPIC[255],   //pompa CO status for 1st temp room sensor
-       BOILER_FLAME_STATUS_ATTRIBUTE[255],   //pompa CO status for 2nd temp room sensor
-       BOILER_COPUMP_STATUS_ATTRIBUTE[255];
-} configuration_type;
-
-// with DEFAULT values!
-configuration_type CONFIGURATION;
-configuration_type CONFTMP;
-
-const String
-        tempicon=F("<i class=\"fas fa-thermometer-half\" style=\"color:#059e8a;font-size:36px;text-shadow:2px 2px 4px #000000;\"></i>&nbsp;&nbsp;"),
-        presicon=F("<i class=\"fas fa-thermometer-half\" style=\"color:#059e8a;font-size:36px;text-shadow:2px 2px 4px #000000;\"></i>&nbsp;&nbsp;"),
-        attiicon=F("<i class=\"fas fa-water\" style=\"color:#90add6;font-size:36px;text-shadow:2px 2px 4px #000000;\"></i>&nbsp;&nbsp;"),
-        ppmicon=F("<i class=\"fas fa-tint\" style=\"color:#50ad00;font-size:36px;text-shadow:2px 2px 4px #000000;\"></i>&nbsp;&nbsp;"),
-        pumpicon=F("<i class=\"fas fa-tint\" style=\"color:#500d00;font-size:36px;text-shadow:2px 2px 4px #000000;\"></i>&nbsp;&nbsp;"),
-        humidicon=F("<i class=\"fas fa-humidity\" style=\"color:blue;font-size:36px;text-shadow:2px 2px 4px #000000;\"></i>&nbsp;&nbsp;");

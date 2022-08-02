@@ -1,56 +1,355 @@
+//websrv_ota.h
+
+#include "Arduino.h"
 
 
-uint8_t mac[6] = {(uint8_t)strtol(WiFi.macAddress().substring(0,2).c_str(),0,16), (uint8_t)strtol(WiFi.macAddress().substring(3,5).c_str(),0,16),(uint8_t)strtol(WiFi.macAddress().substring(6,8).c_str(),0,16),(uint8_t)strtol(WiFi.macAddress().substring(9,11).c_str(),0,16),(uint8_t)strtol(WiFi.macAddress().substring(12,14).c_str(),0,16),(uint8_t)strtol(WiFi.macAddress().substring(15,17).c_str(),0,16)};
-unsigned long  started = 0; //do mierzenia czasu uptime bez resetu
+String get_PlaceholderName(u_int i)
+{ //get names by number to match www placeholders
+  switch(i) {
+    case ASS_uptimedana: return PSTR(ASS_uptimedanaStr); break;
+    case ASS_Statusy: return PSTR(ASS_StatusyStr); break;
+    case ASS_MemStats: return PSTR(ASS_MemStatsStr); break;
 
-const char htmlup[] PROGMEM = R"rawliteral(
-  <form method='POST' action='/doUpdate' enctype='multipart/form-data'><input type='file' name='update' accept=".bin,.bin.gz"><input type='submit' value='Update'></form>)rawliteral";
+    case ASS_temp_NEWS: return PSTR(ASS_temp_NEWSStr); break;
+    case ASS_lastNEWSSet: return PSTR(ASS_lastNEWSSetStr); break;
+    case ASS_opcohi: return PSTR("opcohi"); break;
+
+    case ASS_room1temp: return PSTR(ASS_room1tempStr); break;
+    case ASS_room1tempSet: return PSTR(ASS_room1tempSetStr); break;
+    case ASS_RoomHumid1: return PSTR(ASS_RoomHumid1Str); break;
+    case ASS_Roomstate1: return PSTR(ASS_Roomstate1Str); break;
+
+    case ASS_room2temp: return PSTR(ASS_room2tempStr); break;
+    case ASS_room2tempSet: return PSTR(ASS_room2tempSetStr); break;
+    case ASS_RoomHumid2: return PSTR(ASS_RoomHumid2Str); break;
+    case ASS_Roomstate2: return PSTR(ASS_Roomstate2Str); break;
+
+    case ASS_room3temp: return PSTR(ASS_room3tempStr); break;
+    case ASS_room3tempSet: return PSTR(ASS_room3tempSetStr); break;
+    case ASS_RoomHumid3: return PSTR(ASS_RoomHumid3Str); break;
+    case ASS_Roomstate3: return PSTR(ASS_Roomstate3Str); break;
+
+    case ASS_room4temp: return PSTR(ASS_room4tempStr); break;
+    case ASS_room4tempSet: return PSTR(ASS_room4tempSetStr); break;
+    case ASS_RoomHumid4: return PSTR(ASS_RoomHumid4Str); break;
+    case ASS_Roomstate4: return PSTR(ASS_Roomstate4Str); break;
+
+    case ASS_room5temp: return PSTR(ASS_room5tempStr); break;
+    case ASS_room5tempSet: return PSTR(ASS_room5tempSetStr); break;
+    case ASS_RoomHumid5: return PSTR(ASS_RoomHumid5Str); break;
+    case ASS_Roomstate5: return PSTR(ASS_Roomstate5Str); break;
+
+    case ASS_room6temp: return PSTR(ASS_room6tempStr); break;
+    case ASS_room6tempSet: return PSTR(ASS_room6tempSetStr); break;
+    case ASS_RoomHumid6: return PSTR(ASS_RoomHumid6Str); break;
+    case ASS_Roomstate6: return PSTR(ASS_Roomstate6Str); break;
+
+    case ASS_room7temp: return PSTR(ASS_room7tempStr); break;
+    case ASS_room7tempSet: return PSTR(ASS_room7tempSetStr); break;
+    case ASS_RoomHumid7: return PSTR(ASS_RoomHumid7Str); break;
+    case ASS_Roomstate7: return PSTR(ASS_Roomstate7Str); break;
+
+    case ASS_room8temp: return PSTR(ASS_room8tempStr); break;
+    case ASS_room8tempSet: return PSTR(ASS_room8tempSetStr); break;
+    case ASS_RoomHumid8: return PSTR(ASS_RoomHumid8Str); break;
+    case ASS_Roomstate8: return PSTR(ASS_Roomstate8Str); break;
+
+    case ASS_room9temp: return PSTR(ASS_room9tempStr); break;
+    case ASS_room9tempSet: return PSTR(ASS_room9tempSetStr); break;
+    case ASS_Roomstate9: return PSTR(ASS_Roomstate9Str); break;
+
+    case ASS_room10temp: return PSTR(ASS_room10tempStr); break;
+    case ASS_room10tempSet: return PSTR(ASS_room10tempSetStr); break;
+    case ASS_Roomstate10: return PSTR(ASS_Roomstate10Str); break;
+
+    case ASS_room11temp: return PSTR(ASS_room11tempStr); break;
+    case ASS_room11tempSet: return PSTR(ASS_room11tempSetStr); break;
+    case ASS_Roomstate11: return PSTR(ASS_Roomstate11Str); break;
+
+    case ASS_room12temp: return PSTR(ASS_room12tempStr); break;
+    case ASS_room12tempSet: return PSTR(ASS_room12tempSetStr); break;
+    case ASS_Roomstate12: return PSTR(ASS_Roomstate12Str); break;
 
 
-String do_stopkawebsite();
-//******************************************************************************************
+    case ASS_cutOffTemp: return PSTR(ASS_cutOffTempStr); break;
+    case ASS_retTemp: return PSTR(ASS_retTempStr); break;
 
-String PrintHex8(const uint8_t *data, char separator, uint8_t length) // prints 8-bit data in hex , uint8_t length
-{
-  uint8_t lensep = sizeof(separator);
-  int dod = 0;
-  if (separator == 0x0) {
-    lensep = 0;
-    dod = 1;
+    case ASS_roomDHTtemp: return PSTR(ASS_roomDHTtempStr); break;
+    case ASS_roomDHThum: return PSTR(ASS_roomDHThumStr); break;
+
+    case ASS_modeState: return PSTR(ASS_modeStateStr); break;
+
+
+    // case ASS_tempBoilerSet: return PSTR("sliderValue1"); break;
+    // case ASS_dhwTarget: return PSTR("sliderValue2"); break;
+    // case ASS_roomtempSet: return PSTR("sliderValue4"); break;  //Room Target sp
+
+
+    // case ASS_tempBoiler: return PSTR("tempBoiler"); break;
+    // case ASS_tempCWU: return PSTR("tempCWU"); break;
+    // case ASS_roomtemp: return PSTR("roomtemp"); break;
+    // case ASS_AutoMode: return PSTR("boilermodewww"); break;
+    // case ASS_EnableHeatingCO: return PSTR("boilerwww"); break;
+    // case ASS_statusWaterActive: return PSTR("statusWaterActive"); break;  //pump for water cwu active
+    // case ASS_statusCHActive: return PSTR("statusCHActive"); break;
+    // case ASS_statusFlameOn: return PSTR("statusFlameOn"); break;
+    // case ASS_statusFault: return PSTR("statusFault"); break;
+    // case ASS_EnableHotWater: return PSTR("boilerhwwww"); break;
+     case ASS_UsedMedia: return PSTR("UsedMedia"); break;
+    // case ASS_ecoMode: return PSTR("ecoMode"); break;
   }
-  if (lensep > 1) dod = 1 - lensep;
-  char tmp[length * (2 + lensep) + dod - lensep];
-  byte first;
-  byte second;
-  for (int i = 0; (i + 0) < length; i++) {
-    first = (data[i] >> 4) & 0x0f;
-    second = data[i] & 0x0f;
-    // base for converting single digit numbers to ASCII is 48
-    // base for 10-16 to become lower-case characters a-f is 87
-    // note: difference is 39
-    tmp[i * (2 + lensep)] = first + 48;
-    tmp[i * (2 + lensep) + 1] = second + 48;
-    if ((i) < length and (i) + 1 != length) tmp[i * (2 + lensep) + 2] = separator;
-    if (first > 9) tmp[i * (2 + lensep)] += 39;
-    if (second > 9) tmp[i * (2 + lensep) + 1] += 39;
-
-  }
-  tmp[length * (2 + lensep) + 0 - lensep] = 0;
-#ifdef debug
-  Serial.print(F("MAC Addr: "));
-  Serial.println(tmp);
-#endif
-  //     debugA("%s",tmp);
-  return tmp;
+  return "\0";
 }
 
-//*********************************************************************************************
+
+void updateDatatoWWW_received(u_int i) {
+
+  sprintf(log_chars, "Received data nr: %s", String(i).c_str());
+  log_message(log_chars);
+  switch (i) {
+    case ASS_room1tempSet: room_temp[0].tempset = PayloadtoValidFloat(String(ASS[ASS_room1tempSet].Value), true, roomtemplo, roomtemphi); break;
+    case ASS_room2tempSet: room_temp[1].tempset = PayloadtoValidFloat(String(ASS[ASS_room2tempSet].Value), true, roomtemplo, roomtemphi); break;
+    case ASS_room3tempSet: room_temp[2].tempset = PayloadtoValidFloat(String(ASS[ASS_room3tempSet].Value), true, roomtemplo, roomtemphi); break;
+    case ASS_room4tempSet: room_temp[3].tempset = PayloadtoValidFloat(String(ASS[ASS_room4tempSet].Value), true, roomtemplo, roomtemphi); break;
+    case ASS_room5tempSet: room_temp[4].tempset = PayloadtoValidFloat(String(ASS[ASS_room5tempSet].Value), true, roomtemplo, roomtemphi); break;
+    case ASS_room6tempSet: room_temp[5].tempset = PayloadtoValidFloat(String(ASS[ASS_room6tempSet].Value), true, roomtemplo, roomtemphi); break;
+    case ASS_room7tempSet: room_temp[6].tempset = PayloadtoValidFloat(String(ASS[ASS_room7tempSet].Value), true, roomtemplo, roomtemphi); break;
+    case ASS_room8tempSet: room_temp[7].tempset = PayloadtoValidFloat(String(ASS[ASS_room8tempSet].Value), true, roomtemplo, roomtemphi); break;
+    case ASS_room9tempSet: room_temp[8].tempset = PayloadtoValidFloat(String(ASS[ASS_room9tempSet].Value), true, roomtemplo, roomtemphi); break;
+    case ASS_modeState: {
+      String modestate_tmp = String(ASS[ASS_room9tempSet].Value);
+      if (modestate_tmp == "modeAuto") {
+        modestate = MODEAUTO;
+      } else
+      if (modestate_tmp == "modeCool") {
+        modestate = MODECOOL;
+      } else
+      if (modestate_tmp == "modeHeat") {
+        modestate = MODEHEAT;
+      } else {
+        modestate = MODEOFF;
+      }
+    }
+     // tempBoilerSet = PayloadtoValidFloat(String(ASS[ASS_tempBoilerSet].Value), true, oplo, ophi);
+      break;
+//egfor dla set values
+
+
+      //     String message;
+//     for (u_int x=0;x<maxsensors;x++)
+//     {
+//       String fragment = String(room_temp[x].nameSensor)+ appendSet;
+//       fragment.replace(sepkondname,"_");
+//       if (request->hasParam((fragment ).c_str()))
+//       {
+//         message = request->getParam((fragment).c_str())->value();
+//         log_message((char*)message.c_str());
+//         receivedmqttdata = getRemoteTempHumid(message, x, action_tempset);
+//       }else {
+//           //message = "No message sent PARAM_roomtempset0";
+//       }
+//     }
+
+  }
+}
+String return_noval_if_invalid(float val2check)
+{
+  if (check_isValidTemp(val2check)) {
+    return String(val2check, decimalPlaces);
+    } else
+    {
+      if (decimalPlaces == 1)
+      {
+        return F("--.-");
+      } else
+      if (decimalPlaces == 2)
+      {
+        return F("--.--");
+      } else
+      {
+        return F("--");
+      }
+    }
+}
+
+void updateDatatoWWW() //default false so if true than update
+{
+
+  sprintf(log_chars, "Update Data to www ");
+  log_message(log_chars);
+#ifdef enableWebSocket
+  //if (receivedwebsocketdata and dont_send_after_sync) return;
+  //String dana = {"DHWTemp",DHW_Temp}
+  String ptrS = "\0";
+
+    SaveAssValue(ASS_lastNEWSSet,       uptimedana(lastNEWSSet) );
+    SaveAssValue(ASS_temp_NEWS,         return_noval_if_invalid(temp_NEWS) );
+
+    SaveAssValue(ASS_room1temp,         return_noval_if_invalid(room_temp[0].tempread) );
+    SaveAssValue(ASS_RoomHumid1,        return_noval_if_invalid(room_temp[0].humidityread), true );
+    SaveAssValue(ASS_room1tempSet,      String(room_temp[0].tempset, decimalPlaces) );
+    SaveAssValue(ASS_Roomstate1,        String(room_temp[0].switch_state?1:0 ) );
+
+    SaveAssValue(ASS_room2temp,         return_noval_if_invalid(room_temp[1].tempread) );
+    SaveAssValue(ASS_RoomHumid2,        return_noval_if_invalid(room_temp[1].humidityread), true );
+    SaveAssValue(ASS_room2tempSet,      String(room_temp[1].tempset, decimalPlaces) );
+    SaveAssValue(ASS_Roomstate2,        String(room_temp[1].switch_state?1:0 ) );
+
+    SaveAssValue(ASS_room3temp,         return_noval_if_invalid(room_temp[2].tempread) );
+    SaveAssValue(ASS_RoomHumid3,        return_noval_if_invalid(room_temp[2].humidityread), true );
+    SaveAssValue(ASS_room3tempSet,      String(room_temp[2].tempset, decimalPlaces) );
+    SaveAssValue(ASS_Roomstate3,        String(room_temp[2].switch_state?1:0 ) );
+
+    SaveAssValue(ASS_room4temp,         return_noval_if_invalid(room_temp[3].tempread) );
+    SaveAssValue(ASS_RoomHumid4,        return_noval_if_invalid(room_temp[3].humidityread), true );
+    SaveAssValue(ASS_room4tempSet,      String(room_temp[3].tempset, decimalPlaces) );
+    SaveAssValue(ASS_Roomstate4,        String(room_temp[3].switch_state?1:0 ) );
+
+    SaveAssValue(ASS_room5temp,         return_noval_if_invalid(room_temp[4].tempread) );
+    SaveAssValue(ASS_RoomHumid5,        return_noval_if_invalid(room_temp[4].humidityread), true );
+    SaveAssValue(ASS_room5tempSet,      String(room_temp[4].tempset, decimalPlaces) );
+    SaveAssValue(ASS_Roomstate5,        String(room_temp[4].switch_state?1:0 ) );
+
+    SaveAssValue(ASS_room6temp,         return_noval_if_invalid(room_temp[5].tempread) );
+    SaveAssValue(ASS_RoomHumid6,        return_noval_if_invalid(room_temp[5].humidityread), true );
+    SaveAssValue(ASS_room6tempSet,      String(room_temp[5].tempset, decimalPlaces) );
+    SaveAssValue(ASS_Roomstate6,        String(room_temp[5].switch_state?1:0 ) );
+
+    SaveAssValue(ASS_room7temp,         return_noval_if_invalid(room_temp[6].tempread) );
+    SaveAssValue(ASS_RoomHumid7,        return_noval_if_invalid(room_temp[6].humidityread), true );
+    SaveAssValue(ASS_room7tempSet,      String(room_temp[6].tempset, decimalPlaces) );
+    SaveAssValue(ASS_Roomstate7,        String(room_temp[6].switch_state?1:0 ) );
+
+    SaveAssValue(ASS_room8temp,         return_noval_if_invalid(room_temp[7].tempread) );
+    SaveAssValue(ASS_RoomHumid8,        return_noval_if_invalid(room_temp[7].humidityread), true );
+    SaveAssValue(ASS_room8tempSet,      String(room_temp[7].tempset, decimalPlaces) );
+    SaveAssValue(ASS_Roomstate8,        String(room_temp[7].switch_state?1:0 ) );
+
+    SaveAssValue(ASS_room9temp,         return_noval_if_invalid(room_temp[8].tempread) );
+    SaveAssValue(ASS_room9tempSet,      String(room_temp[8].tempset, decimalPlaces) );
+    SaveAssValue(ASS_Roomstate9,        String(room_temp[8].switch_state?1:0 ) );
+
+    SaveAssValue(ASS_room10temp,         return_noval_if_invalid(room_temp[9].tempread) );
+    SaveAssValue(ASS_room10tempSet,      String(room_temp[9].tempset, decimalPlaces) );
+    SaveAssValue(ASS_Roomstate10,        String(room_temp[9].switch_state?1:0 ) );
+
+    SaveAssValue(ASS_room11temp,         return_noval_if_invalid(room_temp[10].tempread) );
+    SaveAssValue(ASS_room11tempSet,      String(room_temp[10].tempset, decimalPlaces) );
+    SaveAssValue(ASS_Roomstate11,        String(room_temp[10].switch_state?1:0 ) );
+
+    SaveAssValue(ASS_room12temp,         return_noval_if_invalid(room_temp[11].tempread) );
+    SaveAssValue(ASS_room12tempSet,      String(room_temp[11].tempset, decimalPlaces) );
+    SaveAssValue(ASS_Roomstate12,        String(room_temp[11].switch_state?1:0 ) );
+
+    SaveAssValue(ASS_modeState,        String((modestate == MODEAUTO)? "modeAuto": ((modestate == MODECOOL)?"modeCool":((modestate == MODEHEAT)?"modeHeat":"modeOFF"))) );
+//modestate == MODEHEAT and x<8 and room_temp[x].switch_state==startrun
+
+
+    SaveAssValue(ASS_roomDHTtemp, return_noval_if_invalid(tempcor) );
+    SaveAssValue(ASS_roomDHThum, return_noval_if_invalid(humiditycor) );
+
+
+//tempCORETThermometerS    String(retTemp,1)
+for (u_int x=0;x<maxsensors;x++)
+{ String fragment = String(room_temp[x].nameSensor);
+  fragment.replace(sepkondname,"_");
+  //fragment      String(room_temp[x].tempread==InitTemp ? "--.-" : String(room_temp[x].tempread,1);
+  //fragment + appendSet    String(room_temp[x].tempset,1)
+
+}
+#ifdef enableDHT
+  //dhumidcor     String(humiditycor,1)
+  //dtempcor      String(tempcor,1)+tempw)
+#endif
+    SaveAssValue(ASS_retTemp,             return_noval_if_invalid(retTemp) );
+    SaveAssValue(ASS_cutOffTemp,          return_noval_if_invalid(cutOffTemp) );
+    // SaveAssValue(ASS_tempBoiler,          String(tempBoiler, decimalPlaces) );
+    // SaveAssValue(ASS_tempBoilerSet,       String(tempBoilerSet, decimalPlaces) );
+    // SaveAssValue(ASS_tempCWU,             String(tempCWU, decimalPlaces) );
+    // SaveAssValue(ASS_dhwTarget,           String(dhwTarget, decimalPlaces) );
+    // SaveAssValue(ASS_roomtemp,            String(roomtemp, decimalPlaces) );
+    // SaveAssValue(ASS_roomtempSet,         String(roomtempSet, decimalPlaces) );
+
+
+    ptrS = "\0";
+      if (pump==startrun) {
+        ptrS += F("<i class='fas fa-fire'></i>"); ptrS += "<span id='StatusRedNormal'>"+String(FloorPumpActive)+F("</span><B>")+F("<sup class=\"units\"> </sup></B></br>");
+      }
+      if (CO_BoilerPumpWorking) {ptrS += F("<span id='StatusRedNormal'><B>"); ptrS += String(BOILER_IS_HEATING); ptrS += F("</span></br>");}
+      if (CO_PumpWorking) {ptrS += "<span id='StatusBlue'>" + String(Second_Engine_Heating_PompActive_Disable_heat) + "</span>></br>";}
+
+      ptrS += F("<span id='StatusBlue'><B>"); ptrS += String(sMODESTATE)+" "+String(modestate==MODEHEAT?sMODESTATE_HEAT:modestate==MODECOOL?sMODESTATE_COOL:modestate==MODEOFF?sMODESTATE_OFF:String(modestate)); ptrS += F("</B></span></br>");
+      ptrS += F("<span id='StatusBlue'>Temperatura progu włączenia/wyłączenia pompy: <B>"); ptrS += String(pumpOffVal); ptrS += F("</B></span><br>");
+
+
+    // if (status_FlameOn) {
+    //   ptrS += "<i class='fas fa-fire' id='StatusRed'></i>"; ptrS += "<span id='StatusRedNormal'>" + String(Flame_Active_Flame_level) + "</span><b>" + String(flame_level, 0) + "<sup class=\"units\">&#37;</sup></b></br>";
+    // }
+    // if (status_Fault) ptrS += "<span id='StatusRed'>!!!!!!!!!!!!!!!!! status_Fault !!!!!!!</span></br>";
+    // if (heatingEnabled) {
+    //   ptrS += "<span is='StatusBlack'>" + String(BOILER_HEAT_ON);
+    //   if (automodeCO) ptrS += F(" (AUTO)"); else ptrS += F(" (Standard)");
+    //   ptrS += ("</span></br>");
+    // }
+    // if (status_CHActive) ptrS += "<span id='StatusRed'>" + String(BOILER_IS_HEATING) + "</span></br>";
+    // if (enableHotWater) ptrS += "<span id='StatusBlack'>" + String(DHW_HEAT_ON) + "</span></br>";
+    // if (status_WaterActive) ptrS += "<span id='StatusRed'>" + String(Boiler_Active_heat_DHW) + "</span></br>";
+    // if (status_Cooling) ptrS += "<span id='StatusOrange'>" + String(CoolingMode) + "</span><</br>";
+    // if (status_Diagnostic) ptrS += "<span id='StatusDarkRed'>" + String(DiagMode) + "</span></br>";
+    // if (Water_PumpWorking) ptrS += "<span id='StatusBlue'>" + String(Second_Engine_Heating_Water_PompActive) + "</span></br>";
+    // if (status_FlameOn) ptrS += "<span id='StatusGreen'>" + String(Flame_time) + "<b>" + uptimedana(start_flame_time_fordisplay) + "</b></span></br>";
+//    ASS[ASS_Statusy].Value = toCharPointer(String(ptrS));
+    //strcpy(ASS[ASS_Statusy].Value, toCharPointer(ptrS) );
+    SaveAssValue(ASS_Statusy, ptrS );
+
+    ptrS = "\0";
+    ptrS += F(" Unassigned Dallas: ");
+    ptrS += UnassignedTempSensor;
+    // ptrS += "<p id='StatusBlackNormal'>" + String(Flame_total) + "<b>" + String(flame_used_power_kwh, 4) + "kWh</b>";
+    // ptrS += String(" : ") + "<b>" + String(uptimedana((flame_time_total), true)+"</b>");
+    // ptrS += "</br>w tym woda: <b>" + String(flame_used_power_waterTotal, 4) + "kWh</b>";
+    // ptrS += String(" : ") + "<b>" + String(uptimedana((flame_time_waterTotal), true)+"</b>");
+    // ptrS += "</br>w tym CO: <b>" + String(flame_used_power_CHTotal, 4) + "kWh</b>";
+    // ptrS += String(" : ") + "<b>" + String(uptimedana((flame_time_CHTotal), true)+"</b></p>");
+// //    ASS[ASS_UsedMedia].Value = toCharPointer(String(ptrS));
+//     strcpy(ASS[ASS_UsedMedia].Value, toCharPointer( ptrS) );
+    SaveAssValue(ASS_UsedMedia, ptrS );
+    #ifdef debug
+    sprintf(log_chars,"Flame_Total: %s (%s), CO: %s (%s), DHW: %s (%s)", String(flame_used_power_kwh).c_str(), String(uptimedana((flame_time_total), true)).c_str(), String(flame_used_power_CHTotal).c_str(), String(uptimedana((flame_time_CHTotal), true)).c_str(), String(flame_used_power_waterTotal).c_str(), String(uptimedana((flame_time_waterTotal), true)).c_str());
+    log_message(log_chars);
+    #endif
+#endif
+}
+
+String local_specific_web_processor_vars(String var) {
+  //Update config page
+  if (var == "COPUMP_GET_TOPIC") { return String(COPUMP_GET_TOPIC);
+  } else
+  if (var == "COPumpStatus_json") { return String(COPumpStatus_json);
+  } else
+  if (var == "WaterPumpStatus_json") { return String(WaterPumpStatus_json);
+  // } else
+  // if (var == "ROOMS_F1_GET_TOPIC") { return String(ROOMS_F1_GET_TOPIC);
+  // } else
+  // if (var == "roomF1temp_json") { return String(roomF1temp_json);
+  // } else
+  // if (var == "roomF1tempset_json") { return String(roomF1tempset_json);
+  // } else
+  // if (var == "ROOMS_F2_GET_TOPIC") { return String(ROOMS_F2_GET_TOPIC);
+  // } else
+  // if (var == "roomF2temp_json") { return String(roomF2temp_json);
+  // } else
+  // if (var == "roomF2tempset_json") { return String(roomF2tempset_json);
+  }
+  return "\0";
+}
+
 
 //******************************************************************************************
 //     background-color: #01DF3A;
 //
 //  <div class='s'><svg version='1.1' width="75px" height="75px" id='l' x='0' y='0' viewBox='0 0 200 200' xml:space='preserve'><path d='M59.3,2.5c18.1,0.6,31.8,8,40.2,23.5c3.1,5.7,4.3,11.9,4.1,18.3c-0.1,3.6-0.7,7.1-1.9,10.6c-0.2,0.7-0.1,1.1,0.6,1.5c12.8,7.7,25.5,15.4,38.3,23c2.9,1.7,5.8,3.4,8.7,5.3c1,0.6,1.6,0.6,2.5-0.1c4.5-3.6,9.8-5.3,15.7-5.4c12.5-0.1,22.9,7.9,25.2,19c1.9,9.2-2.9,19.2-11.8,23.9c-8.4,4.5-16.9,4.5-25.5,0.2c-0.7-0.3-1-0.2-1.5,0.3c-4.8,4.9-9.7,9.8-14.5,14.6c-5.3,5.3-10.6,10.7-15.9,16c-1.8,1.8-3.6,3.7-5.4,5.4c-0.7,0.6-0.6,1,0,1.6c3.6,3.4,5.8,7.5,6.2,12.2c0.7,7.7-2.2,14-8.8,18.5c-12.3,8.6-30.3,3.5-35-10.4c-2.8-8.4,0.6-17.7,8.6-22.8c0.9-0.6,1.1-1,0.8-2c-2-6.2-4.4-12.4-6.6-18.6c-6.3-17.6-12.7-35.1-19-52.7c-0.2-0.7-0.5-1-1.4-0.9c-12.5,0.7-23.6-2.6-33-10.4c-8-6.6-12.9-15-14.2-25c-1.5-11.5,1.7-21.9,9.6-30.7C32.5,8.9,42.2,4.2,53.7,2.7c0.7-0.1,1.5-0.2,2.2-0.2C57,2.4,58.2,2.5,59.3,2.5z M76.5,81c0,0.1,0.1,0.3,0.1,0.6c1.6,6.3,3.2,12.6,4.7,18.9c4.5,17.7,8.9,35.5,13.3,53.2c0.2,0.9,0.6,1.1,1.6,0.9c5.4-1.2,10.7-0.8,15.7,1.6c0.8,0.4,1.2,0.3,1.7-0.4c11.2-12.9,22.5-25.7,33.4-38.7c0.5-0.6,0.4-1,0-1.6c-5.6-7.9-6.1-16.1-1.3-24.5c0.5-0.8,0.3-1.1-0.5-1.6c-9.1-4.7-18.1-9.3-27.2-14c-6.8-3.5-13.5-7-20.3-10.5c-0.7-0.4-1.1-0.3-1.6,0.4c-1.3,1.8-2.7,3.5-4.3,5.1c-4.2,4.2-9.1,7.4-14.7,9.7C76.9,80.3,76.4,80.3,76.5,81z M89,42.6c0.1-2.5-0.4-5.4-1.5-8.1C83,23.1,74.2,16.9,61.7,15.8c-10-0.9-18.6,2.4-25.3,9.7c-8.4,9-9.3,22.4-2.2,32.4c6.8,9.6,19.1,14.2,31.4,11.9C79.2,67.1,89,55.9,89,42.6z M102.1,188.6c0.6,0.1,1.5-0.1,2.4-0.2c9.5-1.4,15.3-10.9,11.6-19.2c-2.6-5.9-9.4-9.6-16.8-8.6c-8.3,1.2-14.1,8.9-12.4,16.6C88.2,183.9,94.4,188.6,102.1,188.6z M167.7,88.5c-1,0-2.1,0.1-3.1,0.3c-9,1.7-14.2,10.6-10.8,18.6c2.9,6.8,11.4,10.3,19,7.8c7.1-2.3,11.1-9.1,9.6-15.9C180.9,93,174.8,88.5,167.7,88.5z'/></svg>
-
+#ifdef enableWebSocket
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html>
 <head>
@@ -66,6 +365,7 @@ const char index_html[] PROGMEM = R"rawliteral(
   </style>
 </head>
 <body>
+  <h2>%ver%</h2>
   <h2>%ver%</h2>
   <p>
   <sup class="units">Uptime <b><span id="%uptime%">%uptimewart%</span></B></sup>
@@ -84,11 +384,11 @@ const char index_html[] PROGMEM = R"rawliteral(
 </html>)rawliteral";
 //******************************************************************************************
 
+#endif
 
-
-void handleUpdate(AsyncWebServerRequest *request) {
-  request->send(200, "text/html", htmlup);
-}
+// void handleUpdate(AsyncWebServerRequest *request) {
+//   request->send(200, "text/html", htmlup);
+// }
 
 
 void handleGetTemp() {
@@ -97,164 +397,120 @@ void handleGetTemp() {
 	//digitalWrite(BUILTIN_LED, 0);
 }
 
-//#include <Update.h>
-size_t content_len;
-void printProgress(size_t prg, size_t sz) {
-  sprintf(log_chars, "Progress: %d%%\n", (prg*100)/content_len);
-  log_message(log_chars);
-}
-
-void handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final) {
-  //#define UPDATE_SIZE_UNKNOWN 0XFFFFFFFF
-  //uint32_t free_space = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
-  if (!index){
-    log_message((char*)F("Update starts"));
-    AsyncWebServerResponse *response = request->beginResponse(302, "text/plain", "Please wait while the device reboots");
-    response->addHeader("Refresh", "15");
-    response->addHeader("Location", "/");
-    request->send(response);
-    content_len = request->contentLength();
-    // if filename includes spiffs, update the spiffs partition
-    int cmd = U_FLASH; //(filename.indexOf("spiffs") > -1) ? U_SPIFFS : U_FLASH;
-//    Update.runAsync(true);
-    if (!Update.begin(content_len, cmd)){
-      Update.printError(Serial);
-    }
-  }
-  //Serial.println(F("Write data..."));
-  if (Update.write(data, len) != len) {
-    Update.printError(Serial);
-  }
-  if (final) {
-    if (!Update.end(true)){
-      Update.printError(Serial);
-      log_message(log_chars);
-    } else {
-      log_message((char*)F("Update complete"));
-      Serial.flush();
-      AsyncWebServerResponse *response = request->beginResponse(302, "text/plain", "Please wait while the device reboots");
-      response->addHeader("Refresh", "20");
-      response->addHeader("Location", "/");
-      request->send(response);
-      delay(100);
-      ESP.restart();
-    }
-  }
-}
-
-void starthttpserver() {
-  webserver.on("/update", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "text/html", htmlup);
-    }).setAuthentication("", "");
-  webserver.on("/doUpdate", HTTP_POST,
-      [&](AsyncWebServerRequest *request) {
-      // the request handler is triggered after the upload has finished...
-      // create the response, add header, and send response
-      AsyncWebServerResponse *response = request->beginResponse((Update.hasError())?500:200, "text/plain", (Update.hasError())?"FAIL":"OK");
-      response->addHeader("Connection", "close");
-      response->addHeader("Access-Control-Allow-Origin", "*");
-      request->send(response);
-      },
-    [](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data,
-                  size_t len, bool final) {handleDoUpdate(request, filename, index, data, len, final);}
-  ).setAuthentication("", "");;
+// void starthttpserver() {
+//   webserver.on("/update", HTTP_GET, [](AsyncWebServerRequest * request) {
+//     request->send(200, "text/html", htmlup);
+//     }).setAuthentication("", "");
+//   webserver.on("/doUpdate", HTTP_POST,
+//       [&](AsyncWebServerRequest *request) {
+//       // the request handler is triggered after the upload has finished...
+//       // create the response, add header, and send response
+//       AsyncWebServerResponse *response = request->beginResponse((Update.hasError())?500:200, "text/plain", (Update.hasError())?"FAIL":"OK");
+//       response->addHeader("Connection", "close");
+//       response->addHeader("Access-Control-Allow-Origin", "*");
+//       request->send(response);
+//       },
+//     [](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data,
+//                   size_t len, bool final) {handleDoUpdate(request, filename, index, data, len, final);}
+//   ).setAuthentication("", "");;
 
 
-  webserver.onNotFound([](AsyncWebServerRequest * request) {
-    request->send(404);
-  });
-  webserver.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/html; charset=utf-8",  index_html, processor);
-  }).setAuthentication("", "");
-    // Send a GET request to <IP>/get?message=<message>
-  webserver.on("/" uptimelink , HTTP_GET, [](AsyncWebServerRequest * request) {
-  //  request.setAuthentication("", "");
-    request->send(200, "text/plain; charset=utf-8", String(uptimedana(started)));
-  }).setAuthentication("", "");
-  webserver.on("/" dallThermometerS, HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "text/plain; charset=utf-8", String(temp_NEWS));
-  }).setAuthentication("", "");
-  webserver.on("/" tempCORETThermometerS, HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "text/plain; charset=utf-8", String(retTemp,1));
-  }).setAuthentication("", "");
+//   webserver.onNotFound([](AsyncWebServerRequest * request) {
+//     request->send(404);
+//   });
+//   webserver.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+//     request->send_P(200, "text/html; charset=utf-8",  index_html, processor);
+//   }).setAuthentication("", "");
+//     // Send a GET request to <IP>/get?message=<message>
+//   webserver.on("/" uptimelink , HTTP_GET, [](AsyncWebServerRequest * request) {
+//   //  request.setAuthentication("", "");
+//     request->send(200, "text/plain; charset=utf-8", String(uptimedana(starting)));
+//   }).setAuthentication("", "");
+//   webserver.on("/" dallThermometerS, HTTP_GET, [](AsyncWebServerRequest * request) {
+//     request->send(200, "text/plain; charset=utf-8", String(temp_NEWS));
+//   }).setAuthentication("", "");
+//   webserver.on("/" tempCORETThermometerS, HTTP_GET, [](AsyncWebServerRequest * request) {
+//     request->send(200, "text/plain; charset=utf-8", String(retTemp,1));
+//   }).setAuthentication("", "");
 
 
 
-  webserver.on("/" do_stopkawebsiteS, HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "text/plain; charset=utf-8", do_stopkawebsite());
-  }).setAuthentication("", "");
+//   webserver.on("/" do_stopkawebsiteS, HTTP_GET, [](AsyncWebServerRequest * request) {
+//     request->send(200, "text/plain; charset=utf-8", do_stopkawebsite());
+//   }).setAuthentication("", "");
 
-  for (u_int x=0;x<maxsensors;x++)
-  {
-    String fragment = String(room_temp[x].nameSensor);
-    fragment.replace(sepkondname,"_");
-    webserver.on( ("/" + fragment).c_str() , HTTP_GET, [x](AsyncWebServerRequest * request) { //roomtempS + getident
-    request->send(200, "text/plain; charset=utf-8", String(room_temp[x].tempread==InitTemp ? "--.-" : String(room_temp[x].tempread,1)));
-    }).setAuthentication("", "");
-    webserver.on( ("/" + fragment + appendSet).c_str() , HTTP_GET, [x](AsyncWebServerRequest * request) {
-      request->send(200, "text/plain; charset=utf-8", String(room_temp[x].tempset,1));
-    }).setAuthentication("", "");
-  }
+//   for (u_int x=0;x<maxsensors;x++)
+//   {
+//     String fragment = String(room_temp[x].nameSensor);
+//     fragment.replace(sepkondname,"_");
+//     webserver.on( ("/" + fragment).c_str() , HTTP_GET, [x](AsyncWebServerRequest * request) { //roomtempS + getident
+//     request->send(200, "text/plain; charset=utf-8", String(room_temp[x].tempread==InitTemp ? "--.-" : String(room_temp[x].tempread,1)));
+//     }).setAuthentication("", "");
+//     webserver.on( ("/" + fragment + appendSet).c_str() , HTTP_GET, [x](AsyncWebServerRequest * request) {
+//       request->send(200, "text/plain; charset=utf-8", String(room_temp[x].tempset,1));
+//     }).setAuthentication("", "");
+//   }
 
-#ifdef enableDHT
-    webserver.on( ("/"+String(dhumidcor)).c_str(), HTTP_GET, [](AsyncWebServerRequest * request) {
-        request->send(200, "text/plain; charset=utf-8",  String(humiditycor,1));
-      }).setAuthentication("", "");
+// #ifdef enableDHT
+//     webserver.on( ("/"+String(dhumidcor)).c_str(), HTTP_GET, [](AsyncWebServerRequest * request) {
+//         request->send(200, "text/plain; charset=utf-8",  String(humiditycor,1));
+//       }).setAuthentication("", "");
 
-    webserver.on( ("/"+String(dtempcor)).c_str(), HTTP_GET, [](AsyncWebServerRequest * request) {
-        String tempw = "\0";
-        if (millis()-dhtreadtime > (60*1000)) tempw="<span class='units'>  Last update was "+uptimedana(dhtreadtime)+" ago</span>";
-        request->send(200, "text/plain; charset=utf-8",  String(tempcor,1)+tempw);
-      }).setAuthentication("", "");
-#endif
+//     webserver.on( ("/"+String(dtempcor)).c_str(), HTTP_GET, [](AsyncWebServerRequest * request) {
+//         String tempw = "\0";
+//         if (millis()-dhtreadtime > (60*1000)) tempw="<span class='units'>  Last update was "+uptimedana(dhtreadtime)+" ago</span>";
+//         request->send(200, "text/plain; charset=utf-8",  String(tempcor,1)+tempw);
+//       }).setAuthentication("", "");
+// #endif
 
-  webserver.on("/" NEWS_lastTimeS, HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "text/plain; charset=utf-8", String(uptimedana(lastNEWSSet)));
-  }).setAuthentication("", "");
+//   webserver.on("/" NEWS_lastTimeS, HTTP_GET, [](AsyncWebServerRequest * request) {
+//     request->send(200, "text/plain; charset=utf-8", String(uptimedana(lastNEWSSet)));
+//   }).setAuthentication("", "");
 
 
 
-  webserver.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
-    String message;
-    for (u_int x=0;x<maxsensors;x++)
-    {
-      String fragment = String(room_temp[x].nameSensor)+ appendSet;
-      fragment.replace(sepkondname,"_");
-      if (request->hasParam((fragment ).c_str()))
-      {
-        message = request->getParam((fragment).c_str())->value();
-        log_message((char*)message.c_str());
-        receivedmqttdata = getRemoteTempHumid(message, x, action_tempset);
-      }else {
-          //message = "No message sent PARAM_roomtempset0";
-      }
-    }
-    AsyncWebServerResponse *response = request->beginResponse(302, "text/plain", "Update value");
-    response->addHeader("Refresh", "1");
-    response->addHeader("Location", "/");
-    request->send(response);
-  });
-    // Send a POST request to <IP>/post with a form field message set to <message>
-/*     webserver.on("/post", HTTP_POST, [](AsyncWebServerRequest *request){
-        String message;
-        if (request->hasParam(PARAM_MESSAGE, true)) {
-            message = request->getParam(PARAM_MESSAGE, true)->value();
-        } else {
-            message = "No message sent";
-        }
-        request->send(200, "text/plain", "Hello, POST: " + message);
-    });
- */
-  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
-  DefaultHeaders::Instance().addHeader("Server",me_lokalizacja);
-  DefaultHeaders::Instance().addHeader("Title",me_lokalizacja);
+//   webserver.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
+//     String message;
+//     for (u_int x=0;x<maxsensors;x++)
+//     {
+//       String fragment = String(room_temp[x].nameSensor)+ appendSet;
+//       fragment.replace(sepkondname,"_");
+//       if (request->hasParam((fragment ).c_str()))
+//       {
+//         message = request->getParam((fragment).c_str())->value();
+//         log_message((char*)message.c_str());
+//         receivedmqttdata = getRemoteTempHumid(message, x, action_tempset);
+//       }else {
+//           //message = "No message sent PARAM_roomtempset0";
+//       }
+//     }
+//     AsyncWebServerResponse *response = request->beginResponse(302, "text/plain", "Update value");
+//     response->addHeader("Refresh", "1");
+//     response->addHeader("Location", "/");
+//     request->send(response);
+//   });
+//     // Send a POST request to <IP>/post with a form field message set to <message>
+// /*     webserver.on("/post", HTTP_POST, [](AsyncWebServerRequest *request){
+//         String message;
+//         if (request->hasParam(PARAM_MESSAGE, true)) {
+//             message = request->getParam(PARAM_MESSAGE, true)->value();
+//         } else {
+//             message = "No message sent";
+//         }
+//         request->send(200, "text/plain", "Hello, POST: " + message);
+//     });
+//  */
+//   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+//   DefaultHeaders::Instance().addHeader("Server",me_lokalizacja);
+//   DefaultHeaders::Instance().addHeader("Title",me_lokalizacja);
 
-	webserver.begin();
-  log_message((char*)F("HTTP server started"));
-}
+// 	webserver.begin();
+//   log_message((char*)F("HTTP server starting"));
+// }
 
 String processor(const String var) {
 
+#ifdef enableWebSocket
 
   #ifdef debug
 //    Serial.print(F("Start processor: "));
@@ -264,7 +520,7 @@ String processor(const String var) {
     String a = F("</B>ESP CO Server dla: <B>");
     a += String(me_lokalizacja);
     a += F("</B><BR>v. ");
-    a += me_version;
+    //a += me_version;
     a += F("<br><font size=\"2\" color=\"DarkGreen\">");
     a += mqttclient.connected()? "MQTT "+String(msg_Connected)+": "+String(mqtt_server)+":"+String(mqtt_port) : "MQTT "+String(msg_disConnected)+": "+String(mqtt_server)+":"+String(mqtt_port) ;  //1 conn, 0 not conn
     #ifdef ENABLE_INFLUX
@@ -284,7 +540,7 @@ String processor(const String var) {
     a += F("</B>WiFi (RSSI): <B>");
     a += WiFi.RSSI();
     a += F("dBm</b> CRT:");
-    a += String(runNumber);
+    a += String(CRTrunNumber);
     a += F(", Hall: ");
     a += String(hallRead());
     a += F("Gauss");
@@ -301,7 +557,7 @@ String processor(const String var) {
   }
 
   if (var == "uptimewart") {
-    return String(uptimedana(started));
+    return String(uptimedana(starting));
   }
   if (var == "me_lokalizacja") {
     return String(me_lokalizacja);
@@ -331,9 +587,8 @@ String processor(const String var) {
     #endif
     return String(ptr);
   }
-
   if (var == "stopkawebsite") {
-    return do_stopkawebsite();
+    //return do_stopkawebsite();
   }
   if (var == "stopkawebsite0") {
     String ptr;
@@ -342,14 +597,15 @@ String processor(const String var) {
       ptr += "<a href='/webserial' target=\"_blank\">"+String(Web_Serial)+"</a>&nbsp;";
       #endif
       ptr += "<br>&copy; ";
-      ptr += stopka;
+      // const String  stopka = String(MFG)+" "+version[4]+version[5]+"-"+version[2]+version[3]+"-20"+version[0]+version[1]+" "+version[6]+version[7]+":"+version[8]+version[9];
+      ptr += String(MFG)+" "+version[4]+version[5]+"-"+version[2]+version[3]+"-20"+version[0]+version[1]+" "+version[6]+version[7]+":"+version[8]+version[9];
       ptr += "<br>";
     #ifdef debug2
     Serial.println(var+": "+ptr.length());
     #endif
     return String(ptr);
   }
-
+#endif
 
   if (var=="bodywstaw") {
     String ptr;
@@ -403,7 +659,7 @@ String processor(const String var) {
     if (millis()-dhtreadtime > (60*1000)) ptr+="<span class='units'>  Last update was "+uptimedana(dhtreadtime)+" ago</span>";
     ptr+=F("</td></tr>");
     #endif
-
+#ifdef enableWebSocket
 
   //  ptr+="<tr><td>";
 
@@ -465,10 +721,11 @@ String processor(const String var) {
 //    Serial.println(var);
   #endif
   return String();
-
+#endif
 }
 
 String do_stopkawebsite() {
+  #ifndef enableWebSocket
       String ptr;
       ptr = "&nbsp;";
       if (pump==startrun) {
@@ -501,4 +758,8 @@ String do_stopkawebsite() {
     ptr += F("% ## Mqtt reconnects: ");
     ptr += mqttReconnects;
     return String(ptr);
+    #else
+    return "\0";
+    #endif
+
 }

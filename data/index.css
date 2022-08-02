@@ -1,0 +1,550 @@
+/* At-Rules */
+@font-face {
+      font-family: 'roboto';
+      src: url('roboto.eot'); /* ie9 compat modes */
+      src: url('roboto.eot?#iefix') format('embedded-opentype'), /* ie6-ie8 */
+      url('roboto.woff') format('woff'), /* modern browsers */
+      url('roboto.ttf')  format('truetype'), /* safari, android, ios */
+      url('roboto.svg#svgfontname') format('svg'); /* legacy ios */
+    }
+
+
+/*html, body, html * {font-family: 'Roboto', sans-serif;   font-family: 'Roboto Condensed', sans-serif;}*/
+
+html {font-family: 'Roboto', sans-serif;   display: inline-block;   text-align: center;}
+
+h1 {font-size: 2.1rem;   border-radius: 15%;   color: white;}
+
+p {font-size: 1.4rem;}
+
+.topnav {overflow: hidden;   background-color: #0A1128;}
+
+body {margin: auto; margin-bottom: 5%; background-color:lightcyan; min-height:100vh;
+  }*/
+
+.content {padding: 1.2rem;}
+
+.card-grid {max-width: 800px;   position: relative;   margin: 0 auto;   display: grid;   grid-gap: 1.5rem;   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));}
+
+.card {background-color: white;   border-radius: 5%; padding: 3% 3% 3% 3%; box-shadow: 0.1rem 0.1rem 1rem 0.1rem rgba(140,140,140,.5);}
+
+.card-title {font-size: 1.3rem;   font-weight: bold;   color: #4208f2; padding-bottom: 0.2rem; border-radius: 50px;}
+
+.state {font-size: 1.3rem;   font-weight: bold;   color:#092f39;}
+
+.twoCard {  display: flex;  }
+.cardPart {
+  width: 100%;
+  padding: 0.2rem;
+  text-align: -webkit-center;
+  /* font-size: 1.4rem;
+  font-weight: bold; */
+  color: #4208f2;
+  padding-bottom: 0.2rem;
+  }
+  .cardPart2 {  border-left: 1px solid #ccc;  }
+
+.hidden {display:none}
+
+input[type=range] {
+  -webkit-appearance: none;
+  margin: 1.7rem 0;
+  margin-top: 2.5rem;  /*  High of ballon */
+  width: 100%;
+}
+input[type=range]:focus {  outline: 453px;}
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 1.5rem;
+  cursor: pointer;
+  animate: 0.2s;
+  background: #03a9f4;
+  border-radius: 2rem;
+}
+input[type=range]::-moz-range-track {
+  width: 100%;
+  height: 1.5rem;
+  cursor: pointer;
+  animate: 0.2s;
+  background: #03a9f4;
+  border-radius: 2rem;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  height: 2.5rem;
+  width: 2.5rem;
+  border-radius: 50%;
+  background: #f1f7d7e6;
+  box-shadow: 0 1px 0.9rem 1px rgba(0,0,0, 1);
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -0.5rem;
+}
+input[type=range]::-moz-range-thumb {
+  height: 2.5rem;
+  width: 2.5rem;
+  border-radius: 50%;
+  background: #f1f7d7e6;
+  box-shadow: 0 1px 0.9rem 1px rgba(0,0,0, 1);
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -0.5rem;
+}
+
+
+input[type=range]:disabled {
+  /* Disabled Element */
+  opacity: 30%;
+}
+
+input[type=range]:disabled::-webkit-slider-runnable-track {
+  /* Disabled slider-runnable-track */
+  opacity: 30%;
+}
+
+input[type=range]:disabled::-moz-range-track {
+    /* Disabled slider-range-track */
+    opacity: 30%;
+}
+
+input[type=range]:disabled::-webkit-slider-thumb {
+  /* Disabled slider-thumb */
+  opacity: 30%;
+}
+
+input[type=range]:disabled::-moz-range-thumb {
+  /* Disabled slider-thumb */
+  opacity: 30%;
+}
+
+.rangewrap{
+  width: 100%;         /* length of belka*/
+  position: relative;
+}
+.rangevalue{
+  top: -0.5rem;
+  left: auto;
+
+  width: 5rem;
+  height: 1.8rem;
+  line-height: 1.8rem;
+  text-align: center;
+  background: #03a9f4;
+  color: white;
+  font-size: 1.4rem;
+  font-weight: bold;
+  position: absolute;
+  /*left: 65%;  tym by pomanewrowac by wysrodkowav*/
+  transform: translate(-50%, 0);
+  border-radius: 0.4rem;
+  /*display: block;*/
+  display: none;
+}
+
+.rangewrap:hover   .rangevalue{
+  display: block;
+}
+
+.rangevalue:before {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-top: 10px solid #03a9f4;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  margin-top: 0px;
+}
+.temperatureVal {
+  text-align: center;
+  color: rgb(0, 23, 198);
+  font-size: 2.1rem;
+  font-weight: 700;
+  vertical-align:middle;
+  padding-bottom: 0.8rem;
+  display: inline-block;
+}
+.unitsmain{font-size: 1.8rem; font-weight: bold; position: relative; top: 0%; color: #059e8a; display: inline-block;}
+.units{font-size: 1.1rem; font-weight: bold; position: relative; top: 2%; color: black; display: inline-block;}
+.fas {
+  color:#059e8a;font-size:2.2rem; text-shadow: 1px 1px 2px #000000; padding: 5px; position: relative; top: 1%; display: inline-block;
+}
+.dht-labels{
+  font-size:1.2rem;vertical-align:middle;padding-bottom:8px;font-weight: bold;
+}
+#StatusRed {font-size:1.2rem;vertical-align:middle;padding-bottom:3px;font-weight: bold; color: red; }
+#StatusRedNormal {font-size:1.2rem;vertical-align:middle;padding-bottom:3px;font-weight: normal; color: red; }
+#StatusBlue {font-size:1.2rem;vertical-align:middle;padding-bottom:3px;font-weight: bold; color: blue; }
+#StatusDarkRed {font-size:1.2rem;vertical-align:middle;padding-bottom:3px;font-weight: bold; color: darkred; }
+#StatusOrange {font-size:1.2rem;vertical-align:middle;padding-bottom:3px;font-weight: bold; color: orange; }
+#StatusGreen {font-size:1.2rem;vertical-align:middle;padding-bottom:3px;font-weight: normal; color: green; }
+#StatusBlack {font-size:1.2rem;vertical-align:middle;padding-bottom:3px;font-weight: bold; color: black; }
+#StatusBlackNormal {font-size:1.3rem;vertical-align:middle;padding-bottom:3px;font-weight: normal; color: black; }
+#StatusBlackNormalSmall {font-size:1.0rem;vertical-align:middle;padding-bottom:2px;font-weight: normal; color: black; }
+.StatusBlackNormalSmall {font-size:1.0rem;vertical-align:middle;padding-bottom:2px;font-weight: normal; color: black; }
+
+.units_update {
+  font-size:1.1rem; font-weight: normal; color: lightseagreen; text-align: right; padding-top:18px; display: inline-block;
+}
+
+/* Tooltip container */
+.tooltip { position: relative; border-bottom: 0px dotted black; /* If you want dots under the hoverable text */
+}
+
+/* Tooltip text */
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: auto;
+  font-size: 0.9rem;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  padding: 0.8rem 0.8rem;
+  border-radius: 6px;
+
+  /* Position the tooltip text */
+  position: absolute;
+  z-index: 3;
+  left: 0%;
+  margin-left: 0px;
+
+  /* Fade in tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+/* Tooltip arrow */
+.tooltip .tooltiptext::after {
+  content: "";
+  position: absolute;
+  transform: rotate(0deg);
+  top: 100%;
+  left: 50%;
+  margin-left: -0.5rem;
+  border-width: 0.5rem;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  width: auto;
+  position:absolute;
+  bottom: 6.55rem;
+  display:inline-flexbox;
+  opacity: 0.8;
+}
+
+
+
+
+
+label:active:after {
+  width: 11rem;
+}
+
+/* Not exacly name -this is only for informational purpose -applied in js code */
+#Boiler_CO { background-color: #8bf6cd; }
+#Hot_Water { background-color: #f7e08c; }
+#statusError { background-color: #ff0000;}
+#statusFlame { background-color: #ff0000;}
+#statusecoMode { background-color: #c9ffb3;}
+
+
+
+/* full Page Tabs -------------------------------------------------------------------------------------------- */
+/* Style tab links */
+.tablink {
+  background-color: rgb(45, 83, 132);
+  color: white;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 0.8rem 0.9rem;
+  font-size: 1.2rem;
+  width: 25%;
+  font-variant-caps: petite-caps;
+
+}
+
+.tablink:hover {
+  background-color: #777;
+
+}
+
+/* Style the tab content (and add height:100% for full page content) */
+.tabcontent {
+  color: white;
+  font-weight: bold;
+
+  display: none;
+
+  padding: 0.5rem 1rem;
+  height: 100%;
+}
+
+/*#Home {background-color: red;}*/
+#News {background-color: green;}
+#Contact {background-color: blue;}
+#About {background-color: orange;}
+
+
+
+.stopkawebsite {
+  position:fixed;
+  bottom:0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  padding-top: 0.5%;
+  background-color: #000000;
+  color: white;
+  text-align: center;
+  float:left;
+  display: inline;
+  height:[stopkawebsite];
+}
+
+/* Style the webserial(and add height:100% for full page content) */
+/* The browser window */
+.container {
+  border: 3px solid #f1f1f1;
+  padding-top: 00.1rem;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+/* Style the input field */
+input[type=text] {
+  width: 100%;
+  border-radius: 4px;
+  border: none;
+  background-color: white;
+  margin-top: -1px;
+  height: 30px;
+  color: #282626;
+  padding: 5px;
+}
+
+/* The browser window */
+.container {
+  border: 3px solid #aaa;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+/* Page content */
+.content {
+  padding: 5px;
+  background-color: #000000;
+
+  float: left;
+  width: 100%;
+  height:100%
+}
+* {
+  box-sizing: border-box;
+}
+/* Container for columns and the top "toolbar" */
+.row {
+  padding: 5px;
+  background: #aaa;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+
+p {
+  color: black;
+}
+
+
+/* File Table */
+
+.fileTable {border-collapse: collapse; width:300px;}
+.fileTable th, .fileTable td { padding: 5px; border: solid 1px #777; }
+.fileTable th { background-color: lightblue; font-weight: bold;}
+
+
+#whicon {color: white; padding: 0%;}
+
+/*  margin: 1rem 1.5rem;  */
+
+input[type=checkbox] { visibility: hidden; margin: 1rem 1.5rem; }
+.RoundSwitchCheckbox { width: 4.5rem; margin: 1rem 1.5rem; height: 4.5rem; background: rgb(22,22,22);border-radius: 3rem; display: inline-block; box-shadow: 0rem 0rem 1rem rgba(22,22,22,0.9); }
+.RoundSwitchCheckbox label{ -webkit-transition: all .4s ease; -moz-transition: all .4s ease; -o-transition: all .4s ease; -ms-transition: all .4s ease; transition: all .4s ease; }
+.RoundSwitchCheckbox input[type=checkbox] + label {
+  z-index:2;
+  position:absolute;
+  margin-left:-4.0rem;
+  width: 4rem;
+  margin-top: 0.2rem;
+  height:4rem;
+  border-radius: 30rem;
+  /* background-color:white; */
+  /* background-color:whitesmoke; */
+  box-shadow: inset 0rem -0.5rem 1.5rem black,0rem 0rem 0.4rem white,inset 0rem 0.4rem 1.5rem white;
+}
+.RoundSwitchCheckbox input[type=checkbox]:checked + label {
+  z-index:2;
+  position:absolute;
+  /* background-color:green; */
+  box-shadow: inset 0rem -0.5rem 1.5rem white,0rem 0rem 0.5rem black,inset 0rem 0.5rem 1.5rem black;
+}
+.RoundSwitchCheckbox:hover { box-shadow: 0rem 0rem 1.5rem rgb(251, 251, 89); }
+
+.boilerwww + label {margin-top: inherit; margin-left:-3.30rem; background-color:white;}
+.boilerwww:checked + label {margin-top: inherit; background-color: red;}
+.boilermodewww + label {margin-left:-3.30rem; margin-top: inherit; background-color:white;}
+.boilermodewww:checked + label {margin-top: inherit; background-color: yellow;}
+.boilerhwwww + label {margin-left:-3.30rem; margin-top: inherit; background-color:white;}
+.boilerhwwww:checked + label {margin-top: inherit; background-color: blue;}
+.ecoMode + label {margin-left:-3.30rem; margin-top: inherit; background-color:white;}
+.ecoMode:checked + label {margin-top: inherit; background-color: green;}
+#BOILMODMODE {visibility: hidden;}
+.boilerhwwww:checked  >  #BOILMODMODE { visibility:visible; }
+/*
+/* BUTTON*/
+/* input[type=checkbox] {
+  height: 0;
+  width: 0;
+  visibility: hidden;
+} */
+/*
+label {
+  cursor: pointer;
+  text-indent: -9999px;
+  /*width: 9rem;*/
+  /* height: 1.65rem;
+  background: #03a9f4;
+  display: block;
+  border-radius: 30px;
+  position: relative;
+  padding-left:10px;color: white; */
+  /*transform: rotate(270deg);*/
+/* } */ */
+
+
+/* label:after {
+  text-indent: -9999px;
+  content: "";
+  position: absolute;
+  top: 0.35rem;
+  left: 0.35rem;
+  width: 1.4rem;
+  height: 1.0rem;
+  background: #f1f7d7e6;
+  border-radius: 30px;
+  transition: 0.3s;
+} */
+
+
+/*
+input:checked + label {
+  background: #ff0000;
+  text-indent: 2px;
+  text-align: left;
+}
+
+input:checked + label:after {
+  left: calc(100% - 5px);
+  transform: translateX(-100%);
+} */ */
+
+
+
+.rounded-input {
+  padding:10px;
+  border-radius:10px;
+}
+
+input:required + span:after {
+  content: "Required";
+}
+input[type=text] , input[type=password], input[type=number] {
+  padding: 2px;
+  margin: 3px 0;
+  border:0;
+  box-shadow:0 0 15px 4px rgba(0,0,0,0.06);
+  border-radius:10px;
+  flex: 1;
+  font-size: medium;
+  width: auto;
+}
+input[type=text]:focus , input[type=password], input[type=number] { border-color:#cccccc;	outline: none; flex: 1;}
+
+
+.form-group {
+  display: flex;
+}
+label { flex: 0 0 40%; margin: auto; }
+
+input[type=text]::placeholder { color:lightgrey; }
+
+/* labels of form */
+.formbuilder-text-label , .formbuilder-select-label, .formbuilder-number-label {
+  color: #0d0101;
+  width: 30%;
+  text-align:right;
+  margin-right: 1em;
+  text-align: right;
+  font-size: large;
+  font-weight:bold;
+  /* display:block; */
+}
+
+.form_delimiters, .form_header {
+  color:green;
+  margin-bottom: 0;
+  margin-top: 2px;
+  font-size: large;
+  font-weight: bold;
+}
+
+select {
+  /* // A reset of styles, including removing the default dropdown arrow */
+  appearance: none;
+  /* // Additional resets for further consistency */
+  background-color: transparent;
+  border: none;
+  padding: 0 1em 0 0;
+  margin: 0;
+  width: 100%;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: inherit;
+  line-height: inherit;
+}
+
+select[multiple] {
+  padding-right: 0;
+  height: 7rem;
+}
+textarea, .RemoteCommand, #log {
+  width: 100%;
+  padding: 5px;
+  font-size: 1.4rem;
+  font-weight: bold;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: vertical;
+}
+.contentTextArea {
+  background-color: #000000;
+  color: #8bf6cd;
+  font-size: 1.15rem;
+  font-weight: normal;
+  overflow: auto;
+  display: inline-block;
+  max-height: calc(100vh - 40px);
+  height: calc(60vh - 40px);
+}

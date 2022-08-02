@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>%ME_TITLE% Uploader</title>
+    <link href='index.css' rel='stylesheet' type='text/css'>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="144x144"  href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="48x48" href="favicon.ico">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00878f">
+    <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport'>
+</head>
+<body>
+	<center>
+        <header>
+            <div class="topnav">
+                <h1>%ME_TITLE%</h1>
+            </div>
+            <br>
+            <h2>Uploader</h2>
+        </header>
+        <div>
+            <p style="text-align: center">Use this page to upload new files to the ESP.<br/>You can use compressed (deflated) files (files with a .gz extension) to save space and bandwidth.<br/>Existing files will be replaced.</p>
+            <form method="post" enctype="multipart/form-data" style="margin: 0px auto 8px auto" >
+                <input type="file" name="Choose file" accept=".gz,.html,.ico,.js,.css">
+                <input class="button" type="submit" value="Upload" name="submit">
+            </form>
+        </div>
+        <p><a href="/">Back to Home</a></p>
+        <br><br>
+        %DIR_LIST%
+	</center>
+</body>
+</html>

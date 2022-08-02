@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ESP FS File Upload Successful</title>
+    <link rel="icon" type="image/png" href="favicon.ico">
+    <link rel="stylesheet" type="text/css" href="index-mini.css">
+</head>
+
+<body>
+    <div class="topnav">
+        <h1><br/>FS File Upload Successful</h1>br></h1>
+    </div>
+    <p><a href="/">Back to Home</a></p>
+    Jeśli to okno wyświetlone jest po zapisaniu Konfig -zalecany jest RESTART -inicjalizacja InfluxDB i MQTT jest przed Setup.
+
+    <form action="/get" method="get" target="hidden-form">
+        <input type="checkbox" id="RESTART" name="RESTART" value="1" hidden="true" checked>
+        <input type="submit" value="Zrób RESTART" class="btn btn-primary" />
+    </form>
+</body>
+
+</html>
