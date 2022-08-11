@@ -107,17 +107,17 @@ void updateDatatoWWW_received(u_int i) {
   sprintf(log_chars, "Received data nr: %s", String(i).c_str());
   log_message(log_chars);
   switch (i) {
-    case ASS_room1tempSet: room_temp[0].tempset = PayloadtoValidFloat(String(ASS[ASS_room1tempSet].Value), true, roomtemplo, roomtemphi); break;
-    case ASS_room2tempSet: room_temp[1].tempset = PayloadtoValidFloat(String(ASS[ASS_room2tempSet].Value), true, roomtemplo, roomtemphi); break;
-    case ASS_room3tempSet: room_temp[2].tempset = PayloadtoValidFloat(String(ASS[ASS_room3tempSet].Value), true, roomtemplo, roomtemphi); break;
-    case ASS_room4tempSet: room_temp[3].tempset = PayloadtoValidFloat(String(ASS[ASS_room4tempSet].Value), true, roomtemplo, roomtemphi); break;
-    case ASS_room5tempSet: room_temp[4].tempset = PayloadtoValidFloat(String(ASS[ASS_room5tempSet].Value), true, roomtemplo, roomtemphi); break;
-    case ASS_room6tempSet: room_temp[5].tempset = PayloadtoValidFloat(String(ASS[ASS_room6tempSet].Value), true, roomtemplo, roomtemphi); break;
-    case ASS_room7tempSet: room_temp[6].tempset = PayloadtoValidFloat(String(ASS[ASS_room7tempSet].Value), true, roomtemplo, roomtemphi); break;
-    case ASS_room8tempSet: room_temp[7].tempset = PayloadtoValidFloat(String(ASS[ASS_room8tempSet].Value), true, roomtemplo, roomtemphi); break;
-    case ASS_room9tempSet: room_temp[8].tempset = PayloadtoValidFloat(String(ASS[ASS_room9tempSet].Value), true, roomtemplo, roomtemphi); break;
+    case ASS_room1tempSet: room_temp[0].tempset = PayloadtoValidFloat(ASS[ASS_room1tempSet].Value, true, roomtemplo, roomtemphi); break;
+    case ASS_room2tempSet: room_temp[1].tempset = PayloadtoValidFloat(ASS[ASS_room2tempSet].Value, true, roomtemplo, roomtemphi); break;
+    case ASS_room3tempSet: room_temp[2].tempset = PayloadtoValidFloat(ASS[ASS_room3tempSet].Value, true, roomtemplo, roomtemphi); break;
+    case ASS_room4tempSet: room_temp[3].tempset = PayloadtoValidFloat(ASS[ASS_room4tempSet].Value, true, roomtemplo, roomtemphi); break;
+    case ASS_room5tempSet: room_temp[4].tempset = PayloadtoValidFloat(ASS[ASS_room5tempSet].Value, true, roomtemplo, roomtemphi); break;
+    case ASS_room6tempSet: room_temp[5].tempset = PayloadtoValidFloat(ASS[ASS_room6tempSet].Value, true, roomtemplo, roomtemphi); break;
+    case ASS_room7tempSet: room_temp[6].tempset = PayloadtoValidFloat(ASS[ASS_room7tempSet].Value, true, roomtemplo, roomtemphi); break;
+    case ASS_room8tempSet: room_temp[7].tempset = PayloadtoValidFloat(ASS[ASS_room8tempSet].Value, true, roomtemplo, roomtemphi); break;
+    case ASS_room9tempSet: room_temp[8].tempset = PayloadtoValidFloat(ASS[ASS_room9tempSet].Value, true, roomtemplo, roomtemphi); break;
     case ASS_modeState: {
-      String modestate_tmp = String(ASS[ASS_room9tempSet].Value);
+      String modestate_tmp = ASS[ASS_room9tempSet].Value;
       if (modestate_tmp == "modeAuto") {
         modestate = MODEAUTO;
       } else
@@ -174,9 +174,10 @@ String return_noval_if_invalid(float val2check)
 
 void updateDatatoWWW() //default false so if true than update
 {
-
+  #ifdef debug1
   sprintf(log_chars, "Update Data to www ");
   log_message(log_chars);
+  #endif
 #ifdef enableWebSocket
   //if (receivedwebsocketdata and dont_send_after_sync) return;
   //String dana = {"DHWTemp",DHW_Temp}
@@ -315,8 +316,8 @@ for (u_int x=0;x<maxsensors;x++)
 //     strcpy(ASS[ASS_UsedMedia].Value, toCharPointer( ptrS) );
     SaveAssValue(ASS_UsedMedia, ptrS );
     #ifdef debug
-    sprintf(log_chars,"Flame_Total: %s (%s), CO: %s (%s), DHW: %s (%s)", String(flame_used_power_kwh).c_str(), String(uptimedana((flame_time_total), true)).c_str(), String(flame_used_power_CHTotal).c_str(), String(uptimedana((flame_time_CHTotal), true)).c_str(), String(flame_used_power_waterTotal).c_str(), String(uptimedana((flame_time_waterTotal), true)).c_str());
-    log_message(log_chars);
+    // sprintf(log_chars,"Flame_Total: %s (%s), CO: %s (%s), DHW: %s (%s)", String(flame_used_power_kwh).c_str(), String(uptimedana((flame_time_total), true)).c_str(), String(flame_used_power_CHTotal).c_str(), String(uptimedana((flame_time_CHTotal), true)).c_str(), String(flame_used_power_waterTotal).c_str(), String(uptimedana((flame_time_waterTotal), true)).c_str());
+    // log_message(log_chars);
     #endif
 #endif
 }

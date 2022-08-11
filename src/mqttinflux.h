@@ -18,7 +18,7 @@ void Assign_Name_Addr_Pinout(int i, String name, String address, int outpin) {
   if (outpin>-1) {
     pinMode (outpin, OUTPUT);       //set pin as output
     digitalWrite (outpin, start_digital);    //set active high
-    if (room_temp[i].tempset==InitTemp or room_temp[i].tempset==0) room_temp[i].tempset = room_temp_default;
+    if (check_isValidTemp(room_temp[i].tempset) or room_temp[i].tempset==0) room_temp[i].tempset = room_temp_default;
   }
   room_temp[i].humidityread = 0;
   room_temp[i].switch_state=stoprun;
@@ -220,7 +220,7 @@ String LocalVarsRemoteCommands(String command, size_t gethelp)
 void updateInfluxDB()
 {
 //  #include "configmqtttopics.h"
-
+  InfluxStatus = InfluxClient.validateConnection();
   InfluxSensor.clearFields();
   // Report RSSI of currently connected network
   InfluxSensor.addField("rssi"+String(kondygnacja), (WiFi.RSSI()));
@@ -255,8 +255,10 @@ void updateInfluxDB()
 //   InfluxSensor.addField(String(LOG_GET_TOPIC)+String(kondygnacja), LastboilerResponseError);
 
   // Print what are we exactly writing
+  #ifdef debug
   sprintf(log_chars, "Writing to InfluxDB: %s", "\0"); //InfluxClient.pointToLineProtocol(InfluxSensor));
   log_message(log_chars);
+  #endif
   // Write point
   if (!InfluxClient.writePoint(InfluxSensor))
   {
@@ -280,10 +282,10 @@ void updateMQTTData() {
   uint16_t packetIdSub;
   #endif
 
-  String tmpbuilder="{";
-  tmpbuilder += "\"rssi\":"+ String(WiFi.RSSI());
-  tmpbuilder += ",\"HallSensor"+kondygnacja+"\":"+String(hallRead());
-  tmpbuilder += ",\"CRT\":"+ String(CRTrunNumber);
+  String tmpbuilder="\0";
+  // tmpbuilder += build_JSON_Payload("rssi", String(WiFi.RSSI()), true, payloadvalue_startend_val);
+  // tmpbuilder += build_JSON_Payload("HallSensor" +kondygnacja, String(hallRead()), false, payloadvalue_startend_val);
+  // tmpbuilder += build_JSON_Payload(F("CRT"), String(CRTrunNumber), false, payloadvalue_startend_val);
 
   // #ifdef enableMQTT
   // mqttclient.publish(String(LOG_GET_TOPIC).c_str(), LastboilerResponseError.c_str());
@@ -294,38 +296,51 @@ void updateMQTTData() {
   // if (packetIdSub == 0) packetIdSub = 0;
   // #endif
 
-  for (int x=0;x<createhasensors;x++)
-  {
-    String identyfikator = getIdentyfikator(x);
-    if (check_isValidTemp(room_temp[x].tempread) and room_temp[x].tempread > roomtemplo) {
-      tmpbuilder += ",\"" + String(OT) + String(ROOM_TEMPERATURE) + String(identyfikator) + "\": " + payloadvalue_startend_val + String(room_temp[x].tempread) + payloadvalue_startend_val;
-
-    }
-    if (check_isValidTemp(room_temp[x].tempset) and room_temp[x].idpinout>0 and room_temp[x].tempread > roomtemplo) {
-      tmpbuilder += ",\"" + String(OT) + String(ROOM_TEMPERATURE_SETPOINT) + String(identyfikator) + "\": " + payloadvalue_startend_val + String(room_temp[x].tempset) + payloadvalue_startend_val;
-
-    }
+  String topictmp = "\0";
+  topictmp = String(ROOMS_TOPIC_SENSOR);
+  topictmp += getIdentyfikator(-1);
+  if (check_isValidTemp(min_temp) && check_isValidTemp(max_temp)) {
+    tmpbuilder += build_JSON_Payload(String(OT) + String(ROOM_TEMPERATURE) + getIdentyfikator(-1), String(min_temp), true, payloadvalue_startend_val);
+    tmpbuilder += build_JSON_Payload(String(OT) + String(ROOM_TEMPERATURE_SETPOINT) + getIdentyfikator(-1), String(max_temp), false, payloadvalue_startend_val);
+    publishMQTT(topictmp, tmpbuilder);
+    tmpbuilder = "\0";
   }
-  if (check_isValidTemp(min_temp)) tmpbuilder += ",\"" + String(OT) + String(ROOM_TEMPERATURE) + String(getIdentyfikator(-1)) + "\": " + payloadvalue_startend_val + String(min_temp) + payloadvalue_startend_val;
-  if (check_isValidTemp(max_temp)) tmpbuilder += ",\"" + String(OT) + String(ROOM_TEMPERATURE_SETPOINT) + String(getIdentyfikator(-1)) + "\": " + payloadvalue_startend_val + String(max_temp) + payloadvalue_startend_val;
 
   #ifdef enableDHT
   if (check_isValidTemp(tempcor))
   {
-    tmpbuilder += ",\"" + String(OT) + String(ROOM_TEMPERATURE) + String(getIdentyfikator(-1)) + "_DHT_Temp\": " + payloadvalue_startend_val + String(tempcor) + payloadvalue_startend_val;
-    tmpbuilder += ",\"" + String(OT) + String(ROOM_HUMIDITY) + String(getIdentyfikator(-1)) + "_DHT_Humid\": " + payloadvalue_startend_val + String(humiditycor) + payloadvalue_startend_val;
+    topictmp = String(ROOMS_TOPIC_SENSOR);
+    topictmp += F("_DHT");
+    tmpbuilder += build_JSON_Payload(String(OT) + String(ROOM_TEMPERATURE) + String(getIdentyfikator(-1)) + "_DHT_Temp", String(tempcor), true, payloadvalue_startend_val);
+    tmpbuilder += build_JSON_Payload(String(OT) + String(ROOM_HUMIDITY) + String(getIdentyfikator(-1)) + "_DHT_Humid", payloadvalue_startend_val + String(humiditycor), false, payloadvalue_startend_val);
+    publishMQTT(topictmp, tmpbuilder);
+    tmpbuilder = "\0";
   }
   #endif
-  tmpbuilder += ",\"" + String(OT) + String(ROOM_PUMPSTATE) + String(getIdentyfikator(-1)) + "_pumpstate\": " + payloadvalue_startend_val + String(!pump?1:0) + payloadvalue_startend_val;
-  tmpbuilder += "}";
 
-  #ifdef enableMQTT
-  mqttclient.publish(String(ROOMS_TOPIC_SENSOR).c_str(), String(tmpbuilder).c_str(), mqtt_Retain);
-  #endif //
-  #ifdef enableMQTTAsync
-  packetIdSub = mqttclient.publish(String(ROOMS_TOPIC_SENSOR).c_str(), QOS, mqtt_Retain, tmpbuilder.c_str());
-  if (packetIdSub == 0) packetIdSub = 0;
-  #endif
+  topictmp = String(ROOMS_TOPIC_SENSOR);
+  tmpbuilder += build_JSON_Payload(String(OT) + String(ROOM_PUMPSTATE) + String(getIdentyfikator(-1)) + "_pumpstate", payloadvalue_startend_val + String(!pump?1:0), true, payloadvalue_startend_val);
+  publishMQTT(topictmp, tmpbuilder);
+  tmpbuilder = "\0";
+
+  for (int x=0;x<createhasensors;x++)
+  {
+    topictmp = String(ROOMS_TOPIC_SENSOR);
+    topictmp += String(x+1);
+    String identyfikator = getIdentyfikator(x);
+    if (check_isValidTemp(room_temp[x].tempread) and room_temp[x].tempread > roomtemplo) {
+      tmpbuilder += build_JSON_Payload(String(OT) + String(ROOM_TEMPERATURE) + String(identyfikator), String(room_temp[x].tempread), true, payloadvalue_startend_val);
+      if (check_isValidTemp(room_temp[x].tempset) and room_temp[x].idpinout>0 and room_temp[x].tempread > roomtemplo) {
+        tmpbuilder += build_JSON_Payload(String(OT) + String(ROOM_TEMPERATURE_SETPOINT) + String(identyfikator), String(room_temp[x].tempset), false, payloadvalue_startend_val);
+      }
+      if (check_isValidTemp(room_temp[x].humidityread) and room_temp[x].idpinout>0 and room_temp[x].tempread > roomtemplo) {
+        tmpbuilder += build_JSON_Payload(String(OT) + String(ROOM_HUMIDITY) + String(identyfikator), String(room_temp[x].humidityread), false, payloadvalue_startend_val);
+      }
+    }
+    publishMQTT(topictmp, tmpbuilder);
+    tmpbuilder = "\0";
+  }
+
 
 
   // client.publish(ROOMS_TOPIC.c_str(),
@@ -356,21 +371,23 @@ void updateMQTTData() {
  //   const String temperature_class_lines = "\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer-lines\"";
     for (int x=0;x<createhasensors;x++){
       String identyfikator = getIdentyfikator(x);
-      if (room_temp[x].idpinout>0 and check_isValidTemp(room_temp[x].tempread)) HADiscovery(String(ROOMS_TOPIC_SENSOR), String(OT), String(ROOM_TEMPERATURE) + String(identyfikator), String(HA_SENSORS_TOPIC), "temperature");
+      topictmp = String(ROOMS_TOPIC_SENSOR);
+      topictmp += String(x+1);
+      if (room_temp[x].idpinout>0 and check_isValidTemp(room_temp[x].tempread)) HADiscovery(topictmp, String(OT), String(ROOM_TEMPERATURE) + String(identyfikator), String(HA_SENSORS_TOPIC), "temperature");
 //      if (room_temp[x].tempread!=InitTemp) mqttclient.publish((HA_SENSORS_TOPIC + "_" + ROOM_TEMPERATURE + identyfikator + "/config").c_str(), ("{\"name\":\"" + String(OT) + String(room_temp[x].nameSensor) + identyfikator+"\",\"uniq_id\": \"" + String(OT) + ROOM_TEMPERATURE + identyfikator+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + String(OT) + ROOM_TEMPERATURE + identyfikator+"}}\","+temperature_class+",\"qos\":" + String(QOS) + "," + mqttdeviceid + "}").c_str(), mqtt_Retain);
       //mqttclient.publish((HA_SENSORS_TOPIC + "_" + ROOM_TEMPERATURE + identyfikator + "/config").c_str(), ("{\"name\":\"" + String(OT) + ROOM_TEMPERATURE + identyfikator+"\",\"uniq_id\": \"" + String(OT) + ROOM_TEMPERATURE + identyfikator+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + String(OT) + ROOM_TEMPERATURE + identyfikator+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer\",\"qos\":" + String(QOS) + "," + mqttdeviceid + "}").c_str(), mqtt_Retain);
-      if (room_temp[x].idpinout>0 and check_isValidTemp(room_temp[x].tempread)) HADiscovery(String(ROOMS_TOPIC_SENSOR), String(OT), String(ROOM_TEMPERATURE_SETPOINT) + String(identyfikator), String(HA_SENSORS_TOPIC), "temperature");
+      if (room_temp[x].idpinout>0 and check_isValidTemp(room_temp[x].tempread)) HADiscovery(topictmp, String(OT), String(ROOM_TEMPERATURE_SETPOINT) + String(identyfikator), String(HA_SENSORS_TOPIC), "temperature");
       //if (room_temp[x].idpinout>0 and check_isValidTemp(room_temp[x].tempread)) mqttclient.publish(((String(HA_SENSORS_TOPIC) + "_" + String(ROOM_TEMPERATURE_SETPOINT) + String(identyfikator) + "/config").c_str(), ("{\"name\":\"" +  String(OT) + String(room_temp[x].nameSensor) + identyfikator +"SP\",\"uniq_id\": \"" + String(OT) + ROOM_TEMPERATURE_SETPOINT + identyfikator+"\",\"stat_t\":\"" + ROOMS_TOPIC_SENSOR + "\",\"val_tpl\":\"{{value_json." + String(OT) + ROOM_TEMPERATURE_SETPOINT + identyfikator+"}}\","+temperature_class_lines+",\"qos\":" + String(QOS) + "," + mqttdeviceid + "}").c_str(), String(mqtt_Retain));
       if (room_temp[x].idpinout>0 and check_isValidTemp(room_temp[x].tempread)) {
       String tmpbuilderpart = ("{\"name\":\"" + String(OT) + String(ROOM_TEMP) + String(room_temp[x].nameSensor) + identyfikator + "\",\"uniq_id\": \"" + String(OT) + String(ROOM_TEMP) + identyfikator + "\", \
 \"modes\":[\"off\",\"cool\",\"heat\"], \
-\"mode_state_topic\": \"" + ROOMS_TOPIC_SENSOR + "\", \
+\"mode_state_topic\": \"" + topictmp + "\", \
 \"mode_state_template\": \"{{'heat' if now() > today_at('0:00') else 'heat'}}\", \
 \"icon\": \"mdi:radiator\", \
-\"current_temperature_topic\":\"" + String(ROOMS_TOPIC_SENSOR) + "\", \
+\"current_temperature_topic\":\"" + topictmp + "\", \
 \"current_temperature_template\":\"{{value_json." + String(OT) + String(ROOM_TEMPERATURE) + String(identyfikator) + "}}\", \
 \"temperature_command_topic\":\"" + String(ROOM_TEMPERATURE_SETPOINT_SET_TOPIC) + String(identyfikator) + String(SET_LAST) + "\", \
-\"temperature_state_topic\":\"" + String(ROOMS_TOPIC_SENSOR) + "\", \
+\"temperature_state_topic\":\"" + topictmp + "\", \
 \"temperature_state_template\":\"{{value_json." + String(OT) + String(ROOM_TEMPERATURE_SETPOINT) + String(identyfikator) + "}}\", \
 \"temperature_unit\":\"C\", \
 \"temp_step\": 0.5, \
@@ -391,15 +408,19 @@ void updateMQTTData() {
 
     }
     //max tempset for rooms and min temp in rooms
-
-    HADiscovery(String(ROOMS_TOPIC_SENSOR), String(OT), String(ROOM_TEMPERATURE) + String(getIdentyfikator(-1)), String(HA_SENSORS_TOPIC), "temperature");
-    HADiscovery(String(ROOMS_TOPIC_SENSOR), String(OT), String(ROOM_TEMPERATURE) + String(getIdentyfikator(-1)), String(HA_SENSORS_TOPIC), "temperature");
+  topictmp = String(ROOMS_TOPIC_SENSOR);
+  topictmp += getIdentyfikator(-1);
+    HADiscovery(topictmp, String(OT), String(ROOM_TEMPERATURE) + String(getIdentyfikator(-1)), String(HA_SENSORS_TOPIC), "temperature");
+    HADiscovery(topictmp, String(OT), String(ROOM_TEMPERATURE) + String(getIdentyfikator(-1)), String(HA_SENSORS_TOPIC), "temperature");
 //    mqttclient.publish(String(String(HA_SENSORS_TOPIC) + "_" + String(ROOM_TEMPERATURE) + getIdentyfikator(-1) + "/config").c_str(), String("{\"name\":\"" + String(OT) + String(ROOM_TEMPERATURE) + getIdentyfikator(-1)+"_min\",\"uniq_id\": \"" + String(OT) + String(ROOM_TEMPERATURE) + getIdentyfikator(-1)+"\",\"stat_t\":\"" + String(ROOMS_TOPIC_SENSOR) + "\",\"val_tpl\":\"{{value_json." + String(OT) + String(ROOM_PUMPSTATE) + getIdentyfikator(-1)+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer\",\"qos\":" + String(QOS) + "," + String(mqttdeviceid) + "}").c_str(), String(mqtt_Retain));
 //    mqttclient.publish(String(String(HA_SENSORS_TOPIC) + "_" + String(ROOM_TEMPERATURE_SETPOINT) + getIdentyfikator(-1)+"/config").c_str(), String("{\"name\":\"" + String(OT) + String(ROOM_TEMPERATURE_SETPOINT) + getIdentyfikator(-1)+"_max\",\"uniq_id\": \"" + String(OT) + String(ROOM_TEMPERATURE_SETPOINT) + getIdentyfikator(-1)+"\",\"stat_t\":\"" + String(ROOMS_TOPIC_SENSOR) + "\",\"val_tpl\":\"{{value_json." + String(OT) + String(ROOM_TEMPERATURE_SETPOINT) + getIdentyfikator(-1)+"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer-lines\",\"qos\":" + String(QOS) + "," + String(mqttdeviceid) + "}").c_str(), String(mqtt_Retain));
     #ifdef enableDHT
-    HADiscovery(String(ROOMS_TOPIC_SENSOR), String(OT), String(ROOM_HUMIDITY) + String(getIdentyfikator(-1)) + "_DHT_Humid", String(HA_SENSORS_TOPIC), "humidity");
-    HADiscovery(String(ROOMS_TOPIC_SENSOR), String(OT), String(ROOM_TEMPERATURE) + String(getIdentyfikator(-1)) + "_DHT_Temp", String(HA_SENSORS_TOPIC), "temperature");
+    topictmp = String(ROOMS_TOPIC_SENSOR);
+    topictmp += F("_DHT");
+    HADiscovery(topictmp, String(OT), String(ROOM_HUMIDITY) + String(getIdentyfikator(-1)) + "_DHT_Humid", String(HA_SENSORS_TOPIC), "humidity");
+    HADiscovery(topictmp, String(OT), String(ROOM_TEMPERATURE) + String(getIdentyfikator(-1)) + "_DHT_Temp", String(HA_SENSORS_TOPIC), "temperature");
     #endif
+    topictmp = String(ROOMS_TOPIC_SENSOR);
     HADiscovery(String(ROOMS_TOPIC_SENSOR), String(OT), String(ROOM_PUMPSTATE) + String(getIdentyfikator(-1)) + "_pumpstate", String(HA_BINARY_TOPIC));
 //mqttclient.publish(String(String(HA_SENSORS_TOPIC) + "_" + String(ROOM_HUMIDITY) + getIdentyfikator(-1) + "_DHT_Humid/config").c_str(), String("{\"name\":\"" + String(OT) + String(ROOM_HUMIDITY) + getIdentyfikator(-1)+"_DHT_Humid\",\"uniq_id\": \"" + String(OT) + String(ROOM_HUMIDITY) + getIdentyfikator(-1)+"_DHT_Humid\",\"stat_t\":\"" + String(ROOMS_TOPIC_SENSOR) + "\",\"val_tpl\":\"{{value_json." + String(OT) + String(ROOM_HUMIDITY) + getIdentyfikator(-1) + "_DHT_Humid" +"}}\",\"dev_cla\":\"humidity\",\"unit_of_meas\": \"%\",\"ic\": \"mdi:thermometer\",\"qos\":" + String(QOS) + "," + String(mqttdeviceid) + "}").c_str(), String(mqtt_Retain));
 //mqttclient.publish(String(String(HA_SENSORS_TOPIC) + "_" + String(ROOM_TEMPERATURE) + getIdentyfikator(-1) + "_DHT_Temp/config").c_str(), String("{\"name\":\"" + String(OT) + String(ROOM_TEMPERATURE) + getIdentyfikator(-1)+"_DHT_Temp\",\"uniq_id\": \"" + String(OT) + String(ROOM_TEMPERATURE) + getIdentyfikator(-1)+"_DHT_Temp\",\"stat_t\":\"" + String(ROOMS_TOPIC_SENSOR) + "\",\"val_tpl\":\"{{value_json." + String(OT) + String(ROOM_PUMPSTATE) + getIdentyfikator(-1) + "_DHT_Temp" +"}}\",\"dev_cla\":\"temperature\",\"unit_of_meas\": \"°C\",\"ic\": \"mdi:thermometer\",\"qos\":" + String(QOS) + "," + String(mqttdeviceid) + "}").c_str(), String(mqtt_Retain));
@@ -431,7 +452,7 @@ bool getRemoteTempHumid(String payloadStr, u_int roomnotmp, u_int action, String
   String messagestr = "\0";
   if (json_temp == "\0") {messagestr = payloadStr;} else {messagestr = getJsonVal(payloadStr, json_temp);}
   log_message((char*)messagestr.c_str());
-  String logtempval = String(F("Floor_")) + kondygnacja + String(F("_Room_")) + String(roomnotmp + 1) + String(F("_")) + room_temp[roomnotmp].nameSensor;
+  String logtempval = String(me_lokalizacja) + kondygnacja + String(F("_Room_")) + String(roomnotmp + 1) + String(F("_")) + room_temp[roomnotmp].nameSensor;
   if (PayloadtoValidFloatCheck(messagestr))           //invalid val is displayed in funct
   {
     float tmp = 0;
@@ -447,10 +468,10 @@ bool getRemoteTempHumid(String payloadStr, u_int roomnotmp, u_int action, String
       if (String(room_temp[roomnotmp].nameSensor) == String(cutOffTempVAL).substring(0,namelength)) {cutOffTemp = room_temp[roomnotmp].tempset;}
 
     }
-
-    if (json_humid != "\0") if (PayloadtoValidFloatCheck(getJsonVal(payloadStr, json_humid)))           //invalid val is displayed in funct
+    String payloadStrAfterJson = getJsonVal(payloadStr, json_humid);
+    if (json_humid != "\0") if (PayloadtoValidFloatCheck(payloadStrAfterJson))           //invalid val is displayed in funct
     {
-      room_temp[roomnotmp].humidityread = PayloadtoValidFloat(getJsonVal(payloadStr, json_humid),true);     //true to get output to serial and webserial
+      room_temp[roomnotmp].humidityread = PayloadtoValidFloat(payloadStrAfterJson,true);     //true to get output to serial and webserial
       logtempval += F(" and humidity to ");
       logtempval += String(room_temp[roomnotmp].humidityread);//+" Payl: "+payloadStr);
       log_message((char*)logtempval.c_str());
@@ -467,42 +488,44 @@ bool getRemoteTempHumid(String payloadStr, u_int roomnotmp, u_int action, String
 
 
 
-void mqttCallbackAsString(String topicStr, String payloadStr)
+void mqttCallbackAsString(String &topicStrFromMQTT, String &payloadStrFromMQTT)
 {
 //tttopics.h"
 
 //NEWS temperature
-  if (topicStr == NEWS_GET_TOPIC)               //NEWS averange temp -outside temp
+  if (topicStrFromMQTT == NEWS_GET_TOPIC)               //NEWS averange temp -outside temp
   {
     String ident = F(" NEWS temp ");
-    if (PayloadtoValidFloatCheck(getJsonVal(payloadStr,NEWStemp_json)))           //invalid val is displayed in funct
+    String payloadStrAfterJson = getJsonVal(payloadStrFromMQTT, NEWStemp_json);
+    if (PayloadtoValidFloatCheck(payloadStrAfterJson))           //invalid val is displayed in funct
     {
-      temp_NEWS = PayloadtoValidFloat(getJsonVal(payloadStr,NEWStemp_json),true);     //true to get output to serial and webserial
+      temp_NEWS = PayloadtoValidFloat(payloadStrAfterJson,true);     //true to get output to serial and webserial
       if (temp_NEWS < temptoheat) modestate = MODEHEAT;
       if (temp_NEWS > temptocool) modestate = MODECOOL;
       lastNEWSSet = millis();
       temp_NEWS_count = 0;
 //      receivedmqttdata = true;    //makes every second run mqtt send and influx
-      ident += " updated from MQTT to " + String(temp_NEWS);//+" Payl: "+payloadStr);
+      ident += " updated from MQTT to " + String(temp_NEWS);//+" Payl: "+payloadStrFromMQTT);
     } else
     {
       ident += " Not updated...";
     }
     log_message((char*)ident.c_str());
    } else
-  if (topicStr == COPUMP_GET_TOPIC)                                                                   //external CO Pump Status
+  if (topicStrFromMQTT == COPUMP_GET_TOPIC)                                                                   //external CO Pump Status
   {
     String ident = F(" Wood/coax CO Pump Status ");
     receivedmqttdata = true;
     bool tmp = false;
-    if (PayloadStatus(getJsonVal(payloadStr,COPumpStatus_json),true) && PayloadStatus(getJsonVal(payloadStr,COPumpStatus_json),true)) tmp = true;
+    String payloadStrAfterJson = getJsonVal(payloadStrFromMQTT, COPumpStatus_json);
+    if (PayloadStatus(payloadStrAfterJson,true) && PayloadStatus(payloadStrAfterJson,true)) tmp = true;
     if (CO_BoilerPumpWorking!=tmp) receivedmqttdata = true;
-    if (PayloadStatus(getJsonVal(payloadStr,COPumpStatus_json), true)) {CO_PumpWorking = true;}
-    else if (PayloadStatus(getJsonVal(payloadStr,COPumpStatus_json), false)) {CO_PumpWorking = false;}
+    if (PayloadStatus(payloadStrAfterJson, true)) {CO_PumpWorking = true;}
+    else if (PayloadStatus(payloadStrAfterJson, false)) {CO_PumpWorking = false;}
     else
     {
       receivedmqttdata = false;
-      ident += ("Unknown: "+String(payloadStr));
+      ident += ("Unknown: "+String(payloadStrFromMQTT));
     }
     if (receivedmqttdata) {
       ident += (CO_PumpWorking ? "Active" : "Disabled" );
@@ -510,16 +533,18 @@ void mqttCallbackAsString(String topicStr, String payloadStr)
     log_message((char*)ident.c_str());
   } else
 //BOILER OPENTHERM CO Status with flame
-  if (topicStr == BOILER_FLAME_STATUS_TOPIC)
+  if (topicStrFromMQTT == BOILER_FLAME_STATUS_TOPIC)
   {
     String ident = F(" Status Boiler flame and co pump ");
     bool tmp = false;
-    if (PayloadStatus(getJsonVal(payloadStr,BOILER_FLAME_STATUS_ATTRIBUTE),true) && PayloadStatus(getJsonVal(payloadStr,BOILER_COPUMP_STATUS_ATTRIBUTE),true)) tmp = true;
-    else if (PayloadStatus(getJsonVal(payloadStr,BOILER_FLAME_STATUS_ATTRIBUTE),false) && PayloadStatus(getJsonVal(payloadStr,BOILER_COPUMP_STATUS_ATTRIBUTE),false)) tmp = false;
+    String payloadStrAfterJson = getJsonVal(payloadStrFromMQTT, BOILER_FLAME_STATUS_ATTRIBUTE);
+    String payloadStrAfterJson1 = getJsonVal(payloadStrFromMQTT, BOILER_COPUMP_STATUS_ATTRIBUTE);
+    if (PayloadStatus(payloadStrAfterJson, true) && PayloadStatus(payloadStrAfterJson1,true)) tmp = true;
+    else if (PayloadStatus(payloadStrAfterJson,false) && PayloadStatus(payloadStrAfterJson1,false)) tmp = false;
     else
     {
       receivedmqttdata = false;
-      ident += "Unknown: "+String(payloadStr);
+      ident += "Unknown: "+String(payloadStrFromMQTT);
     }
     if (CO_BoilerPumpWorking!=tmp) receivedmqttdata = true;
     CO_BoilerPumpWorking = tmp;
@@ -532,8 +557,8 @@ void mqttCallbackAsString(String topicStr, String payloadStr)
 //sensors for setpoint temperature
   for (int x=0;x<maxsensors;x++)
   {
-    if (topicStr == room_temp[x].mqtt_temp_floor_topic) receivedmqttdata = getRemoteTempHumid(payloadStr, x, action_temp, room_temp[x].mqtt_temp_json, room_temp[x].mqtt_humid_json);
-    if (topicStr == room_temp[x].mqtt_tempset_floor_topic) receivedmqttdata = getRemoteTempHumid(payloadStr, x, action_tempset, room_temp[x].mqtt_temp_json);
+    if (topicStrFromMQTT == room_temp[x].mqtt_temp_floor_topic) receivedmqttdata = getRemoteTempHumid(payloadStrFromMQTT, x, action_temp, room_temp[x].mqtt_temp_json, room_temp[x].mqtt_humid_json);
+    if (topicStrFromMQTT == room_temp[x].mqtt_tempset_floor_topic) receivedmqttdata = getRemoteTempHumid(payloadStrFromMQTT, x, action_tempset, room_temp[x].mqtt_temp_json);
 
   // if ((topicStr == ROOM_TEMPERATURE_SETPOINT_SET_TOPIC + getIdentyfikator(x) + SET_LAST) and (room_temp[x].idpinout>0))
   //   {

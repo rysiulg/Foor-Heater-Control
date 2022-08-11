@@ -11,6 +11,11 @@ echo "PORT %OTAPORT%"
 echo %errorlevel%
 echo !errorlevel!
 if  errorlevel 1 goto startowanie
+
+echo for fs enter
+pause
+goto startowanie2
+
 :startowanie0
 IF EXIST %LITTLEFS% (
     "%USERPROFILE%\.platformio\penv\Scripts\python.exe" "%USERPROFILE%\.platformio\packages\framework-arduinoespressif32\tools\espota.py" "-p 8266" --debug --progress -i %OTAPORT%  -f "%LITTLEFS%" --spiffs --timeout=20
@@ -19,18 +24,28 @@ IF EXIST %LITTLEFS% (
     goto startowanie2
 )
 
+
+
+
 echo %errorlevel%
 echo !errorlevel!
 if  errorlevel 1 goto startowanie0
 
-set OTAPORT=10.48.18.30
+echo press enter to upload to parter
+pause
 :startowanie2
+set OTAPORT=10.48.18.30
 echo "PORT %OTAPORT%"
     "%USERPROFILE%\.platformio\penv\Scripts\python.exe" "%USERPROFILE%\.platformio\packages\framework-arduinoespressif32\tools\espota.py" "-p 8266" --debug --progress -i %OTAPORT%  -f "%BINFILE%"
 echo %errorlevel%
 echo !errorlevel!
 if  errorlevel 1 goto startowanie2
+
 :startowanie2a
+echo for fs enter
+pause
+exit
+
 IF EXIST %LITTLEFS% (
     "%USERPROFILE%\.platformio\penv\Scripts\python.exe" "%USERPROFILE%\.platformio\packages\framework-arduinoespressif32\tools\espota.py" "-p 8266" --debug --progress -i %OTAPORT%  -f "%LITTLEFS%" --spiffs --timeout=20
 ) ELSE (

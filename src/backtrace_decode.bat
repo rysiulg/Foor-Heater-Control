@@ -1,4 +1,4 @@
-C:\Users\Rysza\.platformio\packages\toolchain-xtensa-esp32\bin\xtensa-esp32-elf-addr2line.exe -pfiaC -e "S:\EPROM\!Projekty\Foor Heater Control\.pio\build\esp32doit-devkit-v1\firmware.elf" "$1"
+C:\Users\Rysza\.platformio\packages\toolchain-xtensa-esp32\bin\xtensa-esp32-elf-addr2line.exe -pfiaC -e "S:\EPROM\!Projekty\Floor Heater Control\.pio\build\esp32doit-devkit-v1\firmware.elf" "$1"
 echo 0x400eb88d
 echo "$1"
 

@@ -41,7 +41,7 @@
 #define enableInfluxClient     // works as client -uses include InfluxdbClient.h not Influxdb.h
 #define enableMQTTAsync     //Async MQTT   ottowinter/AsyncMqttClient-esphome @ ^0.8.6  -implements also reconnects based by wifi
 //#define enableMQTT        //knolleary/PubSubClient@^2.8  --problem with connected status ---
-//#define enableWebUpdate   //not implemented -not working well
+#define enableWebUpdate   //not implemented -not working well
 //#define enableMESHNETWORK
 //#define enableWebSerial     //not fully implemented and abandoned  1115101 - 1033185 = 81 916
 #define enableDHT

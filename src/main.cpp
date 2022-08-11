@@ -24,29 +24,33 @@ void ReadTemperatures()
   sprintf(log_chars, "Reading 1wire 18B20 and DHT sensors... Count: %i", count);
   log_message(log_chars);
   if (count==0) count = maxsensors;
-  String temptmp =" Collecting 18B20 ROMS and temps:\n";
+  String temptmp = "\0";
   for (int j = 0; j < count; j++)
   {
     temp1w = sensors.getTempCByIndex(j);
-    addrstr="";
+    addrstr="\0";
     sensors.getAddress(addr, j);
-    for (int i1 = 0; i1 < 8; i1++) if (String(addr[i1], HEX).length() == 1) addrstr += "0" + String(addr[i1], HEX); else addrstr += String(addr[i1], HEX); //konwersja HEX2StringHEX
+    for (int i1 = 0; i1 < 8; i1++) if (String(addr[i1], HEX).length() == 1) { addrstr += F("0"); addrstr += String(addr[i1], HEX); } else { addrstr += String(addr[i1], HEX); } //konwersja HEX2StringHEX
       //zapisanie do zmiennej addr[8], addrstr, aktualiozacja index wskazany przez j i aktualozacja temp1w.
     for (int z = 0; z < maxsensors; z++)
     {
       if (array_cmp_8(room_temp[z].addressHEX, addr, sizeof(room_temp[z].addressHEX) / sizeof(room_temp[z].addressHEX[0]),sizeof(addr) / sizeof(addr[0])) == true)
       {
-        assignedsensor=true;
+        assignedsensor = true;
         if (check_isValidTemp(temp1w)) room_temp[z].tempread = temp1w;
       }
     }
-    if (!assignedsensor and UnassignedTempSensor.indexOf(addrstr)==-1) UnassignedTempSensor += ";"+String(addrstr)+" "+String(temp1w);
+    if (!assignedsensor and UnassignedTempSensor.indexOf(addrstr)==-1 and check_isValidTemp(temp1w)) {sprintf(log_chars, ";%s %f", addrstr, temp1w); UnassignedTempSensor += log_chars;}
     assignedsensor=false;
-    temptmp += "       " + String(j) + ": 18B20 ROM= " + addrstr + ", temp: " + String(temp1w,2) + "\n";
+    if (check_isValidTemp(temp1w)) {
+      sprintf(log_chars, "       %i: 18B20 ROM= %s, temp: %f\n", j, addrstr, temp1w);
+      temptmp += log_chars;
+    }
   }
-  log_message((char*)temptmp.c_str());
+  sprintf(log_chars,"Collecting 18B20 ROMS and temps:\n%s", temptmp.c_str());
+  log_message(log_chars);
 
-  if (UnassignedTempSensor!= "")
+  if (UnassignedTempSensor.length() > 0)
   {
     sprintf(log_chars, "Unassigned Sensors: %s", UnassignedTempSensor);
     log_message(log_chars);
@@ -54,7 +58,9 @@ void ReadTemperatures()
 
   #ifdef enableDHT
   dht.read(true);
+
   delay(200);
+  tempcor = InitTemp;
   float t = dht.readTemperature();
   float h = dht.readHumidity();
   if (isnan(h) or isnan(t)) {
@@ -65,10 +71,10 @@ void ReadTemperatures()
       dhtreadtime = millis();
     }
 
-  sprintf(log_chars, "Get DHT values t= %s, humid: %s", String(t,2), String(h,1));
+  sprintf(log_chars, "Get DHT values t= %f, humid: %f", t, h);
   log_message(log_chars);
   if (!isnan(h)) humiditycor = h;
-  if (!isnan(t)) tempcor = t; //to check ds18b20 also ;)
+  if (!isnan(t) && check_isValidTemp(t)) tempcor = t; //to check ds18b20 also ;)
   #endif
 }
 
@@ -89,14 +95,14 @@ void setup()
   // pinMode(lampPin, OUTPUT );
   // pinMode(choosepin,INPUT_PULLUP);    // sets the digital pin 13 as output
   //get Configuration floor 1 or 2 -if set is 2
-  sprintf(log_chars,"choosePin: %s,  status: %s,  czyli: %s,  - %s  : %s",String(choosepin).c_str(), String(digitalRead(choosepin)).c_str(), String(digitalRead(choosepin)? "Kondygnacja 2":"Kondygnacja 1").c_str(), String(kondygnacja).c_str(), String(me_lokalizacja).c_str());
+  sprintf(log_chars,"choosePin: %i,  status: %i,  czyli: %s,  - %s  : %s", (int)choosepin, (int)digitalRead(choosepin), String(digitalRead(choosepin)? "Kondygnacja 2":"Kondygnacja 1").c_str(), kondygnacja.c_str(), me_lokalizacja.c_str());
   log_message(log_chars);
  // pinMode(choosepin, DISABLED );
 
 
   ts = millis();
   lastTempSet = -extTempTimeout_ms;
-
+  log_message((char*)F("18B20 begin"));
   Serial.println("18B20 begin");
    // Init DS18B20 sensor
   sensors.begin();
@@ -106,7 +112,7 @@ void setup()
   sensors.setWaitForConversion(true); //
     //sensors.setWaitForConversion(true); //
   sensors.requestTemperatures();
-
+  log_message((char*)F("Setup Finished...."));
 }
 
   #define abs(x) ((x)>0?(x):-(x))

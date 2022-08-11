@@ -31,17 +31,17 @@ const String ROOM_TEMPERATURE_SETPOINT = ROOM_TEMPERATURE + "_setpoint";
 String ROOM_TEMPERATURE_SETPOINT_SET_TOPIC = String(BASE_TOPIC) + "/SET/" + ROOM_TEMPERATURE_SETPOINT; //+SET_LAST + "/set"; // t
 
 
-String ROOMS_TOPIC_SENSOR = String(BASE_TOPIC) + "/" + String(ROOM_TEMP) + "/attributes";
+String ROOMS_TOPIC_SENSOR = String(BASE_TOPIC) + "/" + String(ROOM_TEMP) + "/attr";
 
 
-String COPUMP_GET_TOPIC = F("COWoda0/switch/boilerroom/attributes");                      // temperatura outside avg NEWS
-#define COPumpStatus_json "CO0_boilerroom_pump2CO"
-#define WaterPumpStatus_json "CO0_boilerroom_pump1Water"
+String COPUMP_GET_TOPIC = F("COWODA0/switch/boilerroom/attr");                      // temperatura outside avg NEWS
+#define COPumpStatus_json "boilerroom_pump2CO"
+#define WaterPumpStatus_json "boilerroom_pump1Water"
 
-String NEWS_GET_TOPIC = F("COWoda0/sensor/boilerroom/attributes");          // pompa CO status     IF CHANGE TOPIC -CHANGE CONFIGURATION VERSION !!!!!
-String NEWStemp_json = F("CO0_outside_temperature_Averange");
+String NEWS_GET_TOPIC = F("COWODA0/sensor/boilerroom/attributes");          // pompa CO status     IF CHANGE TOPIC -CHANGE CONFIGURATION VERSION !!!!!
+String NEWStemp_json = F("outside_temperature_Averange");
 
-String BOILER_FLAME_STATUS_TOPIC = F("opentherm-thermostat/boiler/attributes");                              //flme status of co gaz boiler
+String BOILER_FLAME_STATUS_TOPIC = F("opentherm-thermostat/boiler/attr");                              //flme status of co gaz boiler
 String BOILER_FLAME_STATUS_ATTRIBUTE = F("ot_flame_state");                              //boiler flame status of co gaz boiler
 String BOILER_COPUMP_STATUS_ATTRIBUTE = F("ot_boiler_ch_state");                          //boiler pump status
 
