@@ -281,6 +281,8 @@ void updateMQTTData() {
   #ifdef enableMQTTAsync
   uint16_t packetIdSub;
   #endif
+  #define payloadON "\"ON\""
+  #define payloadOFF "\"OFF\""
 
   String tmpbuilder="\0";
   // tmpbuilder += build_JSON_Payload("rssi", String(WiFi.RSSI()), true, payloadvalue_startend_val);
@@ -319,7 +321,7 @@ void updateMQTTData() {
   #endif
 
   topictmp = String(ROOMS_TOPIC_SENSOR);
-  tmpbuilder += build_JSON_Payload(String(OT) + String(ROOM_PUMPSTATE) + String(getIdentyfikator(-1)) + "_pumpstate", payloadvalue_startend_val + String(!pump?1:0), true, payloadvalue_startend_val);
+  tmpbuilder += build_JSON_Payload(String(OT) + String(ROOM_PUMPSTATE) + String(getIdentyfikator(-1)) + "_pumpstate", payloadvalue_startend_val + String(!pump?payloadON:payloadOFF), true, payloadvalue_startend_val);
   publishMQTT(topictmp, tmpbuilder);
   tmpbuilder = "\0";
 

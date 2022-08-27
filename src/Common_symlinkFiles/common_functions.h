@@ -25,7 +25,7 @@
 #define websocketendpoint "/ws"
 #endif
 
-#define SerialSpeed 115200
+#define SerialSpeed 74880
 #ifdef enableArduinoOTA
 #define OTA_Port 8266
 #endif
@@ -157,7 +157,6 @@ DNSServer dnsServer;
 typedef struct
 {
   String Value;
-  String ValueHumid;
 } all_sensors_struct;
 all_sensors_struct ASS[ASS_Num];        //for get values from local variables to send to websocket
 String get_PlaceholderName(u_int i);    //replace specific placeholder -return String for specific ASS value  zestaw nazw z js i css i html dopasowania do liczb do łatwiejszego dopasowania
@@ -216,7 +215,7 @@ float opcohi = ecoModeDisabledMaxTemp,             // upper max heat boiler to C
 #endif
 const float ophi = 65,               // upper max heat water
             opcohistatic = opcohi,
-            oplo = 29,               // lower min heat water
+            oplo = 25,               // lower min heat water
             opcolo = oplo,           // lower min heat boiler to CO
             cutoffhi = 20,           // upper max cut-off temp above is heating CO disabled -range +-20
             cutofflo = -cutoffhi,    // lower min cut-off temp above is heating CO disabled
@@ -240,6 +239,7 @@ bool WebSocketlog = true;
 
 
 char log_chars[maxLogSize];      //for logging buffer to log_message function
+char log_chars_tmp[maxLogSize];      //for logging buffer to log_message function
 int temp_NEWS_count = 0;
 unsigned int CRTrunNumber = 0; // count of restarts
 
@@ -257,6 +257,7 @@ size_t content_len;
   size_t receivedtmpIdx = 0;
 #endif //enableMQTTAsync
 String ESPlastResetReason = "\0"; //last reset reason
+String reasontxt = "\0";
 //other_Modules
 const String configfile = "/config.cfg";
 
@@ -307,9 +308,9 @@ char influx_measurments[sensitive_size] = InfluxMeasurments;
 #endif
 const String noTempStr = "--.-";
 
-
+#ifdef ESP32
 TaskHandle_t Task1;
-
+#endif
 
 
 //common_functions.h
@@ -318,6 +319,11 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length);
 #endif
 String get_lastResetReason();
 bool check_isValidTemp(float temptmp);
+#if defined enableMQTT || defined enableMQTTAsync
+uint16_t publishMQTT(String &mqttTopicxx, String &mqttPayloadxx, int mqtt_Retainv, u_int qos);
+uint16_t SubscribeMQTT(String &mqttTopicxx, u_int qos);
+void HADiscovery(String sensorswitchValTopic, String appendname, String nameval, String discoverytopic, String DeviceClass, String unitClass, String stateClass, String HAicon, const String payloadvalue_startend_val, const String payloadON, const String payloadOFF, const String sensorswitchSETTopic);
+#endif //enableMQTTAsync
 void log_message(char* string, u_int specialforce);
 String uptimedana(unsigned long started_local, bool startFromZero, bool forlogall);
 String getJsonVal(String &jsoninput, String tofind);
@@ -409,10 +415,6 @@ String PrintHex8(const uint8_t *data, char separator, uint8_t length);
 #ifdef enableMQTTAsync
 void connectToMqtt();
 #endif
-#if defined enableMQTT || defined enableMQTTAsync
-void HADiscovery(String sensorswitchValTopic, String appendname, String nameval, String discoverytopic, String DeviceClass, String unitClass, String stateClass, String HAicon, const String payloadvalue_startend_val, const String payloadON, const String payloadOFF);
-uint16_t publishMQTT(String &mqttTopicxx, String &mqttPayloadxx, int mqtt_Retainv, u_int qos);
-#endif //enableMQTTAsync
 String build_JSON_Payload(String MQTTname, String MQTTvalue, bool notAddSeparator, String Payload_StartEnd);
 bool loadConfig();
 bool SaveConfig();
@@ -460,27 +462,29 @@ uint8_t mac[6] = {(uint8_t)strtol(WiFi.macAddress().substring(0,2).c_str(),0,16)
 #ifdef ESP32
 String verbose_print_reset_reason(int reason)
 {
+  String resetreason;
   switch ( reason)
   {
-    case 0  : return ("0: normal startup by power on?");break;
-    case 1  : return ("1:POWERON_RESET Vbat power on reset");break;
-    case 2  : return ("2: ");break;
-    case 3  : return ("3:SW_RESET Software reset digital core");break;
-    case 4  : return ("4:OWDT_RESET Legacy watch dog reset digital core");break;
-    case 5  : return ("5:DEEPSLEEP_RESET Deep Sleep reset digital core");break;
-    case 6  : return ("6:SDIO_RESET Reset by SLC module, reset digital core");break;
-    case 7  : return ("7:TG0WDT_SYS_RESET Timer Group0 Watch dog reset digital core");break;
-    case 8  : return ("8:TG1WDT_SYS_RESET Timer Group1 Watch dog reset digital core");break;
-    case 9  : return ("9:RTCWDT_SYS_RESET RTC Watch dog Reset digital core");break;
-    case 10 : return ("10:INTRUSION_RESET Instrusion tested to reset CPU");break;
-    case 11 : return ("11:TGWDT_CPU_RESET Time Group reset CPU");break;
-    case 12 : return ("12:SW_CPU_RESET Software reset CPU");break;
-    case 13 : return ("13:RTCWDT_CPU_RESET RTC Watch dog Reset CPU");break;
-    case 14 : return ("14:EXT_CPU_RESET for APP CPU, reseted by PRO CPU");break;
-    case 15 : return ("15:RTCWDT_BROWN_OUT_RESET Reset when the vdd voltage is not stable");break;
-    case 16 : return ("16:RTCWDT_RTC_RESET RTC Watch dog reset digital core and rtc module");break;
-    default : return ("NO_MEAN");
+    case 0  : resetreason = F("0: normal startup by power on?");break;
+    case 1  : resetreason = F("1:POWERON_RESET Vbat power on reset");break;
+    case 2  : resetreason = F("2: ");break;
+    case 3  : resetreason = F("3:SW_RESET Software reset digital core");break;
+    case 4  : resetreason = F("4:OWDT_RESET Legacy watch dog reset digital core");break;
+    case 5  : resetreason = F("5:DEEPSLEEP_RESET Deep Sleep reset digital core");break;
+    case 6  : resetreason = F("6:SDIO_RESET Reset by SLC module, reset digital core");break;
+    case 7  : resetreason = F("7:TG0WDT_SYS_RESET Timer Group0 Watch dog reset digital core");break;
+    case 8  : resetreason = F("8:TG1WDT_SYS_RESET Timer Group1 Watch dog reset digital core");break;
+    case 9  : resetreason = F("9:RTCWDT_SYS_RESET RTC Watch dog Reset digital core");break;
+    case 10 : resetreason = F("10:INTRUSION_RESET Instrusion tested to reset CPU");break;
+    case 11 : resetreason = F("11:TGWDT_CPU_RESET Time Group reset CPU");break;
+    case 12 : resetreason = F("12:SW_CPU_RESET Software reset CPU");break;
+    case 13 : resetreason = F("13:RTCWDT_CPU_RESET RTC Watch dog Reset CPU");break;
+    case 14 : resetreason = F("14:EXT_CPU_RESET for APP CPU, reseted by PRO CPU");break;
+    case 15 : resetreason = F("15:RTCWDT_BROWN_OUT_RESET Reset when the vdd voltage is not stable");break;
+    case 16 : resetreason = F("16:RTCWDT_RTC_RESET RTC Watch dog reset digital core and rtc module");break;
+    default : resetreason = F("NO_MEAN");
   }
+  return resetreason;
 }
 #endif
 //***********************************************************************************************************************************************************************************************
@@ -496,9 +500,9 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length)
 //***********************************************************************************************************************************************************************************************
 String get_lastResetReason()
 {
+  String lrr = "LsR";
   #ifndef ESP32
   rst_info *resetInfo;
-  String lrr = "\0";
   resetInfo = ESP.getResetInfoPtr();
   int resetNO = resetInfo->reason;
   switch (resetNO){
@@ -509,9 +513,8 @@ String get_lastResetReason()
     case REASON_SOFT_RESTART: lrr = F("4: software restart, system_restart , GPIO status won’t change"); break;
     case REASON_DEEP_SLEEP_AWAKE: lrr = F("5 wake up from deep-sleep"); break;
     case REASON_EXT_SYS_RST: lrr = F("6 external system reset"); break;
-    default: lrr = String(resetNO) + ": unknown"; break;
+    default: lrr = String(resetNO); lrr += F(": unknown"); break;
   }
-  return lrr;
   #else
     // #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
     // #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
@@ -528,12 +531,12 @@ String get_lastResetReason()
     // #else // ESP32 Before IDF 4.0
     // #include "rom/rtc.h"
     // #endif
-    String lrr = F("Core0: ");
+    lrr = F("Core0: ");
     lrr += verbose_print_reset_reason(esp_rom_get_reset_reason(0));
     lrr += F(",\nCore1: ");
     lrr += verbose_print_reset_reason(esp_rom_get_reset_reason(1));
-    return lrr;
-    #endif
+  #endif
+  return lrr.c_str();
 }
 //***********************************************************************************************************************************************************************************************
 bool check_isValidTemp(float temptmp)
@@ -554,61 +557,232 @@ void log_message(char* string, u_int specialforce = logStandard)  //         log
 #define numberOfMinutes(_time_) ((_time_ / SECS_PER_MIN) % SECS_PER_MIN)
 #define numberOfHours(_time_) (( _time_% SECS_PER_DAY) / SECS_PER_HOUR)
 #define elapsedDays(_time_) ( _time_ / SECS_PER_DAY)
-//  #include "configmqtttopics.h"
-sprintf(log_chars,"%s: %s", uptimedana(millis(), true, true).c_str(), string);
-  String send_string = log_chars;
+
+  if ((strlen(string)+ strlen(": ")) > maxLogSize ) string[maxLogSize-strlen(": ")] = '\0';
+  sprintf(log_chars_tmp,"%s: %s", uptimedana(millis(), true, true).c_str(), string);
+  String send_string = log_chars_tmp;
   send_string.trim();
 
   //Send to serial port COM
   #ifdef enableDebug2Serial
   //debugSerial = true;
   if (debugSerial == true) {
-    Serial.println(log_chars);
+    Serial.println(log_chars_tmp);
   }
   #endif
 
-//  if (send_string.length()> maxLogSize ) send_string[maxLogSize] = '\0';
-//abandoned webserial
-
+  //If enabled WebSerial (now abandoned) which have own async webservice -now abandoned
   #ifdef enableWebSerial
-    if (starting == false and WebSocketlog) {WebSerial.println(log_chars);}
+    if (starting == false and WebSocketlog) {WebSerial.println(log_chars_tmp);}
   #endif
 
-  //char send_string_ch[maxLogSize];
-  sprintf(log_chars, "{\"log\":\"%s\"}", send_string.c_str());
-  if (sizeof(log_chars)>512) log_chars[511] = '\0';
-  send_string = log_chars;
+  //Check if string is not too long -otherwise cut string
+  if ((strlen(string)+ strlen("{\"log\":\"\"}")) > maxLogSize ) string[maxLogSize-strlen("{\"log\":\"\"}") - maxLenMQTTTopic ] = '\0';
+  sprintf(log_chars_tmp, "{\"log\":\"%s\"}", send_string.c_str());
+  send_string = log_chars_tmp;
 
-#if defined enableWebSocketlog && defined enableWebSocket
+  //If enabled send message to websocket
+  #if defined enableWebSocketlog && defined enableWebSocket
   if (!starting && (WebSocketlog || specialforce == logCommandResponse)) notifyClients(send_string);
   #endif
 
+  //If enabled MQTT send String to mqtt
   #if defined enableMQTT || defined enableMQTTAsync
   if (sendlogtomqtt == true) { //|| specialforce == 2) {
-    // send_string.replace("\"","'");
-    // send_string.replace("\\","");
     if (mqttclient.connected() && !starting)
     {
-      #if defined enableMQTTAsync
-      uint16_t packetIdSub;
-      packetIdSub = mqttclient.publish(String(LOG_TOPIC).c_str(), QOS, mqtt_Retain, send_string.c_str());
-      if (packetIdSub == 0) packetIdSub = 0;
-      #endif
-      #if defined enableMQTT
-      if (!mqttclient.publish(String(LOG_TOPIC).c_str(), send_string.c_str())) {
-        mqttclient.disconnect();
-        Serial.print(millis());
-        Serial.print(F(": "));
-        Serial.println(F("MQTT publish log message failed!"));
-        mqttReconnect();    //not needed for Async ver
-      }
-      #endif
+      String mqttTopic = String(LOG_TOPIC);
+      //send_string = send_string.substring(1, send_string.length()-1);                             //cut start and end brackets json
+      publishMQTT(mqttTopic, send_string, mqtt_Retain, QOS);
     }
   }
   #endif
 
+}//***********************************************************************************************************************************************************************************************
+#if defined enableMQTT || defined enableMQTTAsync
+//Publish to MQTT Topic
+uint16_t publishMQTT(String &mqttTopicxx, String &mqttPayloadxx, int mqtt_Retainv = 1, u_int qos = 0) {
+    char mqttPayloadSend [maxLenMQTTPayload];
+     if (mqttPayloadxx.indexOf("\":")>-1) {
+      sprintf(mqttPayloadSend, "{%s}", mqttPayloadxx.c_str());
+     } else {
+       sprintf(mqttPayloadSend, "%s", mqttPayloadxx.c_str());
+     }
+    #ifdef debug2
+    sprintf(log_chars, "(publishMQTT) MQTT Topic %s Size: %u, Payload Size: %u", mqttTopicxx.c_str(), (u_int)mqttTopicxx.length(), (u_int)mqttPayloadxx.length());
+    log_message(log_chars);
+    #endif
+    uint16_t packetIdSub = 0;
+    if (mqttPayloadxx.length()>0) {
+      #ifdef enableMQTT
+      mqttclient.publish(mqttTopicxx.c_str(), mqttPayloadxx.c_str(), mqtt_Retainv);
+      #endif
+      #ifdef enableMQTTAsync
+      packetIdSub = mqttclient.publish(mqttTopicxx.c_str(), qos , mqtt_Retainv, mqttPayloadSend);
+      //log_message((char*)String(packetIdSub).c_str());
+      #endif
+    }
+    return packetIdSub;
 }
+#endif
+//***********************************************************************************************************************************************************************************************
+#if defined enableMQTT || defined enableMQTTAsync
+//Subscribe to MQTT topic
+uint16_t SubscribeMQTT(String &mqttTopicxx, u_int qos){
+    uint16_t packetIdSub = 0;
+    if (mqttTopicxx.length()>0) {
+      #ifdef enableMQTT
+      mqttclient.subscribe(mqttTopicxx.c_str());
+      #endif
+      #ifdef enableMQTTAsync
+      packetIdSub = mqttclient.subscribe(mqttTopicxx.c_str(), qos);
+      log_message((char*)String(packetIdSub).c_str());
+      #endif
+    }
+    return packetIdSub;
+}
+#endif
+//***********************************************************************************************************************************************************************************************
+#if defined enableMQTT || defined enableMQTTAsync
+void HADiscovery(String sensorswitchValTopic, String appendname, String nameval, String discoverytopic, String DeviceClass = "\0", String unitClass = "\0", String stateClass = "\0", String HAicon = "\0", const String payloadvalue_startend_val = "", const String payloadON = "1", const String payloadOFF = "0", const String sensorswitchSETTopic = "")
+{
+  const String deviceid = ",\"dev\":{\"ids\":\""+String(me_lokalizacja)+"\",\"name\":\""+String(me_lokalizacja)+"\",\"sw\":\"" + String(version) + "\",\"mdl\":\""+String(me_lokalizacja)+"\",\"mf\":\"" + String(MFG) + "\"}";
+  const String availabityTopic = ",\"avty_t\":\"" + String(WILL_TOPIC) + "\",\"pl_avail\":\"" + String(WILL_ONLINE) + "\",\"pl_not_avail\":\"" + String(WILL_OFFLINE) + "\"";
 
+  String unitbuilder = "\0";
+  int DCswitch = 0;
+  #define tempswitch 1
+  #define energyswitch 2
+  #define pressureswitch 3
+  #define humidityswitch 4
+  #define highswitch 5
+  #define coswitch 6
+  #define switchswitch 7
+  #define powerswitch 8
+  #define voltageswitch 9
+  #define currentswitch 10
+  #define frequencyswitch 11
+  #define durationswitch 12
+  DeviceClass.toLowerCase();
+  stateClass.toLowerCase();
+  HAicon.toLowerCase();
+  if (unitClass.length() == 0) unitClass = " ";
+  if (DeviceClass.length()>0)
+  {
+
+    if (DeviceClass.indexOf("temperature") >= 0) DCswitch = tempswitch;
+    if (DeviceClass.indexOf("energy") >= 0) DCswitch = energyswitch;
+    if (DeviceClass.indexOf("pressure") >= 0) DCswitch = pressureswitch;
+    if (DeviceClass.indexOf("humidity") >= 0) DCswitch = humidityswitch;
+    if (DeviceClass.indexOf("high") >= 0) DCswitch = highswitch;
+    if (DeviceClass.indexOf("co") >= 0) DCswitch = coswitch;
+    if (DeviceClass.indexOf("switch") >= 0) DCswitch = switchswitch;
+    if (DeviceClass.indexOf("power") >= 0) DCswitch = powerswitch;
+    if (DeviceClass.indexOf("voltage") >= 0) DCswitch = voltageswitch;
+    if (DeviceClass.indexOf("current") >= 0) DCswitch = currentswitch;
+    if (DeviceClass.indexOf("frequency") >= 0) DCswitch = frequencyswitch;
+    if (DeviceClass.indexOf("duration") >= 0) DCswitch = durationswitch;
+
+
+
+    switch (DCswitch) {
+      case tempswitch: {
+        if (unitClass.length() == 0 || unitClass == " ") unitClass = "°C";
+        if (HAicon.length() == 0) HAicon = "mdi:thermometer";
+        break;
+      }
+      case powerswitch: {
+        if (unitClass.length() == 0 || unitClass == " ") unitClass = "W"; //energy: Wh, kWh, MWh	Energy, statistics will be stored in kWh. Represents power over time. Nmqttident to be confused with power.  power: W, kW	Power, statistics will be stored in W.
+        if (HAicon.length() == 0) HAicon = "mdi:alpha-W-box"; //fire";
+        break;
+      }
+      case voltageswitch: {
+        if (unitClass.length() == 0 || unitClass == " ") unitClass = "V";
+        if (HAicon.length() == 0) HAicon = "mdi:alpha-v-box"; //fire";
+        break;
+      }
+      case currentswitch: {
+        if (unitClass.length() == 0 || unitClass == " ") unitClass = "A";
+        if (HAicon.length() == 0) HAicon = "mdi:alpha-a-box"; //fire";
+        break;
+      }
+      case frequencyswitch: {
+        if (unitClass.length() == 0 || unitClass == " ") unitClass = "Hz";
+        if (HAicon.length() == 0) HAicon = "mdi:sine-wave"; //fire";
+        break;
+      }
+
+      case switchswitch: {
+        unitbuilder = F(",\"pl_off\":\"OFF\",\"pl_on\":\"ON\"");
+        unitbuilder += F(",\"command_topic\":\"");
+        unitbuilder += sensorswitchSETTopic;
+        unitbuilder += F("\"");
+
+        // if (unitClass.length() == 0 || unitClass == " ") unitClass = "m";
+        // if (HAicon.length() == 0) HAicon = "mdi:speedometer-medium"; //fire";
+        break;
+      }
+      case coswitch: {
+        DeviceClass = "carbon_monoxide";
+        if (unitClass.length() == 0 || unitClass == " ") unitClass = "ppm";
+        if (HAicon.length() == 0) HAicon = "mdi:molecule-co"; //fire";
+        break;
+      }
+      case highswitch: {
+        DeviceClass = "\0";
+        if (unitClass.length() == 0 || unitClass == " ") unitClass = "m";
+        if (HAicon.length() == 0) HAicon = "mdi:speedometer-medium"; //fire";
+        break;
+      }
+      case energyswitch: {
+        if (unitClass.length() == 0 || unitClass == " ") unitClass = "kWh";
+        if (stateClass.length() == 0) stateClass = "total_increasing";
+        if (HAicon.length() == 0) HAicon = "mdi:lightning-bolt-circle"; //fire";
+        break;
+      }
+      case humidityswitch: {
+        if (unitClass.length() == 0 || unitClass == " ") unitClass = "%";
+        if (HAicon.length() == 0) HAicon = "mdi:mdiWavesArrowUp";
+        break;
+      }
+      case pressureswitch: {
+        if (unitClass.length() == 0 || unitClass == " ") unitClass = "hPa";  ////cbar, bar, hPa, inHg, kPa, mbar, Pa, psi
+        if (HAicon.length() == 0) HAicon = "mdi:mdiCarSpeedLimiter";
+        break;
+      }
+      case durationswitch: {
+        if (unitClass.length() == 0 || unitClass == " ") unitClass = "s";  ////cbar, bar, hPa, inHg, kPa, mbar, Pa, psi
+        if (HAicon.length() == 0) HAicon = "mdi:fire";
+        break;
+      }
+      default: {
+
+        break;
+      }
+    }
+//test/lol", 0, true, "test 1");
+  }
+  if (DeviceClass.length() > 0) {
+    unitbuilder += build_JSON_Payload(F("dev_cla"), DeviceClass, false, "\""); }
+  if (unitClass.length() > 0) {
+    unitbuilder += build_JSON_Payload(F("unit_of_meas"), unitClass, false, "\"");
+  }
+  if (stateClass.length() > 0) {
+    unitbuilder += build_JSON_Payload(F("state_class"), stateClass, false, "\"");
+  }
+  if (HAicon.length() > 0) unitbuilder += build_JSON_Payload(F("ic"), HAicon, false, "\"");
+  if (unitbuilder.length() == 0) unitbuilder += F(",");
+  char mqttTopic[maxLenMQTTTopic] = {'\0'};
+  String TotalName = appendname;
+  TotalName += nameval;
+  sprintf(mqttTopic, "%s%s/config", discoverytopic.c_str(), TotalName.c_str());
+  sprintf(log_chars, "\"name\":\"%s\",\"uniq_id\": \"%s\",\"stat_t\":\"%s\",\"val_tpl\":\"{{value_json.%s}}\"%s%s,\"qos\":%s%s",TotalName.c_str(), TotalName.c_str(), sensorswitchValTopic.c_str(), TotalName.c_str(), unitbuilder.c_str(), availabityTopic.c_str(), String(QOS).c_str(), deviceid.c_str());
+  String mqttTopicStr = String(mqttTopic);
+  String mqttPayloadStr = String(log_chars);
+  if (publishMQTT(mqttTopicStr, mqttPayloadStr, mqtt_Retain, QOS) > 0) log_message((char*)F("HA Discovery send OK with QOS > 0")); else log_message((char*)F("HA Discovery send OK with QOS = 0"));
+
+}
+#endif
 //***********************************************************************************************************************************************************************************************
 String uptimedana(unsigned long started_local = 0, bool startFromZero = false, bool forlogall = false) {
   String wynik = "\0";
@@ -701,7 +875,7 @@ String getJsonVal(String &jsoninput, String tofind)
   #endif
   if (!json.isEmpty() and !tofind.isEmpty() and json.startsWith("{") and json.endsWith("}"))  //check is starts and ends as json data and nmqttident null
   {
-    json=json.substring(1,json.length()-1);                             //cut start and end brackets json
+    json = json.substring(1,json.length()-1);                             //cut start and end brackets json
     if (json.indexOf("{",1) !=-1)
     {
       json.replace("{","\"jsonskip\":\"0\",");      //was "{","\"jsonskip\",");
@@ -965,6 +1139,7 @@ void doubleResetDetect() {
     drd->stop();
     SPIFFS.begin();
     //SPIFFS.format();
+    SPIFFS.rename(configfile, configfile + String(millis() + ".txt"));
     SaveConfig();
     WiFi.persistent(true);
     WiFi.disconnect();
@@ -1620,17 +1795,12 @@ String getValuesToWebSocket_andWebProcessor(u_int function, String processorAsk 
   for (u_int i = 0; i < sizeof(ASS)/sizeof(ASS[0]); i++)  /////////////////////////////korekta
   {
     String placeholdername = get_PlaceholderName(i);
-    if (sizeof(ASS[i].Value)>0 )
+    if (ASS[i].Value.length()>0 )
     {
       if (i>0) toreturn += F(",");
-      toreturn += F("\"");
-      toreturn += placeholdername;
-      toreturn += F("\":");
-      toreturn += F("\"");
-      toreturn += String(ASS[i].Value);
-      toreturn += F("\"");
+      toreturn += build_JSON_Payload(placeholdername, ASS[i].Value, true, "\"");
     }
-    if (function == ValuesToWSWPforWebProcessor && (placeholdername).indexOf(processorAsk) >= 0 ) return String(ASS[i].Value);
+    if (function == ValuesToWSWPforWebProcessor && (placeholdername).indexOf(processorAsk) >= 0 ) return ASS[i].Value;
   }
   if (function == ValuesToWSWPinJSON) return (toreturn + "}");
   return "\0";
@@ -1650,22 +1820,18 @@ void handleWebSocketMessage_sensors(String message) {
         if (sizeof(ASS[i].Value)>0)
         {
           String placeholdername = get_PlaceholderName(i);
-          //Serial.println("Debug: "+ASS[i].placeholder+", val: "+ASS[i].Value);
           if (placeholdertmp.indexOf(placeholdername) >= 0) {
             sprintf(log_chars,"Received Websocket %s", String(message).c_str());
             log_message(log_chars);
- //           strcpy(ASS[i].Value, valuetmp.c_str());
-//            valuetmp.toCharArray(ASS[i].Value, valuetmp.length());
             ASS[i].Value = valuetmp;
   //          receivedwebsocketdata = true;
             #if defined(enableMQTT) || defined(ENABLE_INFLUX) || defined (enableMQTTAsync)
             receivedmqttdata = true;
-
             #endif
             updateDatatoWWW_received(i);
             String tmpStr = F("{");
             tmpStr += build_JSON_Payload(placeholdername, ASS[i].Value, true, "\"");
-            tmpStr += F("{");
+            tmpStr += F("}");
             notifyClients(tmpStr);
   //          notifyClients(getValuesToWebSocket_andWebProcessor(ValuesToWSWPinJSON));
           }
@@ -1890,7 +2056,7 @@ void webhandleFileUpload(AsyncWebServerRequest *request, String filename, size_t
       response->addHeader("Refresh", "2");
       response->addHeader("Location", "/success.html");
       request->send(response);
-      if ( filename.indexOf("index.htm") >-1 ) restart(F("Restart After update main index.html file"));
+      //if ( filename.indexOf("index.htm") >-1 ) restart(F("Restart After update main index.html file"));
     }
 }
 
@@ -1904,7 +2070,8 @@ void Task1code( void * pvParameters ){
   for(;;){
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
     delay(1000);
-
+    doubleResetDetect();
+    if (mqttReconnects>100) restart("Core 1 mqtt more than 100");
   }
 }
 #endif
@@ -1936,12 +2103,15 @@ void MainCommonSetup()  {
   Setup_FileSystem();
   if (loadConfig())
   {
+    CRTrunNumber++;
     sprintf(log_chars,"Config loaded. SSID: %s, Pass: %s", ssid, pass);
     log_message(log_chars);
+    SaveConfig();
   }
   else
   {
-    log_message((char*)F("Config not loaded!"));
+    CRTrunNumber++;
+    log_message((char*)F("Config not loaded! SPIFF Format"));
     SPIFFS.format();
     SaveConfig(); // overwrite with the default settings
   }
@@ -1949,7 +2119,6 @@ void MainCommonSetup()  {
   Setup_Mqtt();     //for async version move before wifi
 #endif
   Setup_WiFi();
-  CRTrunNumber++;
   #ifdef enableArduinoOTA
   Setup_OTA();
   #endif
@@ -1968,15 +2137,14 @@ void MainCommonSetup()  {
   #endif
   #if defined enableMQTT
   Setup_Mqtt();     //for async version move before wifi
-  #endif
+  #endif //enableMQTT
   #ifdef ENABLE_INFLUX
   Setup_Influx();
-  #endif
+  #endif //ENABLE_INFLUX
   ESPlastResetReason = get_lastResetReason();
-  log_message((char*)ESPlastResetReason.c_str());
   #ifdef enableMESHNETWORK
   Setup_MeshWiFi();
-  #endif
+  #endif //enableMESHNETWORK
   #ifdef ESP32
   //Start one core in setup and loop ;)
   xPortGetCoreID();
@@ -2010,7 +2178,8 @@ char* toCharPointer (String ptrS) {
 }
 //***********************************************************************************************************************************************************************************************
 void SaveAssValue(uint8_t ASSV, String source_str, bool humid = false) {
-  if (!humid) ASS[ASSV].Value = source_str; else ASS[ASSV].ValueHumid = source_str;
+  ASS[ASSV].Value = source_str;
+//  if (!humid) ASS[ASSV].Value = source_str; else ASS[ASSV].ValueHumid = source_str;
 }
 //***********************************************************************************************************************************************************************************************
 void updateDatatoWWW_common()
@@ -2020,42 +2189,30 @@ void updateDatatoWWW_common()
   SaveAssValue(ASS_uptimedana, String(uptimedana(0) + "    CRT: <b>" + String(CRTrunNumber)) );
   //Statusy
     String ptr = "\0";
-    ptr += F("Free mem: <b>");
-    ptr += String(getFreeMemory());
-    ptr += F("&percnt;</b>, Heap: <b>");
-    ptr += formatBytes(ESP.getFreeHeap());
-    ptr += F("</b>, Wifi: <b>");
-    ptr += String(getWifiQuality());
-    ptr += F("&percnt;");
-    ptr += F("</b>");
+    ptr = formatBytes(ESP.getFreeHeap());
+    sprintf(log_chars, "Free mem: <b>%d&percnt;</b>, Heap: <b>%s</b>, Wifi: <b>%d&percnt;</b>", getFreeMemory(), ptr.c_str(), getWifiQuality());
+    ptr = log_chars;
     #ifdef ESP32
-    ptr += F(", Hall: <b>");
-    ptr += String(hallRead());
-    ptr += F("</b>G");
+    sprintf(log_chars,", Hall: <b>%d</b>G", hallRead());
+    ptr += log_chars;
     #endif
     #if defined enableMQTT || defined enableMQTTAsync
     ptr += F("</br>MQTT");
     #ifdef enableMQTTAsync
     ptr += F("-Async ");
     #endif
-    ptr += F("status: <b>");
-    ptr += ((mqttclient.connected())?"Connected":"Disconnected");
-    ptr += F("</b>");
-    ptr += F(", reconnects: <b>");
-    ptr += mqttReconnects;
-    ptr += F("</b>");
+    sprintf(log_chars,"status: <b>%s</b>, reconnects: %d (%s)", (mqttclient.connected())?msg_Connected : msg_disConnected, mqttReconnects, reasontxt.c_str());
+    ptr += log_chars;
     #endif
     #ifdef ENABLE_INFLUX
-    ptr += F("</br>InfluxDB: <b>");
-    ptr += (InfluxStatus?"Connected":"Disconnected");
-    ptr += F("</b>");
+    sprintf(log_chars,"</br>InfluxDB: <b>%s</b>", (InfluxStatus)?msg_Connected : msg_disConnected);
+    ptr += log_chars;
     #endif
     if (ESPlastResetReason.length() > 0) {
-      ptr += F("</br>Last reset: <b>");
       String ptrtmp = ESPlastResetReason;
       ptrtmp.replace("\n","<br>");
-      ptr += ptrtmp;
-      ptr += F("</b>");
+      sprintf(log_chars,"</br>Last reset: <b>%s</b>", ptrtmp.c_str());
+      ptr += log_chars;
     }
     SaveAssValue(ASS_MemStats, ptr );
     updateDatatoWWW();
@@ -2159,45 +2316,40 @@ void MainCommonLoop()
     // log stats
     //    #include "configmqtttopics.h"
     String payloadvalue_startend_val = F(" ");
-    String message = F("stats: Uptime: ");
-    message += uptimedana();
-    message += F(" ## Free memory: ");
-    message += String(getFreeMemory());
-    message += F("% ");
-    message += formatBytes(ESP.getFreeHeap());
-    message += F(" bytes ## Wifi: ");
-    message += String(getWifiQuality());
+    String message = formatBytes(ESP.getFreeHeap());
+    sprintf(log_chars, "stats: Uptime: %s ## Free memory: %d%%, %s bytes ## Wifi: %d", uptimedana().c_str(), getFreeMemory(), message.c_str(), getWifiQuality());
+    message = log_chars;
+
     #ifdef ESP32
-    message += F("Hall: ");
-    message += String(hallRead());
-    message += F("Gauss");
-    #endif
+    sprintf(log_chars,", Hall: %dGauss", hallRead());
+    message += log_chars;
+    #endif //ESP32
     #if defined enableMQTT || defined enableMQTTAsync
-    message += F("% ## Mqtt reconnects: ");
-    message += String(mqttReconnects);
-    #endif
-
+    message += F("<, MQTT");
+    #ifdef enableMQTTAsync
+    message += F("-Async ");
+    #endif //enableMQTTAsync
+    sprintf(log_chars,"status: %s, reconnects: %d (%s)", (mqttclient.connected())?msg_Connected : msg_disConnected, mqttReconnects, reasontxt.c_str());
+    message += log_chars;
+    #endif //defined enableMQTT || defined enableMQTTAsync
     #ifdef ENABLE_INFLUX
-    message += F(", InfluxDB: ");
-    message += (InfluxStatus?"Połączony":"Rozłączony");
-    #endif
+    sprintf(log_chars,", InfluxDB: %s", (InfluxClient.isConnected())?msg_Connected : msg_disConnected);
+    message += log_chars;
+    #endif //ENABLE_INFLUX
     log_message((char *)message.c_str());
-
     #if defined enableMQTT || defined enableMQTTAsync
-    #ifdef debug
-    log_message((char*)F("MainLoopInLoop: stats string builder to json"));
-    #endif
-    String stats = build_JSON_Payload( F("CRT"), String(CRTrunNumber), true, payloadvalue_startend_val);
-    stats += build_JSON_Payload( F("rssi"), String(WiFi.RSSI()), false, payloadvalue_startend_val);
-    stats += build_JSON_Payload( F("uptime"), String(millis()), false, payloadvalue_startend_val);
-    stats += build_JSON_Payload( F("version"), String(version), false, payloadvalue_startend_val);
-    stats += build_JSON_Payload( F("voltage"), String(0), false, payloadvalue_startend_val);
+
+    String stats = build_JSON_Payload( F("CRT"),  String(CRTrunNumber), true, payloadvalue_startend_val);
+    stats += build_JSON_Payload( F("rssi"),       String(WiFi.RSSI()), false, payloadvalue_startend_val);
+    stats += build_JSON_Payload( F("uptime"),     String(millis()), false, payloadvalue_startend_val);
+    stats += build_JSON_Payload( F("version"),    String(version), false, payloadvalue_startend_val);
+    stats += build_JSON_Payload( F("voltage"),    String(0), false, payloadvalue_startend_val);
     stats += build_JSON_Payload( F("free memory"), String(getFreeMemory()), false, payloadvalue_startend_val);
     stats += build_JSON_Payload( F("ESP_cyclecount"), String(ESP.getCycleCount()), false, payloadvalue_startend_val);
-    stats += build_JSON_Payload( F("wifi"), String(getWifiQuality()), false, payloadvalue_startend_val);
+    stats += build_JSON_Payload( F("wifi"),       String(getWifiQuality()), false, payloadvalue_startend_val);
 
     #ifdef ESP32
-    stats += build_JSON_Payload( F("Hall"), String(hallRead()), false, payloadvalue_startend_val);
+    stats += build_JSON_Payload( F("Hall"),       String(hallRead()), false, payloadvalue_startend_val);
     #endif
     stats += build_JSON_Payload( F("mqttReconnects"), String(mqttReconnects), false, payloadvalue_startend_val);
     // stats += F("}");
@@ -2247,7 +2399,7 @@ void MainCommonLoop()
 #ifndef ESP32
   if ((millis() % 600) < 100) {
     #ifdef debug
-    log_message((char*)F("MainLoop3rdTimed: Ledblonk"));
+    log_message((char*)F("MainLoop3rdTimed: Ledblink"));
     #endif //debug
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));}
 #endif
@@ -2342,6 +2494,11 @@ void onWifiDisconnect(WiFiEvent_t event, WiFiEventInfo_t info) {
 void connectToMqtt() {
   log_message((char*)F("MQTT: Connecting to MQTT..."));
   mqttReconnects++;
+  if (mqttReconnects > 100) restart(F("MQTT Exceed max reconnect"));
+  //add clientid -there is some reason with protocol error and unknown name on mqtt log
+  // char clientid[sensitive_size];
+  // strcpy(clientid, String(BASE_TOPIC).c_str() );
+  // mqttclient.setClientId(clientid);
   mqttclient.connect();
 }
 #endif
@@ -2351,6 +2508,7 @@ void onMqttConnect(bool sessionPresent) {
   log_message((char*)F("MQTT: Connected to MQTT."));
   sprintf(log_chars,"Session present: %s", String(sessionPresent?"Yes":"No").c_str());
   log_message(log_chars);
+  mqttReconnects = 0;
 
   // uint16_t packetIdSub = mqttclient.subscribe("test/lol", 2);
   // sprintf(log_chars,"Subscribing at QoS 2, packetId: %s", String(packetIdSub).c_str());
@@ -2378,7 +2536,7 @@ void onMqttConnect(bool sessionPresent) {
 int _retriesCount = 0;
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
   Serial.println((uint8_t)reason);
-  String reasontxt = "\0";
+  reasontxt = "\0";
   if (AsyncMqttClientDisconnectReason::TCP_DISCONNECTED == reason) reasontxt = "0. TCP_DISCONNECTED";
   if (AsyncMqttClientDisconnectReason::MQTT_UNACCEPTABLE_PROTOCOL_VERSION == reason) reasontxt = "1. MQTT_UNACCEPTABLE_PROTOCOL_VERSION";
   if (AsyncMqttClientDisconnectReason::MQTT_IDENTIFIER_REJECTED == reason) reasontxt = "2. MQTT_IDENTIFIER_REJECTED";
@@ -2700,160 +2858,6 @@ void handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size
   return tmp;
 }
 //***********************************************************************************************************************************************************************************************
-#if defined enableMQTT || defined enableMQTTAsync
-void HADiscovery(String sensorswitchValTopic, String appendname, String nameval, String discoverytopic, String DeviceClass = "\0", String unitClass = "\0", String stateClass = "\0", String HAicon = "\0", const String payloadvalue_startend_val = "", const String payloadON = "1", const String payloadOFF = "0")
-{
-  const String deviceid = "\"dev\":{\"ids\":\""+String(me_lokalizacja)+"\",\"name\":\""+String(me_lokalizacja)+"\",\"sw\":\"" + String(version) + "\",\"mdl\":\""+String(me_lokalizacja)+"\",\"mf\":\"" + String(MFG) + "\"}";
-  const String availabityTopic = ",\"avty_t\":\"" + String(WILL_TOPIC) + "\",\"pl_avail\":\"" + String(WILL_ONLINE) + "\",\"pl_not_avail\":\"" + String(WILL_OFFLINE) + "\"";
-
-  String unitbuilder = "\0";
-  int DCswitch = 0;
-  #define tempswitch 1
-  #define energyswitch 2
-  #define pressureswitch 3
-  #define humidityswitch 4
-  #define highswitch 5
-  #define coswitch 6
-  #define switchswitch 7
-  #define powerswitch 8
-  #define voltageswitch 9
-  #define currentswitch 10
-  #define frequencyswitch 11
-  DeviceClass.toLowerCase();
-  stateClass.toLowerCase();
-  HAicon.toLowerCase();
-  if (unitClass.length() == 0) unitClass = " ";
-  if (DeviceClass.length()>0)
-  {
-
-    if (DeviceClass.indexOf("temperature") >= 0) DCswitch = tempswitch;
-    if (DeviceClass.indexOf("energy") >= 0) DCswitch = energyswitch;
-    if (DeviceClass.indexOf("pressure") >= 0) DCswitch = pressureswitch;
-    if (DeviceClass.indexOf("humidity") >= 0) DCswitch = humidityswitch;
-    if (DeviceClass.indexOf("high") >= 0) DCswitch = highswitch;
-    if (DeviceClass.indexOf("co") >= 0) DCswitch = coswitch;
-    if (DeviceClass.indexOf("switch") >= 0) DCswitch = switchswitch;
-    if (DeviceClass.indexOf("power") >= 0) DCswitch = powerswitch;
-    if (DeviceClass.indexOf("voltage") >= 0) DCswitch = voltageswitch;
-    if (DeviceClass.indexOf("current") >= 0) DCswitch = currentswitch;
-    if (DeviceClass.indexOf("frequency") >= 0) DCswitch = frequencyswitch;
-
-    switch (DCswitch) {
-      case tempswitch: {
-        if (unitClass.length() == 0 || unitClass == " ") unitClass = "°C";
-        if (HAicon.length() == 0) HAicon = "mdi:thermometer";
-        break;
-      }
-      case powerswitch: {
-        if (unitClass.length() == 0 || unitClass == " ") unitClass = "W"; //energy: Wh, kWh, MWh	Energy, statistics will be stored in kWh. Represents power over time. Nmqttident to be confused with power.  power: W, kW	Power, statistics will be stored in W.
-        if (HAicon.length() == 0) HAicon = "mdi:alpha-W-box"; //fire";
-        break;
-      }
-      case voltageswitch: {
-        if (unitClass.length() == 0 || unitClass == " ") unitClass = "V";
-        if (HAicon.length() == 0) HAicon = "mdi:alpha-v-box"; //fire";
-        break;
-      }
-      case currentswitch: {
-        if (unitClass.length() == 0 || unitClass == " ") unitClass = "A";
-        if (HAicon.length() == 0) HAicon = "mdi:alpha-a-box"; //fire";
-        break;
-      }
-      case frequencyswitch: {
-        if (unitClass.length() == 0 || unitClass == " ") unitClass = "Hz";
-        if (HAicon.length() == 0) HAicon = "mdi:sine-wave"; //fire";
-        break;
-      }
-
-      case switchswitch: {
-        unitbuilder = F(",\"pl_off\":\"OFF\",\"pl_on\":\"ON\",");
-        // if (unitClass.length() == 0 || unitClass == " ") unitClass = "m";
-        // if (HAicon.length() == 0) HAicon = "mdi:speedometer-medium"; //fire";
-        break;
-      }
-      case coswitch: {
-        DeviceClass = "carbon_monoxide";
-        if (unitClass.length() == 0 || unitClass == " ") unitClass = "ppm";
-        if (HAicon.length() == 0) HAicon = "mdi:molecule-co"; //fire";
-        break;
-      }
-      case highswitch: {
-        DeviceClass = "\0";
-        if (unitClass.length() == 0 || unitClass == " ") unitClass = "m";
-        if (HAicon.length() == 0) HAicon = "mdi:speedometer-medium"; //fire";
-        break;
-      }
-      case energyswitch: {
-        if (unitClass.length() == 0 || unitClass == " ") unitClass = "kWh";
-        if (stateClass.length() == 0) stateClass = "total_increasing";
-        if (HAicon.length() == 0) HAicon = "mdi:lightning-bolt-circle"; //fire";
-        break;
-      }
-      case humidityswitch: {
-        if (unitClass.length() == 0 || unitClass == " ") unitClass = "%";
-        if (HAicon.length() == 0) HAicon = "mdi:mdiWavesArrowUp";
-        break;
-      }
-      case pressureswitch: {
-        if (unitClass.length() == 0 || unitClass == " ") unitClass = "hPa";  ////cbar, bar, hPa, inHg, kPa, mbar, Pa, psi
-        if (HAicon.length() == 0) HAicon = "mdi:mdiCarSpeedLimiter";
-        break;
-      }
-      default: {
-
-        break;
-      }
-    }
-//test/lol", 0, true, "test 1");
-  }
-  if (DeviceClass.length() > 0) {
-    unitbuilder += build_JSON_Payload(F("dev_cla"), DeviceClass, false, "\""); }
-  if (unitClass.length() > 0) {
-    unitbuilder += build_JSON_Payload(F("unit_of_meas"), unitClass, false, "\"");
-  }
-  if (stateClass.length() > 0) {
-    unitbuilder += build_JSON_Payload(F("state_class"), stateClass, false, "\"");
-  }
-  if (HAicon.length() > 0) unitbuilder += build_JSON_Payload(F("ic"), HAicon, false, "\"");
-  if (unitbuilder.length() == 0) unitbuilder += F(",");
-  char mqttTopic[maxLenMQTTTopic] = {'\0'};
-  String TotalName = appendname;
-  TotalName += nameval;
-  sprintf(mqttTopic, "%s%s/config", discoverytopic.c_str(), TotalName.c_str());
-  sprintf(log_chars, "\"name\":\"%s\",\"uniq_id\": \"%s\",\"stat_t\":\"%s\",\"val_tpl\":\"{{value_json.%s}}\"%s%s,\"qos\":%s,%s",TotalName.c_str(), TotalName.c_str(), sensorswitchValTopic.c_str(), TotalName.c_str(), unitbuilder.c_str(), availabityTopic.c_str(), String(QOS).c_str(), deviceid.c_str());
-  String mqttTopicStr = String(mqttTopic);
-  String mqttPayloadStr = String(log_chars);
-  if (publishMQTT(mqttTopicStr, mqttPayloadStr, mqtt_Retain, QOS) > 0) log_message((char*)F("HA Discovery send OK with QOS > 0")); else log_message((char*)F("HA Discovery send OK with QOS = 0"));
-
-}
-#endif
-//***********************************************************************************************************************************************************************************************
-#if defined enableMQTT || defined enableMQTTAsync
-uint16_t publishMQTT(String &mqttTopicxx, String &mqttPayloadxx, int mqtt_Retainv = 1, u_int qos = 0) {
-    char mqttPayloadSend [maxLenMQTTPayload];
-    // if (mqttPayloadxx.indexOf(",")>-1) {
-      sprintf(mqttPayloadSend, "{%s}", mqttPayloadxx.c_str());
-    // } else {
-    //   sprintf(mqttPayloadSend, "%s", mqttPayloadxx.c_str());
-    // }
-    #ifdef debug2
-    sprintf(log_chars, "(publishMQTT) MQTT Topic %s Size: %u, Payload Size: %u", mqttTopicxx.c_str(), (u_int)mqttTopicxx.length(), (u_int)mqttPayloadxx.length());
-    log_message(log_chars);
-    #endif
-    uint16_t packetIdSub = 0;
-    if (mqttPayloadxx.length()>0) {
-      #ifdef enableMQTT
-      mqttclient.publish(mqttTopicxx.c_str(), mqttPayloadxx.c_str(), mqtt_Retainv);
-      #endif
-      #ifdef enableMQTTAsync
-      packetIdSub = mqttclient.publish(mqttTopicxx.c_str(), qos , mqtt_Retainv, mqttPayloadSend);
-      log_message((char*)String(packetIdSub).c_str());
-      #endif
-    }
-    return packetIdSub;
-}
-#endif
-//***********************************************************************************************************************************************************************************************
 String build_JSON_Payload(String MQTTname, String MQTTvalue, bool notAddSeparator = false, String Payload_StartEnd = "\0") {
     String tmpbuild = F("\0");
     if (!notAddSeparator) tmpbuild += F(",");
@@ -2905,7 +2909,7 @@ bool loadConfig() {
     #ifdef enableDebug2Serial
     if (dane.indexOf("debugSerial") != -1) {
       tmpstrval = getJsonVal(dane, "debugSerial");
-      debugSerial  = (tmpstrval.toInt() == 1);
+      // debugSerial  = (tmpstrval.toInt() == 1);  //make it persistent
     }
     #endif //enableDebug2Serial
     #if defined enableMQTT || defined enableMQTTAsync
@@ -2994,7 +2998,7 @@ bool loadConfig() {
       CRT = (u_int) getJsonVal(dane, "CRT").toInt();
       if (CRT > CRTrunNumber) CRTrunNumber = CRT;
     }
-    sprintf(log_chars,"Config loaded. SSID: %s, CRT: %s",String(ssid).c_str(), String(CRT).c_str());
+    sprintf(log_chars,"Config loaded. SSID: %s, CRT: %s",String(ssid).c_str(), String(CRTrunNumber).c_str());
     log_message(log_chars);
     EEPROM.end();
     return true; // return 1 if config loaded
@@ -3037,7 +3041,7 @@ bool SaveConfig() {
     String configSave = F("{\"config\":99");
 //this block is as param from html
     #if defined enableDebug2Serial
-    configSave += build_JSON_Payload(F("debugSerial"), String(debugSerial?"1":"0"), false, "\"");
+    // configSave += build_JSON_Payload(F("debugSerial"), String(debugSerial?"1":"0"), false, "\"");  //this is persistent
     #endif
     #if defined enableWebSocketlog || defined enableWebSerial
     configSave += build_JSON_Payload(F("WebSocketlog"), String(WebSocketlog?"1":"0"), false, "\"");
@@ -3112,7 +3116,7 @@ void RemoteCommandReceived(uint8_t *data, size_t len)
   String d_oryg = d;
   d.toUpperCase();
   log_message((char*)F("------------------------ REMOTE COMMAND RECEIVED START ------------------------------------------------------------------------"), logCommandResponse);
-  sprintf(log_chars, "DirectCommands RemoteCommandReceived Received: %s (dł: %s)", String(d).c_str(), String(d.length()).c_str());
+  sprintf(log_chars, "DirectCommands RemoteCommand Received: %s (dł: %s)", String(d).c_str(), String(d.length()).c_str());
   log_message(log_chars, logCommandResponse);
 
 

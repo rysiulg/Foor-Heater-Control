@@ -34,12 +34,12 @@ String ROOM_TEMPERATURE_SETPOINT_SET_TOPIC = String(BASE_TOPIC) + "/SET/" + ROOM
 String ROOMS_TOPIC_SENSOR = String(BASE_TOPIC) + "/" + String(ROOM_TEMP) + "/attr";
 
 
-String COPUMP_GET_TOPIC = F("COWODA0/switch/boilerroom/attr");                      // temperatura outside avg NEWS
-#define COPumpStatus_json "boilerroom_pump2CO"
-#define WaterPumpStatus_json "boilerroom_pump1Water"
+String COPUMP_GET_TOPIC = F("COWODA0/switch/boilroom/attrib");                      // temperatura outside avg NEWS
+#define COPumpStatus_json "boilroom_pump2CO"
+#define WaterPumpStatus_json "boilroom_pump1Water"
 
-String NEWS_GET_TOPIC = F("COWODA0/sensor/boilerroom/attributes");          // pompa CO status     IF CHANGE TOPIC -CHANGE CONFIGURATION VERSION !!!!!
-String NEWStemp_json = F("outside_temperature_Averange");
+String NEWS_GET_TOPIC = F("COWODA0/sensor/outside/attrib");          // pompa CO status     IF CHANGE TOPIC -CHANGE CONFIGURATION VERSION !!!!!
+String NEWStemp_json = F("outside_temp_Avg");
 
 String BOILER_FLAME_STATUS_TOPIC = F("opentherm-thermostat/boiler/attr");                              //flme status of co gaz boiler
 String BOILER_FLAME_STATUS_ATTRIBUTE = F("ot_flame_state");                              //boiler flame status of co gaz boiler

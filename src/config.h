@@ -56,8 +56,8 @@
 
 //#boiler_gas_conversion_to_m3  1
 
-#include "sensivity-config-data.h" //it have definitions of sensivity data
-#include "config-translate.h" //definitions polish/english translate
+#include "Common_symlinkFiles\sensivity-config-data.h" //it have definitions of sensivity data
+#include "Common_symlinkFiles\config-translate.h" //definitions polish/english translate
 #ifndef SSID_Name
 #define SSID_Name "SSID_Name"
 #endif
