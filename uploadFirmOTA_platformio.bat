@@ -5,6 +5,8 @@ set LITTLEFS=.pio\build\esp32doit-devkit-v1\littlefs.bin
 set LOCALPORT=COM4
 set OTAPORT=10.48.18.40
 
+if /I NOT "%1"=="" goto startowanie 2
+
 :startowanie
 echo "PORT %OTAPORT%"
 "%USERPROFILE%\.platformio\penv\Scripts\python.exe" "%USERPROFILE%\.platformio\packages\framework-arduinoespressif32\tools\espota.py" "-p 8266" --debug --progress -i %OTAPORT%  -f "%BINFILE%"

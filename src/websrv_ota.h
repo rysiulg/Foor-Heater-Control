@@ -274,7 +274,8 @@ for (u_int x=0;x<maxsensors;x++)
 
     ptrS = "\0";
       if (pump==startrun) {
-        ptrS += F("<i class='fas fa-fire'></i>"); ptrS += "<span id='StatusRedNormal'>"+String(FloorPumpActive)+F("</span><B>")+F("<sup class=\"units\"> </sup></B></br>");
+        unsigned long pumptime = start_pump + start_pump_delay;
+        ptrS += F("<i class='fas fa-fire'></i>"); ptrS += "<span id='StatusRedNormal'>"; ptrS += String(FloorPumpActive); ptrS += F("</span><B><sup class=\'units\'>"); ptrS += ((millis()>pumptime)?" "+uptimedana(millis()-pumptime,true):"-"+uptimedana(pumptime-millis(),true)); ptrS += F("</sup></B></br>");
       }
       if (CO_BoilerPumpWorking) {ptrS += F("<span id='StatusRedNormal'><B>"); ptrS += String(BOILER_IS_HEATING); ptrS += F("</span></br>");}
       if (CO_PumpWorking) {ptrS += "<span id='StatusBlue'>" + String(Second_Engine_Heating_PompActive_Disable_heat) + "</span>></br>";}
@@ -398,116 +399,6 @@ void handleGetTemp() {
 	//digitalWrite(BUILTIN_LED, 0);
 }
 
-// void starthttpserver() {
-//   webserver.on("/update", HTTP_GET, [](AsyncWebServerRequest * request) {
-//     request->send(200, "text/html", htmlup);
-//     }).setAuthentication("", "");
-//   webserver.on("/doUpdate", HTTP_POST,
-//       [&](AsyncWebServerRequest *request) {
-//       // the request handler is triggered after the upload has finished...
-//       // create the response, add header, and send response
-//       AsyncWebServerResponse *response = request->beginResponse((Update.hasError())?500:200, "text/plain", (Update.hasError())?"FAIL":"OK");
-//       response->addHeader("Connection", "close");
-//       response->addHeader("Access-Control-Allow-Origin", "*");
-//       request->send(response);
-//       },
-//     [](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data,
-//                   size_t len, bool final) {handleDoUpdate(request, filename, index, data, len, final);}
-//   ).setAuthentication("", "");;
-
-
-//   webserver.onNotFound([](AsyncWebServerRequest * request) {
-//     request->send(404);
-//   });
-//   webserver.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-//     request->send_P(200, "text/html; charset=utf-8",  index_html, processor);
-//   }).setAuthentication("", "");
-//     // Send a GET request to <IP>/get?message=<message>
-//   webserver.on("/" uptimelink , HTTP_GET, [](AsyncWebServerRequest * request) {
-//   //  request.setAuthentication("", "");
-//     request->send(200, "text/plain; charset=utf-8", String(uptimedana(starting)));
-//   }).setAuthentication("", "");
-//   webserver.on("/" dallThermometerS, HTTP_GET, [](AsyncWebServerRequest * request) {
-//     request->send(200, "text/plain; charset=utf-8", String(temp_NEWS));
-//   }).setAuthentication("", "");
-//   webserver.on("/" tempCORETThermometerS, HTTP_GET, [](AsyncWebServerRequest * request) {
-//     request->send(200, "text/plain; charset=utf-8", String(retTemp,1));
-//   }).setAuthentication("", "");
-
-
-
-//   webserver.on("/" do_stopkawebsiteS, HTTP_GET, [](AsyncWebServerRequest * request) {
-//     request->send(200, "text/plain; charset=utf-8", do_stopkawebsite());
-//   }).setAuthentication("", "");
-
-//   for (u_int x=0;x<maxsensors;x++)
-//   {
-//     String fragment = String(room_temp[x].nameSensor);
-//     fragment.replace(sepkondname,"_");
-//     webserver.on( ("/" + fragment).c_str() , HTTP_GET, [x](AsyncWebServerRequest * request) { //roomtempS + getident
-//     request->send(200, "text/plain; charset=utf-8", String(room_temp[x].tempread==InitTemp ? "--.-" : String(room_temp[x].tempread,1)));
-//     }).setAuthentication("", "");
-//     webserver.on( ("/" + fragment + appendSet).c_str() , HTTP_GET, [x](AsyncWebServerRequest * request) {
-//       request->send(200, "text/plain; charset=utf-8", String(room_temp[x].tempset,1));
-//     }).setAuthentication("", "");
-//   }
-
-// #ifdef enableDHT
-//     webserver.on( ("/"+String(dhumidcor)).c_str(), HTTP_GET, [](AsyncWebServerRequest * request) {
-//         request->send(200, "text/plain; charset=utf-8",  String(humiditycor,1));
-//       }).setAuthentication("", "");
-
-//     webserver.on( ("/"+String(dtempcor)).c_str(), HTTP_GET, [](AsyncWebServerRequest * request) {
-//         String tempw = "\0";
-//         if (millis()-dhtreadtime > (60*1000)) tempw="<span class='units'>  Last update was "+uptimedana(dhtreadtime)+" ago</span>";
-//         request->send(200, "text/plain; charset=utf-8",  String(tempcor,1)+tempw);
-//       }).setAuthentication("", "");
-// #endif
-
-//   webserver.on("/" NEWS_lastTimeS, HTTP_GET, [](AsyncWebServerRequest * request) {
-//     request->send(200, "text/plain; charset=utf-8", String(uptimedana(lastNEWSSet)));
-//   }).setAuthentication("", "");
-
-
-
-//   webserver.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
-//     String message;
-//     for (u_int x=0;x<maxsensors;x++)
-//     {
-//       String fragment = String(room_temp[x].nameSensor)+ appendSet;
-//       fragment.replace(sepkondname,"_");
-//       if (request->hasParam((fragment ).c_str()))
-//       {
-//         message = request->getParam((fragment).c_str())->value();
-//         log_message((char*)message.c_str());
-//         receivedmqttdata = getRemoteTempHumid(message, x, action_tempset);
-//       }else {
-//           //message = "No message sent PARAM_roomtempset0";
-//       }
-//     }
-//     AsyncWebServerResponse *response = request->beginResponse(302, "text/plain", "Update value");
-//     response->addHeader("Refresh", "1");
-//     response->addHeader("Location", "/");
-//     request->send(response);
-//   });
-//     // Send a POST request to <IP>/post with a form field message set to <message>
-// /*     webserver.on("/post", HTTP_POST, [](AsyncWebServerRequest *request){
-//         String message;
-//         if (request->hasParam(PARAM_MESSAGE, true)) {
-//             message = request->getParam(PARAM_MESSAGE, true)->value();
-//         } else {
-//             message = "No message sent";
-//         }
-//         request->send(200, "text/plain", "Hello, POST: " + message);
-//     });
-//  */
-//   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
-//   DefaultHeaders::Instance().addHeader("Server",me_lokalizacja);
-//   DefaultHeaders::Instance().addHeader("Title",me_lokalizacja);
-
-// 	webserver.begin();
-//   log_message((char*)F("HTTP server starting"));
-// }
 
 String processor(const String var) {
 

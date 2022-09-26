@@ -104,7 +104,7 @@ function onMessage(event) {
     if ((event.data).toString().indexOf(logtopic) !== -1)
     {   var key = "log";
         var myStr = (event.data).toString().substring((event.data).toString().indexOf(logtopic)+logtopic.length+1);
-        myStr = myStr.substring(0,myStr.length-2); //sa cudzyslowy wiec dlatego tu 2 i linijke wczesniej +1
+        myStr = myStr.substring(0,myStr.length-1); //sa cudzyslowy wiec dlatego tu 2 i linijke wczesniej +1
 //        console.log(myStr);
         if (document.getElementById(key).scrollHeight - document.getElementById(key).scrollTop > document.getElementById(key).clientHeight + 100 ) {
             document.getElementById(key).value += myStr + "\n";
@@ -123,48 +123,36 @@ function onMessage(event) {
         }
         var keys = Object.keys(myObj);
     //    if (keys[0] == "log") console.log(myObj[keys[0]]); else console.log(event.data);
-
+        //console.log("keyslength: "+keys.length);
         for (var i = 0; i < keys.length; i++){
             var key = keys[i];
+            //console.log(i+": key: "+key+"  val: "+myObj[key] );
             //var str=document.getElementById(key); str = str.replace(/^\s*|\s*$/g,""); if (str == "") { alert("I'm so brilliant"); }
+            if (key.trim() == ("sliderValue"+ key.charAt(key.length-1)).trim()) {
+                var samesam;
+                if (parseFloat(document.getElementById("slider"+ key.charAt(key.length-1)).value).toFixed(1) == parseFloat(myObj[key]).toFixed(1)) {
+                    samesam=true;
+                } else {
+                    samesam=false;
+                }
+                document.getElementById("slider"+ key.charAt(key.length-1)).value = parseFloat(myObj[key]).toFixed(1);
+                document.getElementById("slider"+ key.charAt(key.length-1)).setAttribute('value', myObj[key]);
+                if (samesam == false) {document.getElementById("slider"+ key.charAt(key.length-1)).onchange(); //console.log("this triggers");
+                }
+            } else
+            if (key.trim() == ("Roomstate"+ key.charAt(key.length-1)).trim()) {
+                if (parseInt(myObj[key]).value === 1 || myObj[key] === "1") {
+                    document.getElementById("Room_card"+ key.charAt(key.length-1)).style.background = null;
+                } else {
+                    document.getElementById("Room_card"+ key.charAt(key.length-1)).style.background = "PaleGreen";
+                }
+
+
+               // document.getElementById("Room_card" + key.charAt(key.length-1)).style.background = null;
+
+
+            } else
             if (document.getElementById(key)!=null) {
-                if (key.trim() == ("sliderValue"+ key.charAt(key.length-1)).trim()) {
-                    var samesam;
-                    if (parseFloat(document.getElementById("slider"+ key.charAt(key.length-1)).value).toFixed(1) == parseFloat(myObj[key]).toFixed(1)) {
-                        samesam=true;
-                    } else {
-                        samesam=false;
-                    }
-                    document.getElementById("slider"+ key.charAt(key.length-1)).value = parseFloat(myObj[key]).toFixed(1);
-                    document.getElementById("slider"+ key.charAt(key.length-1)).setAttribute('value', myObj[key]);
-                    if (samesam == false) {document.getElementById("slider"+ key.charAt(key.length-1)).onchange(); console.log("this triggers");}
-                } else
-                if (key.trim() == ("Roomstate"+ key.charAt(key.length-1)).trim()) {
-                    if (parseInt(myObj[key]).value === 0) {
-                        document.getElementById("Room_title"+ key.charAt(key.length-1)).background = null;
-                    } else {
-                        document.getElementById("Room_title"+ key.charAt(key.length-1)).background = "lightorange";
-                    }
-
-
-                    document.getElementById("Room_card" + key.charAt(key.length-1)).style.background = null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                } else
                 if (key.trim() === "boilerhwwww") { //CWU water
     //               console.log(key+" Stan HW: "+myObj[key]);
                     if (myObj[key].toLowerCase() === "on" || myObj[key] === "1") {

@@ -88,7 +88,7 @@ const String sepkondname = ":"; //separator between kondygnacja number and senso
 // #define DS18B20nodata -127
 // #define DS18B20nodata2 -255
 #define limitsetsensor 9 //limitacja wskazania na web suwaka ustawienia tempset -czujniki + prog pompy
-#define temptoheat 8
+#define temptoheat 18
 #define temptocool 25
 
 

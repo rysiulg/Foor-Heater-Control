@@ -10,6 +10,10 @@
 
 void ReadTemperatures()
 {
+  #ifdef enableDHT
+  dht.read(true);
+  #endif
+
   bool assignedsensor=false;
   UnassignedTempSensor="";
    String addrstr = "";
@@ -21,10 +25,11 @@ void ReadTemperatures()
   float temp1w;
   int count = sensors.getDS18Count();
   if (count == 0) count = sensors.getDeviceCount();
-  sprintf(log_chars, "Reading 1wire 18B20 and DHT sensors... Count: %i", count);
+  sprintf(log_chars, "Reading 1wire 18B20 and DHT sensors... Sensors Count: %s ...", String(count,0).c_str());
   log_message(log_chars);
   if (count==0) count = maxsensors;
-  String temptmp = "\0";
+  String temptmp = "";
+   log_message(log_chars);
   for (int j = 0; j < count; j++)
   {
     temp1w = sensors.getTempCByIndex(j);
@@ -47,20 +52,16 @@ void ReadTemperatures()
       temptmp += log_chars;
     }
   }
-  sprintf(log_chars,"Collecting 18B20 ROMS and temps:\n%s", temptmp.c_str());
+  sprintf(log_chars,"Collecting 18B20 ROMS and temps:%s ...", temptmp.c_str());
   log_message(log_chars);
 
   if (UnassignedTempSensor.length() > 0)
   {
-    sprintf(log_chars, "Unassigned Sensors: %s", UnassignedTempSensor);
+    sprintf(log_chars, "Unassigned Sensors: %s ...", UnassignedTempSensor);
     log_message(log_chars);
   }
 
   #ifdef enableDHT
-  dht.read(true);
-
-  delay(200);
-  tempcor = InitTemp;
   float t = dht.readTemperature();
   float h = dht.readHumidity();
   if (isnan(h) or isnan(t)) {
@@ -68,13 +69,17 @@ void ReadTemperatures()
     //if (isnan(t)) t=InitTemp;
     //if (isnan(h)) h=0;
     } else {
+
       dhtreadtime = millis();
+      if (check_isValidTemp(t) and t != 0 and h != 0) {
+        tempcor = t; //to check ds18b20 also ;)
+        humiditycor = h;
+      }
     }
 
   sprintf(log_chars, "Get DHT values t= %f, humid: %f", t, h);
   log_message(log_chars);
-  if (!isnan(h)) humiditycor = h;
-  if (!isnan(t) && check_isValidTemp(t)) tempcor = t; //to check ds18b20 also ;)
+
   #endif
 }
 
@@ -132,7 +137,9 @@ void loop()
     sprintf(log_chars, "temps+pumps lastUpdate: %d, statusUpdateInterval_ms: %d", lastUpdateTempPump, statusUpdateInterval_ms);
     log_message(log_chars);
     lastUpdateTempPump = millis();
-    ReadTemperatures();
+    #ifndef ESP32
+    ReadTemperatures();  //moved to 2nd core
+    #endif
     Pump_Activate_Control();
 //    opentherm_update_data(lastUpdatemqtt); // According OpenTherm Specification from Ihnor Melryk Master requires max 1s interval communication -przy okazji wg czasu update mqtt zrobie odczyt dallas
   }
@@ -142,84 +149,100 @@ void loop()
 
 
 void Pump_Activate_Control () {
+  //aktywacja przekaznika low, moja plyta HIGH
   log_message((char *)F("Pump loop..."));
-  if (temp_NEWS < temptoheat or min_temp < (max_temp - histereza)) modestate = MODEHEAT;   //min i max co drugie wykonanie ;()
-  if (temp_NEWS > temptocool or min_temp > (max_temp + histereza)) modestate = MODECOOL;
-  if ((tempwe > 21 or tempwe != InitTemp) and modestate == MODECOOL) modestate = MODEOFF;
-  min_max_state = stoprun;
   GetSpecificSensorData();
-  String tmpval="\r";
-
   for (int o = 0; o < maxsensors; o++) {
-    if (room_temp[o].tempread == InitTemp) room_temp[o].switch_state = stoprun; //-wylacz gdy temp na wartosci inicjalnej
-    //aktywacja przekaznika low, moja plyta HIGH
-    if (o<8 and room_temp[o].tempread == InitTemp and temp_NEWS < temptoheat) {room_temp[o].switch_state=startrun;}
-    if (o<8 and room_temp[o].tempread != InitTemp) {
-      if (room_temp[o].tempread > room_temp[o].tempset and modestate == MODEHEAT) {room_temp[o].switch_state=stoprun;}
-      if (room_temp[o].tempread > room_temp[o].tempset and modestate == MODECOOL) {room_temp[o].switch_state=startrun;}
-      if (room_temp[o].tempread < (room_temp[o].tempset + histereza) and modestate == MODEHEAT) {room_temp[o].switch_state=startrun;}
-      if (room_temp[o].tempread < (room_temp[o].tempset + histereza) and modestate == MODECOOL) {room_temp[o].switch_state=stoprun;}
-      if (room_temp[o].switch_state == startrun) min_max_state = startrun;
-    }  //stop if tempread is > tempset HIGH disable, LOW enable
-    if (o == 8 and min_max_state == stoprun) pump = stoprun;
+    //if (o < 8 and pump == stoprun) room_temp[o].switch_state = stoprun;  //turnoff floor switches when pump is off
+    sprintf(log_chars,"%i. Switching: %s -> %s, pump: %s, startpump: %s temp: %f, tempset: %f, min_max_state: %s\r", o, digitalRead(room_temp[o].idpinout)?"OFF":"ON", (room_temp[o].switch_state)?"OFF":"ON", pump?"OFF":"ON", String(start_pump).c_str(), room_temp[o].tempread, room_temp[o].tempset, min_max_state?"OFF":"ON");
+    log_message((char*)log_chars);
+    digitalWrite(room_temp[o].idpinout, room_temp[o].switch_state); //chyba raczej do 8 bo tyle czujnikow w pokoju
 
-
-  //  if (o>=8) if (room_temp[o].tempread<room_temp[o].tempset) room_temp[o].switch_state=stop; else room_temp[o].switch_state=start;  //stop if tempread is > tempset HIGH disable, LOW enable
-    if (room_temp[o].idpinout>0) {
-      if (pump==stoprun) room_temp[o].switch_state = stoprun;  //turnoff floor switches when pump is off
-
-//room_temp[o].switch_state = 1;
-
-      tmpval += String("    ")+String(o)+": Switching: "+String(digitalRead(room_temp[o].idpinout)?"OFF":"ON")+" -> "+String((room_temp[o].switch_state)?"OFF":"ON")+" pump: "+String(pump?"OFF":"ON") + "\r";
-      digitalWrite(room_temp[o].idpinout, room_temp[o].switch_state); //chyba raczej do 8 bo tyle czujnikow w pokoju
-    }
   }
-  log_message((char*)tmpval.c_str());
-  GetSpecificSensorData();
-
-//  if (pump == stop) digitalWrite(pompa_pin, stop_digital); else digitalWrite(pompa_pin, start_digital);
-
 }
 
 void GetSpecificSensorData () {
+
+  if (check_isValidTemp(temp_NEWS)) {
+    if (temp_NEWS < temptoheat ) modestate = MODEHEAT;   //min i max co drugie wykonanie ;()     or min_temp < (max_temp - histereza)
+    if (temp_NEWS > temptocool ) modestate = MODECOOL;  //or min_temp > (max_temp + histereza))
+    if ((temp_NEWS > temptoheat and check_isValidTemp(tempwe) and temp_NEWS < temptocool) and modestate == MODECOOL) modestate = MODEOFF;
+  } else {
+    modestate = MODEHEAT;
+  }
+  min_max_state = stoprun;
+
   min_temp = room_temp[0].tempread, max_temp = room_temp[0].tempset;
-  String tmpval="\0";
+  String tmpval="\r";
   for (int o = 0; o < maxsensors; o++) {
-    if (!check_isValidTemp(room_temp[o].tempread)) room_temp[o].tempread = InitTemp;
+    if (!check_isValidTemp(room_temp[o].tempread)) {
+      room_temp[o].tempread = InitTemp;
+    }
+      if (modestate == MODEHEAT) {
+        if (room_temp[o].tempread > (room_temp[o].tempset + histereza)) {
+          room_temp[o].switch_state=stoprun;
+        }
+        if (room_temp[o].tempread < (room_temp[o].tempset)) {
+          room_temp[o].switch_state = startrun;
+        }
+      }
+
+      if (modestate == MODECOOL) {
+        if (room_temp[o].tempread < (room_temp[o].tempset + histereza)) {
+          room_temp[o].switch_state=stoprun;
+        }
+        if (room_temp[o].tempread > room_temp[o].tempset) {
+          room_temp[o].switch_state = startrun;
+        }
+      }
+      if (modestate == MODEOFF) {
+        room_temp[o].switch_state=stoprun;
+      }
     if (o<8) {
-      if (check_isValidTemp(room_temp[o].tempread)) min_temp = room_temp[o].tempread;
-      if (check_isValidTemp(room_temp[o].tempread)) max_temp = room_temp[o].tempset;
+      if (check_isValidTemp(room_temp[o].tempread)) {
+        min_temp = room_temp[o].tempread;
+      } else {
+        room_temp[o].switch_state = stoprun; //-wylacz gdy temp na wartosci inicjalnej
+      }
+      if (check_isValidTemp(room_temp[o].tempset)) max_temp = room_temp[o].tempset;
       if (min_temp < roomtemplo) min_temp = roomtemplo;
       if (max_temp > roomtemphi) max_temp = roomtemphi;
+
       if (room_temp[o].switch_state == startrun) min_max_state = startrun;
+      if (min_max_state == stoprun) pump = stoprun; else pump = startrun;
+    } else
+    {
+//      sprintf(log_chars,"%i. nameSensor: %s == %s  %f",o, room_temp[o].nameSensor, ((String(kondygnacja)+sepkondname+String(tempcutoff)).substring(0,namelength)).c_str(), room_temp[o].tempread);
+//      log_message((char*)log_chars);
+      room_temp[o].tempset = max_temp;
+      if (String(room_temp[o].nameSensor) == (String(kondygnacja)+sepkondname+String(tempcutoff)).substring(0,namelength) ){//and check_isValidTemp(room_temp[o].tempread)) {
+        pumpOffVal = room_temp[o].tempset;
 
+        if (start_pump == 0 and min_max_state == startrun) {
+          start_pump = millis();
+          pump = startrun;
+        }
+        if ((millis() - start_pump) > start_pump_delay) {
+          room_temp[o].switch_state = startrun;
+        }
+        if (pump == stoprun and min_max_state == stoprun) {
+          start_pump = 0;
+          room_temp[o].switch_state = stoprun;
+        }
+
+       // if (room_temp[o].tempread < (room_temp[o].tempset + histereza)) {
+
+
+        sprintf(log_chars, "------------------------------ %i: SetPUMP: %s, to pump: %s ----> modestate: %s", o, room_temp[o].switch_state?"OFF":"ON", pump?"OFF":"ON", modestate==MODEHEAT?"heating":modestate==MODECOOL?"cooling":String(modestate));
+        log_message(log_chars);
+
+//        digitalWrite(room_temp[o].idpinout, pump);
+      }
+      if (String(room_temp[o].nameSensor) == (String(kondygnacja)+sepkondname+String(tempwename)).substring(0,namelength) and check_isValidTemp(room_temp[o].tempread)) {
+        tempwe = room_temp[o].tempread;
+      }
     }
-    if (String(room_temp[o].nameSensor) == (String(kondygnacja)+sepkondname+String(tempcutoff)).substring(0,namelength) and room_temp[o].tempread != InitTemp) {
-      if (modestate == MODEHEAT or modestate == MODEOFF) pumpOffVal = room_temp[o].tempset;
-      if (modestate == MODECOOL and min_max_state == startrun) {pumpOffVal = max_temp - histereza; pump = startrun;}
 
-
-      if (room_temp[o].tempread > pumpOffVal and modestate == MODEHEAT and min_max_state == startrun) pump = startrun;  //raczej na wejsciu z 4d dol
-      if (room_temp[o].tempread < (pumpOffVal + histereza) and modestate == MODEHEAT) pump = stoprun;   //raczej na wejsciu z 4d dol
-      //if (room_temp[o].tempread > pumpOffVal and modestate == MODECOOL) pump = stop;  //raczej na wejsciu z 4d dol
-      //if (room_temp[o].tempread < (pumpOffVal + histereza) and modestate == MODECOOL) pump = start;  //raczej na wejsciu z 4d dol
-
-      if (min_max_state = stoprun or modestate == MODEOFF) {pump=stoprun; start_pump=0;}  //turn off pump if all switches are disabled
-
-      if (start_pump == 0 and pump == startrun) {start_pump=millis(); pump = stoprun;}
-      if ((millis()-start_pump) > (start_pump_delay*1.2) and pump == stoprun) start_pump = 0;
-      if ((millis()-start_pump) > start_pump_delay and min_max_state == startrun) pump = startrun;
-
-      sprintf(log_chars, "------------------------------ %i: SetPUMP: %s, to pump: %s ----> modestate: %s", o, room_temp[o].switch_state?"OFF":"ON", pump?"OFF":"ON", modestate==MODEHEAT?"heating":modestate==MODECOOL?"cooling":String(modestate));
-      log_message(log_chars);
-
-      room_temp[o].switch_state = pump;
-      digitalWrite(room_temp[o].idpinout, pump);
-    }
-    if (String(room_temp[o].nameSensor) == (String(kondygnacja)+sepkondname+String(tempwename)).substring(0,namelength) and room_temp[o].tempread != InitTemp) {
-      tempwe = room_temp[o].tempread;
-      room_temp[o].switch_state = stoprun;
-    }
 
       //tempwe = 34;
       //room_temp[o].tempset = pumpofftemp;

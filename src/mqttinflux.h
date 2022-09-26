@@ -163,7 +163,7 @@ String LocalVarsRemoteCommands(String command, size_t gethelp)
     if (command.indexOf("TOGGLEPUMP") >=0) {
       log_message((char*)F("  TOGGLEPUMP nr_pompy=stan  -Toggle Pump State by command, nr_pompy = 0 to 9, stan = 0 lub 1"), logCommandResponse);
     } else
-    if (command.indexOf("TEMPCUTOFF+") >=0) {
+    if (command.indexOf("TEMPCUTOFF") >=0) {
       log_message((char*)F(" TEMPCUTOFF wartosc  -Zmienia temperature cutoff -sygnal braku ciepla,"), logCommandResponse);
     } else
     return F("OK");
@@ -221,49 +221,54 @@ void updateInfluxDB()
 {
 //  #include "configmqtttopics.h"
   InfluxStatus = InfluxClient.validateConnection();
-  InfluxSensor.clearFields();
-  // Report RSSI of currently connected network
-  InfluxSensor.addField("rssi"+String(kondygnacja), (WiFi.RSSI()));
-  InfluxSensor.addField("HallSensorFH"+kondygnacja, (hallRead()));
-  InfluxSensor.addField("CRT_F"+String(kondygnacja),  (CRTrunNumber));
-  for (int x=0;x<maxsensors;x++)
+  if ((InfluxStatus)?msg_Connected : msg_disConnected) {
+    //Setup_Influx();
+  } else
   {
-    String identyfikator=getIdentyfikator(x);
-    if (check_isValidTemp(room_temp[x].tempread) and room_temp[x].tempread>roomtemplo and room_temp[x].tempread<=roomtemphi) {
-      InfluxSensor.addField(String(ROOM_TEMPERATURE)+String(kondygnacja)+identyfikator, room_temp[x].tempread);
+    InfluxSensor.clearFields();
+    // Report RSSI of currently connected network
+    InfluxSensor.addField("rssi"+String(kondygnacja), (WiFi.RSSI()));
+    InfluxSensor.addField("HallSensorFH"+kondygnacja, (hallRead()));
+    InfluxSensor.addField("CRT_F"+String(kondygnacja),  (CRTrunNumber));
+    for (int x=0;x<maxsensors;x++)
+    {
+      String identyfikator=getIdentyfikator(x);
+      if (check_isValidTemp(room_temp[x].tempread) and room_temp[x].tempread>roomtemplo and room_temp[x].tempread<=roomtemphi) {
+        InfluxSensor.addField(String(ROOM_TEMPERATURE)+String(kondygnacja)+identyfikator, room_temp[x].tempread);
+      }
+      if (check_isValidTemp(room_temp[x].tempset) and room_temp[x].tempset>roomtemplo and room_temp[x].tempset<=roomtemphi) {
+        InfluxSensor.addField(String(ROOM_TEMPERATURE_SETPOINT) +String(kondygnacja)+identyfikator, room_temp[x].tempset);
+      }
     }
-    if (check_isValidTemp(room_temp[x].tempset) and room_temp[x].tempset>roomtemplo and room_temp[x].tempset<=roomtemphi) {
-      InfluxSensor.addField(String(ROOM_TEMPERATURE_SETPOINT) +String(kondygnacja)+identyfikator, room_temp[x].tempset);
+    if (check_isValidTemp(min_temp) and min_temp>=roomtemplo and min_temp<=roomtemphi) InfluxSensor.addField(String(ROOM_TEMPERATURE)+String(kondygnacja)+getIdentyfikator(-1), min_temp);
+    if (check_isValidTemp(max_temp) and max_temp>=roomtemplo and max_temp<=roomtemphi) InfluxSensor.addField(String(ROOM_TEMPERATURE_SETPOINT) +String(kondygnacja)+getIdentyfikator(-1), max_temp);
+
+    #ifdef enableDHT
+    if (check_isValidTemp(tempcor) and tempcor > 0 and humiditycor > 0)
+    {
+      InfluxSensor.addField(String(ROOM_TEMPERATURE)+String(kondygnacja)+"_DHT_Temp", tempcor);
+      InfluxSensor.addField(String(ROOM_HUMIDITY)+String(kondygnacja)+"_DHT_Humid", humiditycor);
     }
-  }
-  if (check_isValidTemp(min_temp) and min_temp>=roomtemplo and min_temp<=roomtemphi) InfluxSensor.addField(String(ROOM_TEMPERATURE)+String(kondygnacja)+getIdentyfikator(-1), min_temp);
-  if (check_isValidTemp(max_temp) and max_temp>=roomtemplo and max_temp<=roomtemphi) InfluxSensor.addField(String(ROOM_TEMPERATURE_SETPOINT) +String(kondygnacja)+getIdentyfikator(-1), max_temp);
+    #endif
+    InfluxSensor.addField(String(ROOM_PUMPSTATE)+"_Floor_"+String(kondygnacja), !pump?1:0);
 
-  #ifdef enableDHT
-  if (check_isValidTemp(tempcor))
-  {
-    InfluxSensor.addField(String(ROOM_TEMPERATURE)+String(kondygnacja)+"_DHT_Temp", tempcor);
-    InfluxSensor.addField(String(ROOM_HUMIDITY)+String(kondygnacja)+"_DHT_Humid", humiditycor);
-  }
-  #endif
-  InfluxSensor.addField(String(ROOM_PUMPSTATE)+"_Floor_"+String(kondygnacja), !pump?1:0);
+  //   InfluxSensor.addField(String(TEMP_CUTOFF)+String(kondygnacja), cutOffTemp);
+  // //  InfluxSensor.addField(String(DIAGS_OTHERS_FAULT), status_Fault ? "1" : "0");
+  // //  InfluxSensor.addField(String(DIAGS_OTHERS_DIAG), status_Diagnostic ? "1" : "0");
+  //   InfluxSensor.addField(String(INTEGRAL_ERROR_GET_TOPIC)+String(kondygnacja), ierr);
+  //   InfluxSensor.addField(String(LOG_GET_TOPIC)+String(kondygnacja), LastboilerResponseError);
 
-//   InfluxSensor.addField(String(TEMP_CUTOFF)+String(kondygnacja), cutOffTemp);
-// //  InfluxSensor.addField(String(DIAGS_OTHERS_FAULT), status_Fault ? "1" : "0");
-// //  InfluxSensor.addField(String(DIAGS_OTHERS_DIAG), status_Diagnostic ? "1" : "0");
-//   InfluxSensor.addField(String(INTEGRAL_ERROR_GET_TOPIC)+String(kondygnacja), ierr);
-//   InfluxSensor.addField(String(LOG_GET_TOPIC)+String(kondygnacja), LastboilerResponseError);
-
-  // Print what are we exactly writing
-  #ifdef debug
-  sprintf(log_chars, "Writing to InfluxDB: %s", "\0"); //InfluxClient.pointToLineProtocol(InfluxSensor));
-  log_message(log_chars);
-  #endif
-  // Write point
-  if (!InfluxClient.writePoint(InfluxSensor))
-  {
-    sprintf(log_chars, "InfluxDB write failed: %s", String(InfluxClient.getLastErrorMessage()));
+    // Print what are we exactly writing
+    #ifdef debug
+    sprintf(log_chars, "Writing to InfluxDB: %s", "\0"); //InfluxClient.pointToLineProtocol(InfluxSensor));
     log_message(log_chars);
+    #endif
+    // Write point
+    if (!InfluxClient.writePoint(InfluxSensor))
+    {
+      sprintf(log_chars, "InfluxDB write failed: %s", String(InfluxClient.getLastErrorMessage()));
+      log_message(log_chars);
+    }
   }
 }
 #endif
@@ -309,7 +314,7 @@ void updateMQTTData() {
   }
 
   #ifdef enableDHT
-  if (check_isValidTemp(tempcor))
+  if (check_isValidTemp(tempcor) and tempcor > 0 and humiditycor > 0)
   {
     topictmp = String(ROOMS_TOPIC_SENSOR);
     topictmp += F("_DHT");
@@ -640,8 +645,18 @@ void mqttReconnect_subscribe_list() {
 
 //additional for load/save
 String addusage_local_values_save(int EpromPosition){
- return "\0";
+  String cfgSave = " ";
+  for (int o=0;o<maxsensors;o++) {
+    cfgSave += build_JSON_Payload(room_temp[o].nameSensor, String(room_temp[o].tempset), false, "\"");
+  }
+ return cfgSave;
 }
 void addusage_local_values_load(String dane, int EpromPosition){
-
+  String tmpstrval = " ";
+  for (int o=0;o<maxsensors;o++) {
+    if (dane.indexOf(room_temp[o].nameSensor) != -1) {
+      tmpstrval = getJsonVal(dane, room_temp[o].nameSensor);
+      tmpstrval.replace("\"",""); room_temp[o].tempset = (float) tmpstrval.toFloat();
+    }
+  }
 }

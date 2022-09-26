@@ -420,7 +420,8 @@ bool loadConfig();
 bool SaveConfig();
 void RemoteCommandReceived(uint8_t *data, size_t len);  //commands from remote -from serial input and websocket input and from webserial
 
-
+//In main.cpp
+void ReadTemperatures();
 
 
 
@@ -560,8 +561,6 @@ void log_message(char* string, u_int specialforce = logStandard)  //         log
 
   if ((strlen(string)+ strlen(": ")) > maxLogSize ) string[maxLogSize-strlen(": ")] = '\0';
   sprintf(log_chars_tmp,"%s: %s", uptimedana(millis(), true, true).c_str(), string);
-  String send_string = log_chars_tmp;
-  send_string.trim();
 
   //Send to serial port COM
   #ifdef enableDebug2Serial
@@ -577,8 +576,12 @@ void log_message(char* string, u_int specialforce = logStandard)  //         log
   #endif
 
   //Check if string is not too long -otherwise cut string
-  if ((strlen(string)+ strlen("{\"log\":\"\"}")) > maxLogSize ) string[maxLogSize-strlen("{\"log\":\"\"}") - maxLenMQTTTopic ] = '\0';
-  sprintf(log_chars_tmp, "{\"log\":\"%s\"}", send_string.c_str());
+  if ((strlen(string)+ strlen("{\"log\":\"\"}")) > maxLogSize ) {log_chars_tmp[maxLogSize-strlen("{\"log\":\"\"}") - maxLenMQTTTopic ] = '\0'; }
+
+  String send_string = log_chars_tmp;
+  send_string.trim();
+  send_string.replace("\"","");
+  sprintf(log_chars_tmp, "\"log\":\"%s\"", send_string.c_str());
   send_string = log_chars_tmp;
 
   //If enabled send message to websocket
@@ -788,6 +791,7 @@ String uptimedana(unsigned long started_local = 0, bool startFromZero = false, b
   String wynik = "\0";
   unsigned long  partia;
   if (startFromZero) partia = started_local; else partia = millis() - started_local;
+
   if (partia<1000) {
     if (!forlogall) {
       return "< 1 "+String(t_sek)+" ";
@@ -884,7 +888,7 @@ String getJsonVal(String &jsoninput, String tofind)
     if (json.indexOf(tofind)>=0 )
     {
       //Found string and get value
-      u_int valu_start_position = json.indexOf(":", json.indexOf(tofind)) + 1;
+      u_int valu_start_position = json.indexOf("\":", json.indexOf(tofind)) + 2;
       u_int valu_end_position = json.indexOf(",", valu_start_position);
 
       String nvalue=json.substring(valu_start_position, valu_end_position); //get node value
@@ -1424,6 +1428,7 @@ void Setup_WiFi() {
 #ifdef ENABLE_INFLUX
 void Setup_Influx() {
   // InfluxDB
+  InfluxClient.resetBuffer();
   InfluxClient.setConnectionParamsV1(influx_server, influx_database, influx_user, influx_password);
   // Alternatively, set insecure connection to skip server certificate validation
   InfluxClient.setInsecure();
@@ -2063,14 +2068,17 @@ void webhandleFileUpload(AsyncWebServerRequest *request, String filename, size_t
 #ifdef ESP32
 //Task1code: blinks an LED every 1000 ms
 void Task1code( void * pvParameters ){
-  Serial.printf("Task1 running on core %i ", String(xPortGetCoreID()).c_str());
-  sprintf(log_chars, "Task1 running on core %i ", String(xPortGetCoreID()).c_str());
+  //Serial.printf("Task1 running on core %s ", String(xPortGetCoreID()).c_str());
+  sprintf(log_chars, "Task1 running on core %s ", String(xPortGetCoreID()).c_str());
   log_message(log_chars);
+  unsigned int blinkmills = 0,
+               readtemps = 0;
+  ReadTemperatures();
 
   for(;;){
-    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-    delay(1000);
-    doubleResetDetect();
+    if (millis() - blinkmills > 1000) {blinkmills = millis(); digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN)); }
+    if (millis() - readtemps > 45000) {readtemps = millis(); ReadTemperatures(); }
+    //doubleResetDetect();
     if (mqttReconnects>100) restart("Core 1 mqtt more than 100");
   }
 }
@@ -2314,10 +2322,10 @@ void MainCommonLoop()
     log_message((char*)F("MainLoopInLoop: message str builder to log"));
     #endif
     // log stats
-    //    #include "configmqtttopics.h"
+    //    #include "configmqtttopics.h"luxClient.isConnecte
     String payloadvalue_startend_val = F(" ");
     String message = formatBytes(ESP.getFreeHeap());
-    sprintf(log_chars, "stats: Uptime: %s ## Free memory: %d%%, %s bytes ## Wifi: %d", uptimedana().c_str(), getFreeMemory(), message.c_str(), getWifiQuality());
+    sprintf(log_chars, "stats: Uptime: %s, Free memory: %d%%, %s bytes, Wifi: %d", uptimedana().c_str(), getFreeMemory(), message.c_str(), getWifiQuality());
     message = log_chars;
 
     #ifdef ESP32
@@ -2325,15 +2333,15 @@ void MainCommonLoop()
     message += log_chars;
     #endif //ESP32
     #if defined enableMQTT || defined enableMQTTAsync
-    message += F("<, MQTT");
+    message += F(", MQTT");
     #ifdef enableMQTTAsync
     message += F("-Async ");
     #endif //enableMQTTAsync
-    sprintf(log_chars,"status: %s, reconnects: %d (%s)", (mqttclient.connected())?msg_Connected : msg_disConnected, mqttReconnects, reasontxt.c_str());
+    sprintf(log_chars,"status: %s, reconnects: %d (reason:%s)", (mqttclient.connected())?msg_Connected : msg_disConnected, mqttReconnects, reasontxt.c_str());
     message += log_chars;
     #endif //defined enableMQTT || defined enableMQTTAsync
     #ifdef ENABLE_INFLUX
-    sprintf(log_chars,", InfluxDB: %s", (InfluxClient.isConnected())?msg_Connected : msg_disConnected);
+    sprintf(log_chars,", InfluxDB: %s", (InfluxStatus)?msg_Connected : msg_disConnected);
     message += log_chars;
     #endif //ENABLE_INFLUX
     log_message((char *)message.c_str());
