@@ -28,8 +28,8 @@ jobs:
         run: |
           git config --local user.email "rysiulg@gmail.com"
           git config --local user.name "rysiulg"
-          git add heatpump.yaml changelog.md
+          git add heatpump.yaml CHANGELOG.md
           git commit -m "Update version to ${{ github.event.release.tag_name }}"
-          git push origin HEAD:main  # Change "main" if your default branch is different
+          git push origin HEAD:master  # Change "main" if your default branch is different
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
