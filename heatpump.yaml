@@ -1,50 +1,47 @@
-substitutions:
-  devicename: heatpump
-  description: Heatpump Controller
-
-globals:
-  - id: unmasked_value_register_0
-    type: uint16_t
-    restore_value: no
-    initial_value: '0'
-  - id: unmasked_value_register_5
-    type: uint16_t
-    restore_value: no
-    initial_value: '0'
-  - id: unmasked_value_water_temperature_t1s
-    type: uint16_t
-    restore_value: no
-    initial_value: '0'
-  - id: unmasked_curve_selection
-    type: uint16_t
-    restore_value: no
-    initial_value: '0'
-  - id: unmasked_value_register_210
-    type: uint16_t
-    restore_value: no
-    initial_value: '0'    
-  - id: unmasked_value_register_211
-    type: uint16_t
-    restore_value: no
-    initial_value: '0'
-  - id: unmasked_value_register_270
-    type: uint16_t
-    restore_value: no
-    initial_value: '0'
-  - id: unmasked_value_register_272
-    type: uint16_t
-    restore_value: no
-    initial_value: '0'
-
-esphome:
-  name: "${devicename}"
-  comment: "${description}"
-  friendly_name: "${description}"
-  project:
-    name: "${devicename}.${description}"
-    version: 4.1.2
-    
 esp32:
   board: esp32dev
   framework:
     type: esp-idf
+esphome:
+  comment: ${description}
+  friendly_name: ${description}
+  name: ${devicename}
+  project:
+    name: ${devicename}.${description}
+    version: 1.0.2
+globals:
+- id: unmasked_value_register_0
+  initial_value: '0'
+  restore_value: false
+  type: uint16_t
+- id: unmasked_value_register_5
+  initial_value: '0'
+  restore_value: false
+  type: uint16_t
+- id: unmasked_value_water_temperature_t1s
+  initial_value: '0'
+  restore_value: false
+  type: uint16_t
+- id: unmasked_curve_selection
+  initial_value: '0'
+  restore_value: false
+  type: uint16_t
+- id: unmasked_value_register_210
+  initial_value: '0'
+  restore_value: false
+  type: uint16_t
+- id: unmasked_value_register_211
+  initial_value: '0'
+  restore_value: false
+  type: uint16_t
+- id: unmasked_value_register_270
+  initial_value: '0'
+  restore_value: false
+  type: uint16_t
+- id: unmasked_value_register_272
+  initial_value: '0'
+  restore_value: false
+  type: uint16_t
+substitutions:
+  description: Heatpump Controller
+  devicename: heatpump
