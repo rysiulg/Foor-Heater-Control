@@ -1,4 +1,3 @@
-
 globals:
 - id: unmasked_value_register_0
   initial_value: '0'
@@ -45,4 +44,4 @@ esphome:
   name: ${devicename}
   project:
     name: ${devicename}.${description}
-    version: 1.0.2
+    version: 1.0.3
