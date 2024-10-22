@@ -44,4 +44,4 @@ esphome:
   name: ${devicename}
   project:
     name: ${devicename}.${description}
-    version: 1.0.0a
+    version: 1.0.0c
