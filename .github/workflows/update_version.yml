@@ -9,11 +9,11 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the GitHub Actions token
-      REPO_OWNER: ${{ github.repository_owner }}   # Repository owner
-      DEFAULT_NAME: "rysiulg"                 # Fallback name
-      DEFAULT_EMAIL: "rysiulg@gmail.com"         # Fallback email
-      TARGET_BRANCH: "master"                       # Target branch name
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO_OWNER: ${{ github.repository_owner }}
+      DEFAULT_NAME: "rysiulg"
+      DEFAULT_EMAIL: "rysiulg@gmail.com"
+      TARGET_BRANCH: "master"  # Target branch name
 
     steps:
       - name: Checkout Code
@@ -51,15 +51,21 @@ jobs:
           echo "name=$NAME" >> $GITHUB_ENV
           echo "email=$EMAIL" >> $GITHUB_ENV
 
+          # Debugging output for NAME and EMAIL
+          echo "Configured NAME: $NAME"
+          echo "Configured EMAIL: $EMAIL"
+
       - name: Update Version
         run: python update_version.py ${{ github.event.release.tag_name }}
 
       - name: Commit Changes
         run: |
+          echo "Using NAME: $NAME"
+          echo "Using EMAIL: $EMAIL"
           git config --local user.email "$EMAIL"
           git config --local user.name "$NAME"
           git add heatpump.yaml CHANGELOG.md
           git commit -m "Update version to ${{ github.event.release.tag_name }}"
-          git push origin HEAD:${{ env.TARGET_BRANCH }}  # Use the variable for the target branch
+          git push origin HEAD:${{ env.TARGET_BRANCH }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
