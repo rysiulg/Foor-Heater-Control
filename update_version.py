@@ -1,24 +1,32 @@
 import re
 import yaml
+import sys
 
-# Read the latest version from changelog.md
-with open('CHANGELOG.md', 'r') as f:
+# Define filenames as variables
+CHANGELOG_FILE = 'CHANGELOG.md'
+YAML_FILE = 'heatpump.yaml'
+
+# Get the version from command-line arguments
+new_version = sys.argv[1]
+
+# Update the YAML file
+with open(YAML_FILE, 'r') as yaml_file:
+    yaml_content = yaml.safe_load(yaml_file)
+
+yaml_content['esphome']['project']['version'] = new_version
+
+with open(YAML_FILE, 'w') as yaml_file:
+    yaml.safe_dump(yaml_content, yaml_file)
+
+print(f'Updated version to {new_version} in {YAML_FILE}')
+
+# Replace unreleased section in CHANGELOG.md
+with open(CHANGELOG_FILE, 'r') as f:
     changelog = f.read()
-    version_match = re.search(r'\[([0-9]+\.[0-9]+\.[0-9]+)\]', changelog)
-    if version_match:
-        new_version = version_match.group(1)
 
-        # Load the YAML file
-        with open('heatpump.yaml', 'r') as yaml_file:
-            yaml_content = yaml.safe_load(yaml_file)
+updated_changelog = re.sub(r'\[Unreleased\](.*?)\n##', f'[{new_version}]\\1\n##', changelog, flags=re.DOTALL)
 
-        # Update the version
-        yaml_content['esphome']['project']['version'] = new_version
+with open(CHANGELOG_FILE, 'w') as f:
+    f.write(updated_changelog)
 
-        # Write back to the YAML file
-        with open('heatpump.yaml', 'w') as yaml_file:
-            yaml.safe_dump(yaml_content, yaml_file)
-
-        print(f'Updated version to {new_version} in heatpump.yaml')
-    else:
-        print('No version found in changelog.md')
+print(f'Replaced [Unreleased] with [{new_version}] in {CHANGELOG_FILE}')
