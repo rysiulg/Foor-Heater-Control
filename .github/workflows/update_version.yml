@@ -10,10 +10,10 @@ jobs:
 
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the GitHub Actions token
-      DEFAULT_NAME: "rysiulg"                 # Fallback name
-      DEFAULT_EMAIL: "rysiulg@gmail.com"         # Fallback email
+      DEFAULT_NAME: "github-actions[bot]"   #"rysiulg"                 # Fallback name
+      DEFAULT_EMAIL: "github-actions[bot]@users.noreply.github.com"   #"rysiulg@gmail.com"         # Fallback email
       TARGET_BRANCH: "master"                       # Target branch name
-
+          
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
