@@ -9,11 +9,10 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      REPO_OWNER: ${{ github.repository_owner }}
-      DEFAULT_NAME: "rysiulg"
-      DEFAULT_EMAIL: "rysiulg@gmail.com"
-      TARGET_BRANCH: "master"  # Target branch name
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the GitHub Actions token
+      DEFAULT_NAME: "rysiulg"                 # Fallback name
+      DEFAULT_EMAIL: "rysiulg@gmail.com"         # Fallback email
+      TARGET_BRANCH: "master"                       # Target branch name
 
     steps:
       - name: Checkout Code
@@ -28,42 +27,18 @@ jobs:
         run: |
           pip install pyyaml
 
-      - name: Get Repository Owner Details
-        id: repo_details
+      - name: Set Git Config
         run: |
-          TOKEN="${GITHUB_TOKEN}"
-          OWNER="${REPO_OWNER}"
-          RESPONSE=$(curl -s -H "Authorization: token $TOKEN" "https://api.github.com/users/$OWNER")
-          
-          echo "API Response: $RESPONSE"  # Debugging line
-          
-          NAME=$(echo "$RESPONSE" | jq -r '.name')
-          EMAIL=$(echo "$RESPONSE" | jq -r '.email')
-
-          # Fallback to default values if NAME or EMAIL is empty
-          if [ -z "$NAME" ]; then
-            NAME="${{ env.DEFAULT_NAME }}"
-          fi
-          if [ -z "$EMAIL" ]; then
-            EMAIL="${{ env.DEFAULT_EMAIL }}"
-          fi
-
-          echo "name=$NAME" >> $GITHUB_ENV
-          echo "email=$EMAIL" >> $GITHUB_ENV
-
-          # Debugging output for NAME and EMAIL
-          echo "Configured NAME: $NAME"
-          echo "Configured EMAIL: $EMAIL"
+          echo "Using NAME: ${{ env.DEFAULT_NAME }}"
+          echo "Using EMAIL: ${{ env.DEFAULT_EMAIL }}"
+          git config --local user.email "${{ env.DEFAULT_EMAIL }}"
+          git config --local user.name "${{ env.DEFAULT_NAME }}"
 
       - name: Update Version
         run: python update_version.py ${{ github.event.release.tag_name }}
 
       - name: Commit Changes
         run: |
-          echo "Using NAME: $NAME"
-          echo "Using EMAIL: $EMAIL"
-          git config --local user.email "$EMAIL"
-          git config --local user.name "$NAME"
           git add heatpump.yaml CHANGELOG.md
           git commit -m "Update version to ${{ github.event.release.tag_name }}"
           git push origin HEAD:${{ env.TARGET_BRANCH }}
