@@ -1,4 +1,4 @@
-name: Update Heatpump and CHANGELOG Version
+name: Update Heatpump Version
 
 on:
   release:
@@ -29,6 +29,15 @@ jobs:
           RESPONSE=$(curl -s -H "Authorization: token $TOKEN" "https://api.github.com/users/$OWNER")
           NAME=$(echo "$RESPONSE" | jq -r '.name')
           EMAIL=$(echo "$RESPONSE" | jq -r '.email')
+
+          # Fallback to default values if NAME or EMAIL is empty
+          if [ -z "$NAME" ]; then
+            NAME="Default Name"
+          fi
+          if [ -z "$EMAIL" ]; then
+            EMAIL="default@example.com"
+          fi
+
           echo "name=$NAME" >> $GITHUB_ENV
           echo "email=$EMAIL" >> $GITHUB_ENV
 
@@ -39,7 +48,7 @@ jobs:
         run: |
           git config --local user.email "$EMAIL"
           git config --local user.name "$NAME"
-          git add heatpump.yaml CHANGELOG.md
+          git add heatpump.yaml changelog.md
           git commit -m "Update version to ${{ github.event.release.tag_name }}"
           git push origin HEAD:main  # Change "main" if your default branch is different
         env:
