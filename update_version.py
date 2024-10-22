@@ -15,8 +15,9 @@ with open(YAML_FILE, 'r') as yaml_file:
 
 yaml_content['esphome']['project']['version'] = new_version
 
+# Use the default YAML Dumper to maintain order
 with open(YAML_FILE, 'w') as yaml_file:
-    yaml.safe_dump(yaml_content, yaml_file)
+    yaml.safe_dump(yaml_content, yaml_file, default_flow_style=False, sort_keys=False)
 
 print(f'Updated version to {new_version} in {YAML_FILE}')
 
