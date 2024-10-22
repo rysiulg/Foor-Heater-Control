@@ -27,13 +27,6 @@ with open(CHANGELOG_FILE, 'r') as f:
 
 updated_changelog = re.sub(r'\[Unreleased\](.*?)\n##', f'## [Unreleased]\n### Changed:\n- \n[{new_version}]\\1\n##', changelog, flags=re.DOTALL)
 
-## [1.0.0a]
-
-### Changed
-
-- Add autoversioning
-
-
 with open(CHANGELOG_FILE, 'w') as f:
     f.write(updated_changelog)
 
