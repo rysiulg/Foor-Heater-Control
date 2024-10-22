@@ -1,0 +1,50 @@
+substitutions:
+  devicename: heatpump
+  description: Heatpump Controller
+
+globals:
+  - id: unmasked_value_register_0
+    type: uint16_t
+    restore_value: no
+    initial_value: '0'
+  - id: unmasked_value_register_5
+    type: uint16_t
+    restore_value: no
+    initial_value: '0'
+  - id: unmasked_value_water_temperature_t1s
+    type: uint16_t
+    restore_value: no
+    initial_value: '0'
+  - id: unmasked_curve_selection
+    type: uint16_t
+    restore_value: no
+    initial_value: '0'
+  - id: unmasked_value_register_210
+    type: uint16_t
+    restore_value: no
+    initial_value: '0'    
+  - id: unmasked_value_register_211
+    type: uint16_t
+    restore_value: no
+    initial_value: '0'
+  - id: unmasked_value_register_270
+    type: uint16_t
+    restore_value: no
+    initial_value: '0'
+  - id: unmasked_value_register_272
+    type: uint16_t
+    restore_value: no
+    initial_value: '0'
+
+esphome:
+  name: "${devicename}"
+  comment: "${description}"
+  friendly_name: "${description}"
+  project:
+    name: "${devicename}.${description}"
+    version: 4.1.2
+    
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
