@@ -1,4 +1,4 @@
-name: Update Heatpump Version
+name: Update Heatpump and Changelog Version from Release
 
 on:
   release:
@@ -35,7 +35,7 @@ jobs:
           git config --local user.name "${{ env.DEFAULT_NAME }}"
 
       - name: Update Version
-        run: python3 update_version.py ${{ github.event.release.tag_name }}
+        run: python3 .github/scripts/update_version.py ${{ github.event.release.tag_name }}
 
       - name: Commit Changes
         run: |
