@@ -13,7 +13,7 @@ with open('CHANGELOG.md', 'r') as f:
             yaml_content = yaml.safe_load(yaml_file)
 
         # Update the version
-        yaml_content['esphome']['esphome']['project']['version'] = new_version
+        yaml_content['esphome']['project']['version'] = new_version
 
         # Write back to the YAML file
         with open('heatpump.yaml', 'w') as yaml_file:
