@@ -1,0 +1,35 @@
+name: Update Heatpump Version
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update_version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install PyYAML
+        run: |
+          pip install pyyaml
+
+      - name: Update Version
+        run: python update_version.py
+
+      - name: Commit Changes
+        run: |
+          git config --local user.email "rysiulg@gmail.com"            #change to your e-mail github
+          git config --local user.name "rysiulg"                       #change to your username github
+          git add heatpump.yaml
+          git commit -m "Update version to $(python -c 'import yaml; print(yaml.safe_load(open(\"heatpump.yaml\")[\"esphome\"][\"project\"][\"version\"]))')"
+          git push origin HEAD:master  # Change "main" to your default branch if different
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
