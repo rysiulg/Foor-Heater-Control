@@ -1,4 +1,4 @@
-Gname: Update Heatpump Version
+name: Update Heatpump Version
 
 on:
   release:
