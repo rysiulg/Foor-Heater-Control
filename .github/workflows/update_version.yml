@@ -22,14 +22,14 @@ jobs:
           pip install pyyaml
 
       - name: Update Version
-        run: python update_version.py
+        run: python update_version.py ${{ github.event.release.tag_name }}
 
       - name: Commit Changes
         run: |
-          git config --local user.email "rysiulg@gmail.com"            #change to your e-mail github
-          git config --local user.name "rysiulg"                       #change to your username github
-          git add heatpump.yaml
-          git commit -m "Update version to $(python -c 'import yaml; print(yaml.safe_load(open(\"heatpump.yaml\")[\"esphome\"][\"project\"][\"version\"]))')"
-          git push origin HEAD:master  # Change "main" to your default branch if different
+          git config --local user.email "rysiulg@gmail.com"
+          git config --local user.name "rysiulg"
+          git add heatpump.yaml changelog.md
+          git commit -m "Update version to ${{ github.event.release.tag_name }}"
+          git push origin HEAD:main  # Change "main" if your default branch is different
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
