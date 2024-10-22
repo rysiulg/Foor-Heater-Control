@@ -11,8 +11,8 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the GitHub Actions token
       REPO_OWNER: ${{ github.repository_owner }}   # Repository owner
-      DEFAULT_NAME: "Default Name"                 # Fallback name
-      DEFAULT_EMAIL: "default@example.com"         # Fallback email
+      DEFAULT_NAME: "rysiulg"                 # Fallback name
+      DEFAULT_EMAIL: "rysiulg@gmail.com"         # Fallback email
       TARGET_BRANCH: "master"                       # Target branch name
 
     steps:
