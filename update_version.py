@@ -25,7 +25,14 @@ print(f'Updated version to {new_version} in {YAML_FILE}')
 with open(CHANGELOG_FILE, 'r') as f:
     changelog = f.read()
 
-updated_changelog = re.sub(r'\[Unreleased\](.*?)\n##', f'[Unreleased]\n#Changed:\n- \n[{new_version}]\\1\n##', changelog, flags=re.DOTALL)
+updated_changelog = re.sub(r'\[Unreleased\](.*?)\n##', f'## [Unreleased]\n### Changed:\n- \n[{new_version}]\\1\n##', changelog, flags=re.DOTALL)
+
+## [1.0.0a]
+
+### Changed
+
+- Add autoversioning
+
 
 with open(CHANGELOG_FILE, 'w') as f:
     f.write(updated_changelog)
